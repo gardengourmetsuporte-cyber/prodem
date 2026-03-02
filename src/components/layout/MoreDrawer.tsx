@@ -42,11 +42,8 @@ const navItems: NavItem[] = [
   { icon: 'Trophy', label: 'Ranking', href: '/ranking', adminOnly: true, group: 'equipe', groupLabel: 'Equipe' },
   { icon: 'Gift', label: 'Recompensas', href: '/rewards', group: 'equipe', groupLabel: 'Equipe' },
   // Ferramentas
-  { icon: 'Sparkles', label: 'Copilot IA', href: '/copilot', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
-  
   { icon: 'Megaphone', label: 'Marketing', href: '/marketing', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
   { icon: 'BookOpen', label: 'Cardápio Digital', href: '/cardapio', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
-  { icon: 'MessageCircle', label: 'WhatsApp', href: '/whatsapp', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
 ];
 
 interface MoreDrawerProps {
