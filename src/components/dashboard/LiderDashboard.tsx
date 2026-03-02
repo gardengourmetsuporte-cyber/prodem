@@ -1,20 +1,17 @@
-import { useState, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserModules } from '@/hooks/useAccessLevels';
-import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 import { useLazyVisible } from '@/hooks/useLazyVisible';
-import { DashboardKPIGrid } from './DashboardKPIGrid';
 import { DashboardSection } from './DashboardSection';
-import { AppIcon } from '@/components/ui/app-icon';
+import { ProductionProgressWidget } from './ProductionProgressWidget';
+import { TeamActivityWidget } from './TeamActivityWidget';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const LazyLeaderboard = lazy(() => import('./LazyLeaderboardWidget'));
-const LazyChecklist = lazy(() => import('./ChecklistDashboardWidget').then(m => ({ default: m.ChecklistDashboardWidget })));
 const LazyAgenda = lazy(() => import('./AgendaDashboardWidget').then(m => ({ default: m.AgendaDashboardWidget })));
 
 function LazyWidget({ children }: { children: React.ReactNode }) {
@@ -34,10 +31,8 @@ export function LiderDashboard() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
-  const { stats, isLoading: statsLoading } = useDashboardStats();
-  const { isVisible } = useDashboardWidgets();
 
-  const isReady = !statsLoading && !modulesLoading && !!profile;
+  const isReady = !modulesLoading && !!profile;
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -73,20 +68,17 @@ export function LiderDashboard() {
         </p>
       </div>
 
-      {/* KPI Grid - focused on team metrics */}
-      <DashboardKPIGrid
-        stats={stats}
-        isLoading={statsLoading}
-        hasAccess={hasAccess}
-        isVisible={isVisible}
-      />
-
-      {/* Checklists - team progress */}
+      {/* 🏭 PRODUÇÃO DO DIA — detailed */}
       {hasAccess('checklists') && (
-        <DashboardSection title="Produção da equipe" icon="Factory" iconColor="text-amber-400" onNavigate={() => navigate('/checklists')}>
-          <LazyWidget><LazyChecklist /></LazyWidget>
+        <DashboardSection title="Produção do dia" icon="Factory" iconColor="text-amber-400" onNavigate={() => navigate('/checklists')}>
+          <ProductionProgressWidget variant="detailed" />
         </DashboardSection>
       )}
+
+      {/* 👥 EQUIPE ATIVA */}
+      <DashboardSection title="Equipe ativa" icon="Users" iconColor="text-blue-400">
+        <TeamActivityWidget />
+      </DashboardSection>
 
       {/* Agenda */}
       {hasAccess('agenda') && (
