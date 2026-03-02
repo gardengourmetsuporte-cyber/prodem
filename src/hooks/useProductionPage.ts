@@ -125,8 +125,10 @@ export function useProductionPage() {
 
   // Overall project progress (sum across all dates for this project)
   const projectProgress = useMemo(() => {
-    const totalOrdered = shift1.totals.ordered || shift2.totals.ordered;
-    const totalDone = shift1.totals.done + shift2.totals.done;
+    // Use the larger ordered value — shift 2 may carry over remaining from shift 1
+    const totalOrdered = Math.max(shift1.totals.ordered, shift2.totals.ordered);
+    // Avoid double-counting: total done is capped at ordered
+    const totalDone = Math.min(shift1.totals.done + shift2.totals.done, totalOrdered);
     const totalPending = Math.max(0, totalOrdered - totalDone);
     return {
       ordered: totalOrdered,
