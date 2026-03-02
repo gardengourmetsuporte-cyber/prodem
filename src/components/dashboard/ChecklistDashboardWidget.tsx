@@ -66,7 +66,7 @@ export function ChecklistDashboardWidget() {
         </div>
         <span className={cn(
           "text-2xl font-black",
-          isComplete ? "text-success" : "text-warning"
+          isComplete ? "text-success" : hasInProgress ? "text-blue-500" : "text-warning"
         )}>
           {totals.percent}%
         </span>
@@ -76,9 +76,9 @@ export function ChecklistDashboardWidget() {
         <div
           className={cn(
             "h-full rounded-full transition-all duration-700 ease-out",
-            isComplete ? "bg-success" : "bg-warning"
+            isComplete ? "bg-success" : hasInProgress ? "bg-blue-500 animate-pulse" : "bg-warning"
           )}
-          style={{ width: `${totals.percent}%` }}
+          style={{ width: `${Math.max(totals.percent, hasInProgress ? 3 : 0)}%` }}
         />
       </div>
 

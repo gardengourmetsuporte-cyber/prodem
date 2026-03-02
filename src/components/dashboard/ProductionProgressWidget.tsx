@@ -52,11 +52,14 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
     );
   }
 
+  const hasInProgress = report.some(r => r.status === 'in_progress');
   const progressColor = totals.percent >= 100
     ? 'bg-emerald-500'
-    : totals.percent > 0
-      ? 'bg-amber-500'
-      : 'bg-muted-foreground/30';
+    : hasInProgress
+      ? 'bg-blue-500 animate-pulse'
+      : totals.percent > 0
+        ? 'bg-amber-500'
+        : 'bg-muted-foreground/30';
 
   return (
     <button
@@ -68,14 +71,14 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
         <div className="grid grid-cols-3 gap-3 mb-3">
           <KpiBlock label="Feitas" value={totals.done} accent="emerald" />
           <KpiBlock label="Planejadas" value={totals.ordered} />
-          <KpiBlock label="Progresso" value={`${totals.percent}%`} accent={totals.percent >= 100 ? 'emerald' : totals.percent > 0 ? 'amber' : undefined} />
+          <KpiBlock label="Progresso" value={`${totals.percent}%`} accent={totals.percent >= 100 ? 'emerald' : hasInProgress ? 'blue' : totals.percent > 0 ? 'amber' : undefined} />
         </div>
 
         {/* Global progress bar */}
         <div className="relative h-2.5 rounded-full bg-secondary overflow-hidden">
           <div
             className={cn("h-full rounded-full transition-all duration-700", progressColor)}
-            style={{ width: `${Math.min(totals.percent, 100)}%` }}
+            style={{ width: `${Math.max(Math.min(totals.percent, 100), hasInProgress ? 3 : 0)}%` }}
           />
         </div>
       </div>
@@ -84,7 +87,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
       {variant === 'detailed' && (
         <div className="space-y-1.5">
           {report.map(item => (
-            <div key={item.checklist_item_id} className="card-surface px-3.5 py-2.5 flex items-center gap-3">
+            <div key={item.checklist_item_id} className={cn("card-surface px-3.5 py-2.5 flex items-center gap-3", item.status === 'in_progress' && "ring-1 ring-blue-500/30 bg-blue-500/5")}>
               <StatusIcon status={item.status} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{item.item_name}</p>
@@ -112,7 +115,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
 }
 
 function KpiBlock({ label, value, accent }: { label: string; value: number | string; accent?: string }) {
-  const textColor = accent === 'emerald' ? 'text-emerald-500' : accent === 'amber' ? 'text-amber-500' : 'text-foreground';
+  const textColor = accent === 'emerald' ? 'text-emerald-500' : accent === 'amber' ? 'text-amber-500' : accent === 'blue' ? 'text-blue-500' : 'text-foreground';
   return (
     <div className="text-center">
       <p className={cn("text-xl font-extrabold tabular-nums leading-none", textColor)}>
