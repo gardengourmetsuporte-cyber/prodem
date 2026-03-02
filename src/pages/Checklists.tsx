@@ -122,21 +122,36 @@ export default function ChecklistsPage() {
   // Determine current shift from checklistType
   const currentShift = checklistType === 'fechamento' ? 2 : 1;
 
-  // Production orders — shift-aware
+  // Production orders — shift-aware, aggregate all projects
   const {
     order: productionOrder, orderItems: productionItems, report: productionReport,
     totals: productionTotals, hasOrder: hasProductionOrder,
     isShift1Closed,
     saveOrder, closeOrder, deleteOrder, closeShiftAndCreateNext, copyFromDate, getPendingFromDate, resetDayOrders,
-  } = useProductionOrders(activeUnitId, selectedDate, currentShift);
+  } = useProductionOrders(activeUnitId, selectedDate, currentShift, '__all__');
 
   // Also fetch both shifts independently for card progress
-  const shift1Hook = useProductionOrders(activeUnitId, selectedDate, 1);
-  const shift2Hook = useProductionOrders(activeUnitId, selectedDate, 2);
+  const shift1Hook = useProductionOrders(activeUnitId, selectedDate, 1, '__all__');
+  const shift2Hook = useProductionOrders(activeUnitId, selectedDate, 2, '__all__');
 
   // Production projects
   const { projects, activeProjects, createProject, updateProject, deleteProject } = useProductionProjects(activeUnitId);
   const activeProject = activeProjects.length > 0 ? activeProjects[0] : null;
+
+  // Fetch orders with project info for grouping
+  const { data: ordersWithProjects = [] } = useQuery({
+    queryKey: ['production-orders-with-projects', activeUnitId, currentDate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('production_orders')
+        .select('id, project_id, shift, production_projects!production_orders_project_id_fkey(id, project_number, description, client)')
+        .eq('unit_id', activeUnitId!)
+        .eq('date', currentDate);
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!activeUnitId,
+  });
 
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
@@ -154,10 +169,52 @@ export default function ChecklistsPage() {
   const productionQtyMap = useMemo(() => {
     const map = new Map<string, number>();
     productionItems.forEach(item => {
-      map.set(item.checklist_item_id, item.quantity_ordered);
+      map.set(item.checklist_item_id, (map.get(item.checklist_item_id) || 0) + item.quantity_ordered);
     });
     return map;
   }, [productionItems]);
+
+  // Build order_id -> project info map
+  const orderProjectMap = useMemo(() => {
+    const map = new Map<string, { projectNumber: string; description: string; client: string | null; projectId: string }>();
+    ordersWithProjects.forEach((o: any) => {
+      const proj = o.production_projects;
+      if (proj) {
+        map.set(o.id, {
+          projectNumber: proj.project_number || '?',
+          description: proj.description || '',
+          client: proj.client || null,
+          projectId: proj.id,
+        });
+      }
+    });
+    return map;
+  }, [ordersWithProjects]);
+
+  // Group production items by project
+  const projectGroups = useMemo(() => {
+    if (!hasProductionOrder || productionItems.length === 0) return [];
+    
+    const groups = new Map<string, { projectInfo: { projectNumber: string; description: string; client: string | null }; itemIds: Set<string> }>();
+    
+    productionItems.forEach(pi => {
+      const proj = orderProjectMap.get(pi.order_id);
+      const key = proj?.projectId || 'unknown';
+      if (!groups.has(key)) {
+        groups.set(key, {
+          projectInfo: proj || { projectNumber: '?', description: 'Sem projeto', client: null },
+          itemIds: new Set(),
+        });
+      }
+      groups.get(key)!.itemIds.add(pi.checklist_item_id);
+    });
+    
+    return [...groups.entries()].map(([projectId, { projectInfo, itemIds }]) => ({
+      projectId,
+      ...projectInfo,
+      itemIds,
+    }));
+  }, [productionItems, orderProjectMap, hasProductionOrder]);
 
   // Progress for plan items must be shift-aware (avoid carrying completed state from another shift)
   const getCrossShiftItemProgressWithPlan = useCallback((itemId: string) => {
@@ -761,27 +818,8 @@ export default function ChecklistsPage() {
                   const isBonus = checklistType === 'bonus';
                   const baseSectors = sectors.filter((s: any) => isBonus ? s.scope === 'bonus' : s.scope !== 'bonus');
 
-                  // For standard checklists, filter to only show items in the active production order
-                  const filteredSectors = (!isBonus && hasProductionOrder && productionItems.length > 0)
-                    ? (() => {
-                        const orderItemIds = new Set(productionItems.map(pi => pi.checklist_item_id));
-                        return baseSectors
-                          .map((s: any) => ({
-                            ...s,
-                            subcategories: (s.subcategories || [])
-                              .map((sub: any) => ({
-                                ...sub,
-                                items: (sub.items || []).filter((item: any) => orderItemIds.has(item.id)),
-                              }))
-                              .filter((sub: any) => sub.items && sub.items.length > 0),
-                          }))
-                          .filter((s: any) => s.subcategories && s.subcategories.length > 0);
-                      })()
-                    : isBonus ? baseSectors : []; // No order = no items shown
-
                   // Show empty state if no production order and not bonus
-                  if (!isBonus && filteredSectors.length === 0 && !hasProductionOrder) {
-                    // If on shift 2 and shift 1 not closed yet, show lock message
+                  if (!isBonus && !hasProductionOrder) {
                     const isShift2Locked = checklistType === 'fechamento' && shift1Hook.hasOrder && !isShift1Closed;
 
                     return (
@@ -818,48 +856,196 @@ export default function ChecklistsPage() {
                     );
                   }
 
-                  return (
-                    <ChecklistView
-                      sectors={filteredSectors}
-                      checklistType={checklistType}
-                      date={currentDate}
-                      completions={completions}
-                      allShiftCompletions={allShiftCompletions}
-                      isItemCompleted={isItemCompletedWithPlan}
-                      getItemStatus={getItemStatus}
-                      onToggleItem={handleToggleItem}
-                      onStartProduction={handleStartProduction}
-                      onFinishProduction={handleFinishProduction}
-                      onUpdateProductionQuantity={handleUpdateProductionQuantity}
-                      getCompletionProgress={(sectorId) => {
-                        const base = getCompletionProgress(sectorId, checklistType);
-                        // When a production order exists, only count items in the plan
-                        if (hasProductionOrder && productionQtyMap.size > 0) {
-                          const sector = sectors.find(s => s.id === sectorId);
-                          if (!sector) return base;
-                          let total = 0;
-                          let completed = 0;
-                          sector.subcategories?.forEach(sub => {
-                            sub.items?.forEach(item => {
-                              if (item.is_active && productionQtyMap.has(item.id)) {
-                                total++;
-                                if (isItemCompletedWithPlan(item.id)) completed++;
-                              }
+                  // For bonus, render flat
+                  if (isBonus) {
+                    return (
+                      <ChecklistView
+                        sectors={baseSectors}
+                        checklistType={checklistType}
+                        date={currentDate}
+                        completions={completions}
+                        allShiftCompletions={allShiftCompletions}
+                        isItemCompleted={isItemCompletedWithPlan}
+                        getItemStatus={getItemStatus}
+                        onToggleItem={handleToggleItem}
+                        onStartProduction={handleStartProduction}
+                        onFinishProduction={handleFinishProduction}
+                        onUpdateProductionQuantity={handleUpdateProductionQuantity}
+                        getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
+                        getCrossShiftItemProgress={getCrossShiftItemProgressWithPlan}
+                        currentUserId={user?.id}
+                        isAdmin={isAdmin}
+                        deadlinePassed={deadlinePassed}
+                        onContestCompletion={contestCompletion}
+                        onSplitCompletion={splitCompletion}
+                      />
+                    );
+                  }
+
+                  // Standard: Group by project/OS
+                  if (projectGroups.length === 0 && hasProductionOrder) {
+                    // Has order but no project groups — fallback
+                    const orderItemIds = new Set(productionItems.map(pi => pi.checklist_item_id));
+                    const filteredSectors = baseSectors
+                      .map((s: any) => ({
+                        ...s,
+                        subcategories: (s.subcategories || [])
+                          .map((sub: any) => ({
+                            ...sub,
+                            items: (sub.items || []).filter((item: any) => orderItemIds.has(item.id)),
+                          }))
+                          .filter((sub: any) => sub.items && sub.items.length > 0),
+                      }))
+                      .filter((s: any) => s.subcategories && s.subcategories.length > 0);
+
+                    return (
+                      <ChecklistView
+                        sectors={filteredSectors}
+                        checklistType={checklistType}
+                        date={currentDate}
+                        completions={completions}
+                        allShiftCompletions={allShiftCompletions}
+                        isItemCompleted={isItemCompletedWithPlan}
+                        getItemStatus={getItemStatus}
+                        onToggleItem={handleToggleItem}
+                        onStartProduction={handleStartProduction}
+                        onFinishProduction={handleFinishProduction}
+                        onUpdateProductionQuantity={handleUpdateProductionQuantity}
+                        getCompletionProgress={(sectorId) => {
+                          const base = getCompletionProgress(sectorId, checklistType);
+                          if (hasProductionOrder && productionQtyMap.size > 0) {
+                            const sector = sectors.find(s => s.id === sectorId);
+                            if (!sector) return base;
+                            let total = 0;
+                            let completed = 0;
+                            sector.subcategories?.forEach(sub => {
+                              sub.items?.forEach(item => {
+                                if (item.is_active && productionQtyMap.has(item.id)) {
+                                  total++;
+                                  if (isItemCompletedWithPlan(item.id)) completed++;
+                                }
+                              });
                             });
-                          });
-                          // If no plan items in this sector, fall back to base
-                          if (total === 0) return base;
-                          return { completed, total };
-                        }
-                        return base;
-                      }}
-                      getCrossShiftItemProgress={getCrossShiftItemProgressWithPlan}
-                      currentUserId={user?.id}
-                      isAdmin={isAdmin}
-                      deadlinePassed={deadlinePassed}
-                      onContestCompletion={contestCompletion}
-                      onSplitCompletion={splitCompletion}
-                    />
+                            if (total === 0) return base;
+                            return { completed, total };
+                          }
+                          return base;
+                        }}
+                        getCrossShiftItemProgress={getCrossShiftItemProgressWithPlan}
+                        currentUserId={user?.id}
+                        isAdmin={isAdmin}
+                        deadlinePassed={deadlinePassed}
+                        onContestCompletion={contestCompletion}
+                        onSplitCompletion={splitCompletion}
+                      />
+                    );
+                  }
+
+                  // Render grouped by project
+                  return (
+                    <div className="space-y-6">
+                      {projectGroups.map(group => {
+                        // Filter sectors to only include items for this project
+                        const filteredSectors = baseSectors
+                          .map((s: any) => ({
+                            ...s,
+                            subcategories: (s.subcategories || [])
+                              .map((sub: any) => ({
+                                ...sub,
+                                items: (sub.items || []).filter((item: any) => group.itemIds.has(item.id)),
+                              }))
+                              .filter((sub: any) => sub.items && sub.items.length > 0),
+                          }))
+                          .filter((s: any) => s.subcategories && s.subcategories.length > 0);
+
+                        if (filteredSectors.length === 0) return null;
+
+                        // Count progress for this project group
+                        let groupTotal = 0;
+                        let groupDone = 0;
+                        group.itemIds.forEach(itemId => {
+                          groupTotal++;
+                          if (isItemCompletedWithPlan(itemId)) groupDone++;
+                        });
+                        const groupPercent = groupTotal > 0 ? Math.round((groupDone / groupTotal) * 100) : 0;
+                        const isGroupComplete = groupPercent >= 100;
+
+                        return (
+                          <div key={group.projectId} className="space-y-3">
+                            {/* OS Header */}
+                            <div className={cn(
+                              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                              isGroupComplete
+                                ? "bg-success/10 ring-1 ring-success/20"
+                                : "bg-warning/5 ring-1 ring-warning/15"
+                            )}>
+                              <div className={cn(
+                                "px-2.5 py-1 rounded-lg text-xs font-black shrink-0",
+                                isGroupComplete ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
+                              )}>
+                                OS #{group.projectNumber}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{group.description}</p>
+                                {group.client && (
+                                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{group.client}</p>
+                                )}
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className={cn(
+                                  "text-lg font-black font-display",
+                                  isGroupComplete ? "text-success" : "text-warning"
+                                )}>
+                                  {groupPercent}%
+                                </span>
+                                <p className="text-[10px] text-muted-foreground">{groupDone}/{groupTotal}</p>
+                              </div>
+                            </div>
+
+                            {/* Items for this project */}
+                            <ChecklistView
+                              sectors={filteredSectors}
+                              checklistType={checklistType}
+                              date={currentDate}
+                              completions={completions}
+                              allShiftCompletions={allShiftCompletions}
+                              isItemCompleted={isItemCompletedWithPlan}
+                              getItemStatus={getItemStatus}
+                              onToggleItem={handleToggleItem}
+                              onStartProduction={handleStartProduction}
+                              onFinishProduction={handleFinishProduction}
+                              onUpdateProductionQuantity={handleUpdateProductionQuantity}
+                              getCompletionProgress={(sectorId) => {
+                                const base = getCompletionProgress(sectorId, checklistType);
+                                if (hasProductionOrder && productionQtyMap.size > 0) {
+                                  const sector = sectors.find(s => s.id === sectorId);
+                                  if (!sector) return base;
+                                  let total = 0;
+                                  let completed = 0;
+                                  sector.subcategories?.forEach(sub => {
+                                    sub.items?.forEach(item => {
+                                      if (item.is_active && group.itemIds.has(item.id)) {
+                                        total++;
+                                        if (isItemCompletedWithPlan(item.id)) completed++;
+                                      }
+                                    });
+                                  });
+                                  if (total === 0) return base;
+                                  return { completed, total };
+                                }
+                                return base;
+                              }}
+                              getCrossShiftItemProgress={getCrossShiftItemProgressWithPlan}
+                              currentUserId={user?.id}
+                              isAdmin={isAdmin}
+                              deadlinePassed={deadlinePassed}
+                              onContestCompletion={contestCompletion}
+                              onSplitCompletion={splitCompletion}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   );
                 })()
               )}

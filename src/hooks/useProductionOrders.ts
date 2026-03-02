@@ -273,7 +273,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     // Use saveProjectId if provided, otherwise fall back to hook-level projectId
     const effectiveProjectId = saveProjectId !== undefined ? saveProjectId : projectId;
 
-    let orderId = order?.id;
+    let orderId = (order?.id && order.id !== '__aggregate__') ? order.id : undefined;
 
     if (!orderId) {
       // Double-check: look for an existing order to avoid duplicate key errors
@@ -335,14 +335,14 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
 
   // Close this shift's order
   const closeOrder = useCallback(async () => {
-    if (!order?.id) return;
+    if (!order?.id || order.id === '__aggregate__') return;
     await supabase.from('production_orders').update({ status: 'closed' }).eq('id', order.id);
     invalidate();
   }, [order?.id, invalidate]);
 
   // Delete order and all its items + completions
   const deleteOrder = useCallback(async () => {
-    if (!order?.id) return;
+    if (!order?.id || order.id === '__aggregate__') return;
     // Delete completions for today's items
     const itemIds = orderItems.map(i => i.checklist_item_id);
     if (itemIds.length > 0) {
@@ -365,7 +365,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
 
   // Reopen a closed shift
   const reopenOrder = useCallback(async () => {
-    if (!order?.id) return;
+    if (!order?.id || order.id === '__aggregate__') return;
     await supabase.from('production_orders').update({ status: 'active' }).eq('id', order.id);
     invalidate();
   }, [order?.id, invalidate]);
@@ -432,7 +432,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
 
   // Close shift 1 and auto-create/update shift 2 with remaining items
   const closeShiftAndCreateNext = useCallback(async () => {
-    if (!order?.id || !user || !unitId) return;
+    if (!order?.id || order.id === '__aggregate__' || !user || !unitId) return;
     if (shift !== 1) return; // Only shift 1 can trigger this
 
     const { error: closeError } = await supabase
