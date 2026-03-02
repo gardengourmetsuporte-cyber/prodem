@@ -117,9 +117,6 @@ export const ALL_MODULES: ModuleDef[] = [
   },
   // ── Ferramentas ──
   {
-    key: 'copilot', label: 'Copilot IA', icon: 'Sparkles', route: '/copilot', routes: ['/copilot'], group: 'Ferramentas',
-  },
-  {
     key: 'marketing', label: 'Marketing', icon: 'Megaphone', route: '/marketing', routes: ['/marketing'], group: 'Ferramentas',
     children: [
       { key: 'marketing.calendar', label: 'Calendário de posts', icon: 'Calendar' },
@@ -137,15 +134,6 @@ export const ALL_MODULES: ModuleDef[] = [
       { key: 'menu-admin.orders', label: 'Cotações recebidas', icon: 'FileText' },
       { key: 'menu-admin.tables', label: 'QR Codes', icon: 'QrCode' },
       { key: 'menu-admin.pdv', label: 'Conexão PDV (Colibri)', icon: 'Monitor' },
-    ],
-  },
-  {
-    key: 'whatsapp', label: 'WhatsApp', icon: 'MessageSquare', route: '/whatsapp', routes: ['/whatsapp'], group: 'Ferramentas',
-    children: [
-      { key: 'whatsapp.conversations', label: 'Conversas', icon: 'MessageCircle' },
-      { key: 'whatsapp.settings', label: 'Configurações bot', icon: 'Settings' },
-      { key: 'whatsapp.knowledge', label: 'Base de conhecimento', icon: 'BookOpen' },
-      { key: 'whatsapp.orders', label: 'Pedidos WhatsApp', icon: 'ShoppingCart' },
     ],
   },
   // ── Sistema ──

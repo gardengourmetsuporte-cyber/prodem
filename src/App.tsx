@@ -63,14 +63,14 @@ const CashClosing = lazy(() => lazyRetry(() => import("./pages/CashClosing")));
 const Employees = lazy(() => lazyRetry(() => import("./pages/Employees")));
 const TabletConfirm = lazy(() => lazyRetry(() => import("./pages/TabletConfirm")));
 const CardapioHub = lazy(() => lazyRetry(() => import("./pages/CardapioHub")));
-const WhatsApp = lazy(() => lazyRetry(() => import("./pages/WhatsApp")));
+
 const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const Orders = lazy(() => lazyRetry(() => import("./pages/Orders")));
 const Marketing = lazy(() => lazyRetry(() => import("./pages/Marketing")));
 const Ranking = lazy(() => lazyRetry(() => import("./pages/Ranking")));
 
 const Landing = lazy(() => lazyRetry(() => import("./pages/Landing")));
-const Copilot = lazy(() => lazyRetry(() => import("./pages/Copilot")));
+
 
 const Invite = lazy(() => lazyRetry(() => import("./pages/Invite")));
 
@@ -200,11 +200,11 @@ function AppRoutes() {
           <Route path="/tablet-admin" element={<Navigate to="/cardapio" replace />} />
           <Route path="/cardapio" element={<ProtectedRoute><CardapioHub /></ProtectedRoute>} />
           <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
-          <Route path="/whatsapp" element={<ProtectedRoute><WhatsApp /></ProtectedRoute>} />
+          
           <Route path="/ranking" element={<ProtectedRoute><Ranking /></ProtectedRoute>} />
 
           <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/copilot" element={<ProtectedRoute><Copilot /></ProtectedRoute>} />
+          
           <Route path="/gamification" element={<Navigate to="/cardapio" replace />} />
           <Route path="/plans" element={<Navigate to="/" replace />} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarFull /></ProtectedRoute>} />
