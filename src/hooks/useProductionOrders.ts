@@ -138,7 +138,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .select('item_id, quantity_done, is_skipped, started_at, finished_at, checklist_type')
         .eq('date', dateStr)
         .eq('unit_id', unitId!)
-        .in('status', ['completed', 'done'])
+        .in('status', ['completed', 'done', 'in_progress'])
         .in('item_id', [...allItemIds]);
       if (error) throw error;
       return data || [];
