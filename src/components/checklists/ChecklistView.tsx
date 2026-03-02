@@ -923,10 +923,10 @@ export function ChecklistView({
                                             : wasSkipped ? (<><AppIcon name="X" className="w-3 h-3" /><span>não concluído</span></>) 
                                             : !wasAwardedPoints ? (<><AppIcon name="RefreshCw" className="w-3 h-3" /><span>pronto</span></>) 
                                             : (<div className="flex items-center gap-0.5">
-                                                {pointsAwarded > 0 && !isBonus && Array.from({ length: pointsAwarded }).map((_, i) => {
+                                                {pointsAwarded > 0 && !isBonus && (() => {
                                                   const colors = getItemPointsColors(pointsAwarded);
-                                                  return <AppIcon name="Star" key={i} className="w-3 h-3" style={{ color: colors.color, fill: colors.color }} />;
-                                                })}
+                                                  return <AppIcon name="Star" className="w-3 h-3" style={{ color: colors.color, fill: colors.color }} />;
+                                                })()}
                                                 {isBonus && <AppIcon name="Zap" className="w-3 h-3" style={{ color: getItemPointsColors(pointsAwarded).color }} />}
                                                 <span className="ml-0.5">+{pointsAwarded}</span>
                                               </div>)}
