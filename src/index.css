@@ -2603,3 +2603,18 @@ select:focus {
 .dark .flight-board .bg-white\/\[0\.01\] {
   background: hsl(0 0% 0% / 0.02);
 }
+
+/* ===== Production Module Styles ===== */
+.production-project-hero {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.4);
+}
+
+.production-highlight-amber {
+  background: hsl(var(--warning) / 0.06) !important;
+  border-left: 3px solid hsl(var(--warning)) !important;
+}
+
+.production-strikethrough {
+  opacity: 0.5;
+}

@@ -416,6 +416,9 @@ export type Database = {
           photo_url: string | null
           points_awarded: number
           quantity_done: number
+          quantity_shipped: number
+          shipped_at: string | null
+          shipped_by: string | null
           started_at: string | null
           status: string
           unit_id: string | null
@@ -439,6 +442,9 @@ export type Database = {
           photo_url?: string | null
           points_awarded?: number
           quantity_done?: number
+          quantity_shipped?: number
+          shipped_at?: string | null
+          shipped_by?: string | null
           started_at?: string | null
           status?: string
           unit_id?: string | null
@@ -462,6 +468,9 @@ export type Database = {
           photo_url?: string | null
           points_awarded?: number
           quantity_done?: number
+          quantity_shipped?: number
+          shipped_at?: string | null
+          shipped_by?: string | null
           started_at?: string | null
           status?: string
           unit_id?: string | null

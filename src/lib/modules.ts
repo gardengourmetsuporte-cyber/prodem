@@ -22,13 +22,16 @@ export const ALL_MODULES: ModuleDef[] = [
   },
   // ── Produção (prioridade máxima) ──
   {
-    key: 'checklists', label: 'Produção', icon: 'ClipboardCheck', route: '/checklists', routes: ['/checklists'], group: 'Produção',
+    key: 'production', label: 'Produção', icon: 'Factory', route: '/production', routes: ['/production'], group: 'Produção',
     children: [
-      { key: 'checklists.complete', label: 'Registrar produção', icon: 'CheckSquare' },
-      { key: 'checklists.manage', label: 'Gerenciar peças (admin)', icon: 'Settings' },
-      { key: 'checklists.contest', label: 'Contestar registros', icon: 'AlertTriangle' },
-      { key: 'checklists.history', label: 'Histórico de produção', icon: 'History' },
+      { key: 'production.complete', label: 'Registrar produção', icon: 'CheckSquare' },
+      { key: 'production.manage', label: 'Gerenciar peças (admin)', icon: 'Settings' },
+      { key: 'production.contest', label: 'Contestar registros', icon: 'AlertTriangle' },
+      { key: 'production.history', label: 'Histórico de produção', icon: 'History' },
     ],
+  },
+  {
+    key: 'checklists', label: 'Checklists', icon: 'ClipboardCheck', route: '/checklists', routes: ['/checklists'], group: 'Produção',
   },
   {
     key: 'inventory', label: 'Estoque', icon: 'Package', route: '/inventory', routes: ['/inventory'], group: 'Produção',
