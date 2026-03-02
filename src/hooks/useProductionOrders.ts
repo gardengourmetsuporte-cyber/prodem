@@ -108,18 +108,26 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   });
 
   // Fetch completions for THIS shift only (shift-specific progress)
+  // Uses order items from a sub-query to avoid stale dependency on orderItems state
   const shiftChecklistType = shift === 1 ? 'abertura' : 'fechamento';
   const { data: completions = [] } = useQuery({
     queryKey: ['production-completions', unitId, dateStr, shift],
     queryFn: async () => {
       if (!order?.id) return [];
       
-      const itemIds = orderItems.map(oi => oi.checklist_item_id);
+      // Fetch item IDs directly from DB to avoid stale orderItems dependency
+      const { data: freshItems, error: itemsErr } = await supabase
+        .from('production_order_items')
+        .select('checklist_item_id')
+        .eq('order_id', order.id);
+      if (itemsErr) throw itemsErr;
+      
+      const itemIds = (freshItems || []).map(i => i.checklist_item_id);
       if (itemIds.length === 0) return [];
       
       const { data, error } = await supabase
         .from('checklist_completions')
-        .select('item_id, quantity_done, is_skipped, started_at, finished_at, checklist_type')
+        .select('item_id, quantity_done, is_skipped, started_at, finished_at, checklist_type, status')
         .eq('date', dateStr)
         .eq('unit_id', unitId!)
         .eq('checklist_type', shiftChecklistType)
@@ -128,7 +136,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       if (error) throw error;
       return data || [];
     },
-    enabled: !!unitId && !!order?.id && orderItems.length > 0,
+    enabled: !!unitId && !!order?.id,
     staleTime: 5_000,
     refetchOnWindowFocus: true,
   });
