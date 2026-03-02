@@ -75,7 +75,7 @@ export default function CashClosing() {
                 Fechar
               </Button>
             </SheetHeader>
-            <div className="overflow-y-auto h-[calc(90vh-80px)] pt-4">
+            <div className="overflow-y-auto h-[calc(90vh-80px)] pt-4 touch-pan-y">
               <CashClosingForm 
                 onSuccess={() => {
                   setIsFormOpen(false);
