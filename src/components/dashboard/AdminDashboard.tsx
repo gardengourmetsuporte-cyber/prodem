@@ -7,7 +7,6 @@ import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 import { useLazyVisible } from '@/hooks/useLazyVisible';
 import { DashboardWidgetManager } from './DashboardWidgetManager';
 import { DashboardHeroFinance } from './DashboardHeroFinance';
-import { DashboardKPIGrid } from './DashboardKPIGrid';
 import { DashboardSection } from './DashboardSection';
 import { FinanceChartWidget } from './FinanceChartWidget';
 import { BillsDueWidget } from './BillsDueWidget';
@@ -88,14 +87,6 @@ export function AdminDashboard() {
           isLoading={statsLoading}
         />
       )}
-
-      {/* KPI Grid */}
-      <DashboardKPIGrid
-        stats={stats}
-        isLoading={statsLoading}
-        hasAccess={hasAccess}
-        isVisible={isVisible}
-      />
 
       {/* Checklists / Produção */}
       {hasAccess('checklists') && isVisible('checklist') && (
