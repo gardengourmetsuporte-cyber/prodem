@@ -994,7 +994,7 @@ export function ChecklistView({
                                   {((isAdmin || completion?.completed_by === currentUserId || isPartialProduction) && openPopover === item.id && !isContested && completion) && (
                                     <div className="mt-2 rounded-xl border bg-card p-4 shadow-lg animate-fade-in space-y-3">
                                       {/* Continue production — available to ANY user for partial items */}
-                                      {isPartialProduction && isTodayDate && (
+                                      {isPartialProduction && isTodayDate && completion?.completed_by !== currentUserId && (
                                         <>
                                           <button
                                             onClick={async () => {
