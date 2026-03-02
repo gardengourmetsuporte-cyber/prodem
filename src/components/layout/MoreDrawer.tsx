@@ -28,21 +28,25 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { icon: 'CalendarDays', label: 'Agenda', href: '/agenda', group: 'gestao', groupLabel: 'Gestão' },
+  // Produção (prioridade)
+  { icon: 'ClipboardCheck', label: 'Produção', href: '/checklists', group: 'producao', groupLabel: 'Produção' },
+  { icon: 'Package', label: 'Estoque', href: '/inventory', group: 'producao', groupLabel: 'Produção' },
+  { icon: 'ShoppingCart', label: 'Pedidos', href: '/orders', group: 'producao', groupLabel: 'Produção' },
+  // Gestão
   { icon: 'DollarSign', label: 'Financeiro', href: '/finance', adminOnly: true, group: 'gestao', groupLabel: 'Gestão' },
-  { icon: 'Package', label: 'Estoque', href: '/inventory', group: 'gestao', groupLabel: 'Gestão' },
+  { icon: 'Users', label: 'Funcionários', href: '/employees', adminOnly: true, group: 'gestao', groupLabel: 'Gestão' },
   { icon: 'UserSearch', label: 'Clientes', href: '/customers', group: 'gestao', groupLabel: 'Gestão' },
-  { icon: 'ShoppingCart', label: 'Pedidos', href: '/orders', group: 'gestao', groupLabel: 'Gestão' },
-  { icon: 'ClipboardCheck', label: 'Checklists', href: '/checklists', group: 'operacao', groupLabel: 'Operação' },
-  { icon: 'Receipt', label: 'Fechamento', href: '/cash-closing', group: 'operacao', groupLabel: 'Operação' },
-  { icon: 'ChefHat', label: 'Fichas Técnicas', href: '/recipes', adminOnly: true, group: 'operacao', groupLabel: 'Operação' },
-  { icon: 'Users', label: 'Funcionários', href: '/employees', adminOnly: true, group: 'pessoas', groupLabel: 'Pessoas' },
-  { icon: 'Gift', label: 'Recompensas', href: '/rewards', group: 'pessoas', groupLabel: 'Pessoas' },
-  { icon: 'Trophy', label: 'Ranking', href: '/ranking', adminOnly: true, group: 'pessoas', groupLabel: 'Pessoas' },
-  { icon: 'Megaphone', label: 'Marketing', href: '/marketing', adminOnly: true, group: 'premium', groupLabel: 'Premium' },
-  { icon: 'Sparkles', label: 'Copilot IA', href: '/copilot', adminOnly: true, group: 'premium', groupLabel: 'Premium' },
-  { icon: 'BookOpen', label: 'Cardápio Digital', href: '/cardapio', adminOnly: true, group: 'premium', groupLabel: 'Premium' },
-  { icon: 'MessageCircle', label: 'WhatsApp', href: '/whatsapp', adminOnly: true, group: 'premium', groupLabel: 'Premium' },
+  { icon: 'Receipt', label: 'Fechamento', href: '/cash-closing', group: 'gestao', groupLabel: 'Gestão' },
+  // Equipe
+  { icon: 'CalendarDays', label: 'Agenda', href: '/agenda', group: 'equipe', groupLabel: 'Equipe' },
+  { icon: 'Trophy', label: 'Ranking', href: '/ranking', adminOnly: true, group: 'equipe', groupLabel: 'Equipe' },
+  { icon: 'Gift', label: 'Recompensas', href: '/rewards', group: 'equipe', groupLabel: 'Equipe' },
+  // Ferramentas
+  { icon: 'Sparkles', label: 'Copilot IA', href: '/copilot', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
+  { icon: 'FileSpreadsheet', label: 'Fichas Técnicas', href: '/recipes', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
+  { icon: 'Megaphone', label: 'Marketing', href: '/marketing', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
+  { icon: 'BookOpen', label: 'Cardápio Digital', href: '/cardapio', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
+  { icon: 'MessageCircle', label: 'WhatsApp', href: '/whatsapp', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
 ];
 
 interface MoreDrawerProps {
