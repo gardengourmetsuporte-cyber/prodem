@@ -72,7 +72,7 @@ function DateInline({ selectedDate, onSelect, todayDate, minAllowedDate }: {
   return (
     <div>
       <Button variant="outline" size="sm" className="gap-2 font-medium" onClick={() => setOpen(!open)}>
-        <AppIcon name="CalendarIcon" className="w-4 h-4" />
+        <AppIcon name="Calendar" className="w-4 h-4" />
         {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
       </Button>
       {open && (
