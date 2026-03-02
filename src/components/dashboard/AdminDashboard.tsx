@@ -90,7 +90,7 @@ export function AdminDashboard() {
 
       {/* Checklists / Produção */}
       {hasAccess('checklists') && isVisible('checklist') && (
-        <DashboardSection title="Produção" icon="Factory" iconColor="text-amber-400" onNavigate={() => navigate('/checklists')}>
+        <DashboardSection title="Produção" icon="Factory" iconColor="text-warning" onNavigate={() => navigate('/checklists')}>
           <LazyWidget><LazyChecklist /></LazyWidget>
         </DashboardSection>
       )}
@@ -123,38 +123,10 @@ export function AdminDashboard() {
         </DashboardSection>
       )}
 
-      {/* AI Insights */}
-      {isVisible('ai-insights') && (
-        <DashboardSection title="Insights da IA" icon="Sparkles" iconColor="text-purple-400">
-          <AIInsightsWidget />
-        </DashboardSection>
-      )}
-
-      {/* Calendar */}
-      {hasAccess('agenda') && isVisible('calendar') && (
-        <DashboardSection title="Calendário" icon="CalendarDays" iconColor="text-indigo-400" onNavigate={() => navigate('/calendar')}>
-          <LazyWidget><LazyCalendar /></LazyWidget>
-        </DashboardSection>
-      )}
-
       {/* Agenda */}
       {hasAccess('agenda') && isVisible('agenda') && (
         <DashboardSection title="Agenda" icon="ListTodo" iconColor="text-violet-400" onNavigate={() => navigate('/agenda')}>
           <LazyWidget><LazyAgenda /></LazyWidget>
-        </DashboardSection>
-      )}
-
-      {/* Pending Orders */}
-      {hasAccess('orders') && isVisible('pending-orders') && (
-        <DashboardSection title="Pedidos pendentes" icon="ShoppingCart" iconColor="text-orange-400" onNavigate={() => navigate('/orders')}>
-          <PendingOrdersWidget />
-        </DashboardSection>
-      )}
-
-      {/* Auto Order */}
-      {hasAccess('inventory') && isVisible('auto-order') && (
-        <DashboardSection title="Sugestão de compras" icon="TrendingUp" iconColor="text-cyan-400" onNavigate={() => navigate('/inventory')}>
-          <LazyWidget><LazyAutoOrder /></LazyWidget>
         </DashboardSection>
       )}
 
