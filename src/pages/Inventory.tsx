@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 type View = 'items' | 'history';
+type LocationFilter = 'todos' | 'almoxarifado' | 'producao';
 
 export default function InventoryPage() {
   const location = useLocation();
@@ -46,6 +47,7 @@ export default function InventoryPage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string> | null>(null);
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'zero' | null>(null);
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>('todos');
 
   // Handle ?action=move from quick actions
   useEffect(() => {
@@ -77,9 +79,17 @@ export default function InventoryPage() {
   const recentMovements = getRecentMovements(7);
 
   const getFilteredByStock = () => {
-    if (stockFilter === 'zero') return outOfStockItems;
-    if (stockFilter === 'low') return lowStockItems;
-    return items;
+    let base = items;
+    if (stockFilter === 'zero') base = outOfStockItems;
+    else if (stockFilter === 'low') base = lowStockItems;
+    
+    // Apply location filter
+    if (locationFilter === 'almoxarifado') {
+      base = base.filter(item => ((item as any).warehouse_stock ?? item.current_stock) > 0);
+    } else if (locationFilter === 'producao') {
+      base = base.filter(item => ((item as any).production_stock ?? 0) > 0);
+    }
+    return base;
   };
 
   const filteredItems = getFilteredByStock().filter(item =>
@@ -121,8 +131,8 @@ export default function InventoryPage() {
     try { await deleteItem(id); } catch { toast.error('Erro ao excluir item'); }
   };
 
-  const handleMovement = async (itemId: string, type: 'entrada' | 'saida', quantity: number, notes?: string) => {
-    try { await registerMovement(itemId, type, quantity, notes); } catch { toast.error('Erro ao registrar movimentação'); }
+  const handleMovement = async (itemId: string, type: 'entrada' | 'saida' | 'transferencia', quantity: number, notes?: string, location?: string) => {
+    try { await registerMovement(itemId, type, quantity, notes, location); } catch { toast.error('Erro ao registrar movimentação'); }
   };
 
   if (isLoading) {
@@ -185,6 +195,33 @@ export default function InventoryPage() {
               </button>
             </div>
           )}
+
+          {/* Location Filter */}
+          <div className="flex gap-2">
+            {([
+              { key: 'todos' as LocationFilter, label: 'Todos', icon: 'Package' },
+              { key: 'almoxarifado' as LocationFilter, label: 'Almoxarifado', icon: 'Warehouse' },
+              { key: 'producao' as LocationFilter, label: 'Produção', icon: 'Factory' },
+            ] as const).map(loc => (
+              <button
+                key={loc.key}
+                onClick={() => setLocationFilter(loc.key)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all border",
+                  locationFilter === loc.key
+                    ? loc.key === 'almoxarifado'
+                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-400'
+                      : loc.key === 'producao'
+                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                      : 'bg-primary/15 border-primary/30 text-primary'
+                    : 'bg-secondary/50 border-transparent text-muted-foreground'
+                )}
+              >
+                <AppIcon name={loc.icon as any} size={14} />
+                {loc.label}
+              </button>
+            ))}
+          </div>
 
           {/* Tabs */}
           <AnimatedTabs

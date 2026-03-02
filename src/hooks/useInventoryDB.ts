@@ -130,8 +130,8 @@ export function useInventoryDB() {
   });
 
   const registerMovementMut = useMutation({
-    mutationFn: async ({ itemId, type, quantity, notes }: {
-      itemId: string; type: MovementType; quantity: number; notes?: string;
+    mutationFn: async ({ itemId, type, quantity, notes, location }: {
+      itemId: string; type: MovementType | 'transferencia'; quantity: number; notes?: string; location?: string;
     }) => {
       const { error } = await supabase.from('stock_movements').insert({
         item_id: itemId,
@@ -140,7 +140,8 @@ export function useInventoryDB() {
         notes,
         user_id: user?.id,
         unit_id: activeUnitId,
-      });
+        location: location || 'almoxarifado',
+      } as any);
       if (error) throw error;
 
       return {
@@ -205,8 +206,8 @@ export function useInventoryDB() {
     addItem: (item: Parameters<typeof addItemMut.mutateAsync>[0]) => addItemMut.mutateAsync(item),
     updateItem: (id: string, updates: Partial<InventoryItem>) => updateItemMut.mutateAsync({ id, updates }),
     deleteItem: (id: string) => deleteItemMut.mutateAsync(id),
-    registerMovement: (itemId: string, type: MovementType, quantity: number, notes?: string) =>
-      registerMovementMut.mutateAsync({ itemId, type, quantity, notes }),
+    registerMovement: (itemId: string, type: MovementType | 'transferencia', quantity: number, notes?: string, location?: string) =>
+      registerMovementMut.mutateAsync({ itemId, type, quantity, notes, location }),
     deleteMovement: (movementId: string) => deleteMovementMut.mutateAsync(movementId),
     getItemMovements,
     getItem,
