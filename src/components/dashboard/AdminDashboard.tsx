@@ -403,7 +403,7 @@ function FlightRow({ piece, index }: { piece: PieceReport; index: number }) {
     complete: { label: 'CONCLUÍDO', bg: 'bg-success/15', text: 'text-success', dot: 'bg-success' },
     partial: { label: 'PARCIAL', bg: 'bg-warning/15', text: 'text-warning', dot: 'bg-warning' },
     in_progress: { label: 'PRODUZINDO', bg: 'bg-primary/15', text: 'text-primary', dot: 'bg-primary animate-pulse' },
-    not_started: { label: 'AGUARDANDO', bg: 'bg-muted', text: 'text-foreground/70', dot: 'bg-foreground/40' },
+    not_started: { label: 'AGUARDANDO', bg: 'bg-muted', text: 'text-foreground/70', dot: '' },
   };
 
   const s = statusConfig[piece.status];
@@ -436,7 +436,7 @@ function FlightRow({ piece, index }: { piece: PieceReport; index: number }) {
 
       <div className="flex justify-end">
         <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", s.bg)}>
-          <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", s.dot)} />
+          {s.dot && <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", s.dot)} />}
           <span className={cn("text-[8px] font-bold tracking-[0.08em] uppercase whitespace-nowrap", s.text)}>
             {s.label}
           </span>
