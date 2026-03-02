@@ -28,6 +28,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string, redirectTo?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  setDevRole: (role: AppRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(cached?.profile ?? null);
   const [role, setRole] = useState<AppRole | null>(cached?.role ?? null);
+  const [devRole, setDevRoleState] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const fetchUserDataRef = useRef<(userId: string) => Promise<void>>();
   const fetchingRef = useRef(false);
@@ -225,12 +227,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearCachedAuth();
   };
 
-  const isAdmin = role === 'admin' || role === 'super_admin';
-  const isSuperAdmin = role === 'super_admin';
-  const isLider = role === 'lider';
+  const effectiveRole = devRole || role;
+  const isAdmin = effectiveRole === 'admin' || effectiveRole === 'super_admin';
+  const isSuperAdmin = effectiveRole === 'super_admin';
+  const isLider = effectiveRole === 'lider';
   const userStatus = (profile?.status as UserStatus) || null;
   const isPending = userStatus === 'pending';
   const isSuspended = userStatus === 'suspended';
+  const setDevRole = useCallback((r: AppRole) => setDevRoleState(r), []);
 
   return (
     <AuthContext.Provider
@@ -238,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         profile,
-        role,
+        role: effectiveRole,
         userStatus,
         isAdmin,
         isSuperAdmin,
@@ -258,6 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
+        setDevRole,
       }}
     >
       {children}

@@ -16,6 +16,7 @@ import { useRoutePersist, useRouteRestore } from "@/hooks/useRouteRestore";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { DevRoleSwitcher } from "@/components/dev/DevRoleSwitcher";
 
 const LAZY_RELOAD_KEY = 'lazy_reload_count';
 
@@ -226,6 +227,7 @@ const App = () => (
             <UnitProvider>
               <FabActionProvider>
                 <UnhandledRejectionGuard>
+                  <DevRoleSwitcher />
                   <AppRoutes />
                 </UnhandledRejectionGuard>
               </FabActionProvider>
