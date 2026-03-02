@@ -140,16 +140,8 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
         </div>
       )}
 
-    <div className="production-os-hero relative overflow-hidden rounded-2xl p-5">
-      {/* Industrial pattern overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, currentColor 20px, currentColor 21px)' }}
-      />
-      
-      {/* Corner accent */}
-      <div className="absolute top-0 left-0 w-1 h-full bg-warning rounded-l-2xl" />
-      
-      <div className="relative z-10 space-y-3 pl-3">
+    <div className="relative overflow-hidden rounded-2xl bg-card/60 ring-1 ring-border/15 p-5">
+      <div className="space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
