@@ -900,10 +900,13 @@ export function ChecklistView({
                                             isPartialProduction ? "text-orange-500 dark:text-orange-400" 
                                             : isContested ? "text-amber-600 dark:text-amber-400" 
                                             : wasSkipped ? "text-destructive line-through" 
-                                            : "text-success line-through"
+                                            : "text-success line-through opacity-60"
                                           )}>{item.name}</p>
+                                          {(item as any).material_code && (
+                                            <span className="text-[10px] font-mono text-muted-foreground/60 inline-block mt-0.5">{(item as any).material_code}</span>
+                                          )}
                                           {(item as any).piece_dimensions && (item as any).piece_dimensions !== item.name && (
-                                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5">📐 {(item as any).piece_dimensions}</p>
+                                            <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5">📐 {(item as any).piece_dimensions}</p>
                                           )}
                                         </div>
                                         <div className={cn(
@@ -1215,6 +1218,9 @@ export function ChecklistView({
                                         <div className="flex items-center gap-1.5">
                                           <p className="font-semibold text-amber-600 dark:text-amber-400">{item.name}</p>
                                         </div>
+                                        {(item as any).material_code && (
+                                          <p className="text-[10px] font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded inline-block mt-0.5">{(item as any).material_code}</p>
+                                        )}
                                         {dimensions && dimensions !== item.name && <p className="text-xs text-primary font-mono mt-0.5">📐 {dimensions}</p>}
                                         {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
                                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -1388,6 +1394,9 @@ export function ChecklistView({
                                         <p className="font-medium text-foreground">{item.name}</p>
                                         {(item as any).requires_photo && <AppIcon name="Camera" className="w-3.5 h-3.5 text-primary shrink-0" />}
                                       </div>
+                                      {(item as any).material_code && (
+                                        <span className="text-[10px] font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded inline-block mt-0.5">{(item as any).material_code}</span>
+                                      )}
                                       {dimensions && dimensions !== item.name && <p className="text-xs text-primary font-mono mt-0.5">📐 {dimensions}</p>}
                                       {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
                                     </div>
