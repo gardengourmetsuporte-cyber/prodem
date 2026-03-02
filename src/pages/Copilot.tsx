@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useManagementAI, CopilotContextStats } from '@/hooks/useManagementAI';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { cn } from '@/lib/utils';
-import mascotImg from '@/assets/garden-mascot.png';
+import mascotImg from '@/assets/prodem-logo.png';
 import CopilotMessageContent from '@/components/copilot/CopilotMessageContent';
 import CopilotSuggestionChips from '@/components/copilot/CopilotSuggestionChips';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -183,7 +183,7 @@ export default function CopilotPage() {
           </button>
           <img
             src={mascotImg}
-            alt="Garden Copiloto"
+            alt="Prodem Copiloto"
             className="w-9 h-9 rounded-xl object-cover border border-primary/20"
           />
           <div className="flex-1 min-w-0">

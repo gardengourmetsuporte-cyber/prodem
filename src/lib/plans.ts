@@ -15,7 +15,7 @@ export const PLANS: PlanDef[] = [
   {
     id: 'pro',
     name: 'Pro',
-    description: 'Para restaurantes em crescimento',
+    description: 'Para operações em crescimento',
     monthly: 97,
     yearly: 77,
     highlight: true,

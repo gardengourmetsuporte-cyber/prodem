@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { AppIcon } from "@/components/ui/app-icon";
-import logoImg from "@/assets/logo.png";
+import logoImg from "@/assets/prodem-logo.png";
 
 export function CTASection() {
   return (
@@ -11,32 +11,30 @@ export function CTASection() {
         <div
           className="relative rounded-[2.5rem] overflow-hidden p-10 sm:p-14 md:p-20 text-center border border-white/10"
           style={{
-            background: 'linear-gradient(145deg, #050a05 0%, #0a150a 50%, #050a05 100%)',
-            boxShadow: '0 20px 80px -20px rgba(16,185,129,0.15), inset 0 1px 1px rgba(255,255,255,0.05)'
+            background: 'linear-gradient(145deg, #0a1020 0%, #101830 50%, #0a1020 100%)',
+            boxShadow: '0 20px 80px -20px rgba(232,132,44,0.15), inset 0 1px 1px rgba(255,255,255,0.05)'
           }}
         >
-          {/* Subtle Grid overlay */}
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-          {/* Glow orbs */}
-          <div className="absolute top-[20%] left-[20%] w-[300px] h-[300px] rounded-full blur-[100px] opacity-[0.15] mix-blend-screen pointer-events-none" style={{ background: 'hsl(156 72% 40%)', animation: 'float-orb-1 8s ease-in-out infinite' }} />
-          <div className="absolute bottom-[20%] right-[20%] w-[250px] h-[250px] rounded-full blur-[80px] opacity-[0.1] mix-blend-screen pointer-events-none" style={{ background: 'hsl(190 90% 50%)', animation: 'float-orb-2 10s ease-in-out infinite' }} />
+          <div className="absolute top-[20%] left-[20%] w-[300px] h-[300px] rounded-full blur-[100px] opacity-[0.15] mix-blend-screen pointer-events-none" style={{ background: 'hsl(25 85% 54%)', animation: 'float-orb-1 8s ease-in-out infinite' }} />
+          <div className="absolute bottom-[20%] right-[20%] w-[250px] h-[250px] rounded-full blur-[80px] opacity-[0.1] mix-blend-screen pointer-events-none" style={{ background: 'hsl(220 70% 50%)', animation: 'float-orb-2 10s ease-in-out infinite' }} />
 
           <div className="relative z-10">
-            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-8 shadow-lg" style={{ boxShadow: '0 0 60px hsl(156 72% 40% / 0.2)' }}>
-              <img src={logoImg} alt="Garden" className="w-11 h-11 object-contain" />
+            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-8 shadow-lg" style={{ boxShadow: '0 0 60px hsl(25 85% 54% / 0.2)' }}>
+              <img src={logoImg} alt="Prodem" className="w-11 h-11 object-contain" />
             </div>
 
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-4 leading-tight font-display">
-              Criado por quem entende<br className="hidden sm:block" /> sua operação.
+              Criado para quem vive<br className="hidden sm:block" /> a operação industrial.
             </h2>
             <p className="text-white/50 text-base sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-              Nasceu dentro de uma hamburgueria de verdade. Comece hoje, veja resultado essa semana.
+              Soluções em sistemas de transporte e movimentação. Comece hoje, veja resultado essa semana.
             </p>
 
             <Link
               to="/auth?plan=free"
-              className="group inline-flex items-center gap-2.5 h-14 px-10 rounded-2xl font-bold text-base bg-white text-[hsl(156,30%,15%)] shadow-xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+              className="group inline-flex items-center gap-2.5 h-14 px-10 rounded-2xl font-bold text-base bg-white text-[hsl(222,30%,15%)] shadow-xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
             >
               Criar minha conta grátis
               <AppIcon name="ArrowRight" size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -44,7 +42,7 @@ export function CTASection() {
 
             <div className="mt-7 flex items-center justify-center gap-4 sm:gap-5 text-xs text-white/35 flex-wrap">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
                 14 dias grátis
               </span>
               <span className="text-white/15">·</span>
