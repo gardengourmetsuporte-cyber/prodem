@@ -120,14 +120,6 @@ export const ALL_MODULES: ModuleDef[] = [
     key: 'copilot', label: 'Copilot IA', icon: 'Sparkles', route: '/copilot', routes: ['/copilot'], group: 'Ferramentas',
   },
   {
-    key: 'recipes', label: 'Fichas Técnicas', icon: 'FileSpreadsheet', route: '/recipes', routes: ['/recipes'], group: 'Ferramentas',
-    children: [
-      { key: 'recipes.view', label: 'Ver fichas', icon: 'Eye' },
-      { key: 'recipes.create', label: 'Criar/editar fichas', icon: 'PenSquare' },
-      { key: 'recipes.costs', label: 'Custos e precificação', icon: 'Calculator' },
-    ],
-  },
-  {
     key: 'marketing', label: 'Marketing', icon: 'Megaphone', route: '/marketing', routes: ['/marketing'], group: 'Ferramentas',
     children: [
       { key: 'marketing.calendar', label: 'Calendário de posts', icon: 'Calendar' },
