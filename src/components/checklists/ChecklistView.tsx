@@ -20,12 +20,14 @@ interface ChecklistViewProps {
   checklistType: ChecklistType;
   date: string;
   completions: ChecklistCompletion[];
+  allShiftCompletions?: { item_id: string; checklist_type: string; quantity_done: number; status: string; is_skipped: boolean }[];
   isItemCompleted: (itemId: string) => boolean;
   getItemStatus: (itemId: string) => string;
   onToggleItem: (itemId: string, points: number, completedByUserId?: string, isSkipped?: boolean, photoUrl?: string) => void;
   onStartProduction: (itemId: string, completedByUserId?: string) => Promise<void>;
   onFinishProduction: (itemId: string, quantityDone: number, points: number, completedByUserId?: string) => Promise<void>;
   getCompletionProgress: (sectorId: string) => { completed: number; total: number };
+  getCrossShiftItemProgress?: (itemId: string) => { targetQty: number; totalDone: number; remaining: number; isFullyComplete: boolean };
   currentUserId?: string;
   isAdmin: boolean;
   deadlinePassed?: boolean;
@@ -76,12 +78,14 @@ export function ChecklistView({
   checklistType,
   date,
   completions,
+  allShiftCompletions,
   isItemCompleted,
   getItemStatus,
   onToggleItem,
   onStartProduction,
   onFinishProduction,
   getCompletionProgress,
+  getCrossShiftItemProgress,
   onContestCompletion,
   onSplitCompletion,
   currentUserId,
@@ -346,8 +350,9 @@ export function ChecklistView({
   };
 
   const filteredSectors = sectors.filter(sector => {
+    const isBonus = checklistType === 'bonus';
     const hasActiveItems = sector.subcategories?.some(sub =>
-      sub.items?.some(i => i.is_active && (i as any).checklist_type === checklistType)
+      sub.items?.some(i => i.is_active && (isBonus ? (i as any).checklist_type === 'bonus' : (i as any).checklist_type !== 'bonus'))
     );
     return hasActiveItems;
   });
@@ -449,7 +454,7 @@ export function ChecklistView({
                 /* BONUS: Flat list - items directly under sector, no subcategory headers */
                 <div className="ml-4 space-y-1.5 pt-1 pb-2">
                   {sector.subcategories?.flatMap(sub => 
-                    (sub.items || []).filter(i => i.is_active && (i as any).checklist_type === checklistType)
+                    (sub.items || []).filter(i => i.is_active && (isBonus ? (i as any).checklist_type === 'bonus' : (i as any).checklist_type !== 'bonus'))
                   ).map((item, itemIndex) => {
                     const completed = isItemCompletedOptimistic(item.id);
                     const completion = completions.find(c => c.item_id === item.id);
@@ -819,7 +824,7 @@ export function ChecklistView({
                 /* STANDARD: Sector > Subcategory > Items */
                 sector.subcategories?.map((subcategory, subIndex) => {
                   const isSubExpanded = expandedSubcategories.has(subcategory.id);
-                  const activeItems = subcategory.items?.filter(i => i.is_active && (i as any).checklist_type === checklistType) || [];
+                  const activeItems = subcategory.items?.filter(i => i.is_active && (i as any).checklist_type !== 'bonus') || [];
                   const completedItems = activeItems.filter(i => isItemCompletedOptimistic(i.id));
                   const subComplete = activeItems.length > 0 && completedItems.length === activeItems.length;
 
@@ -941,14 +946,19 @@ export function ChecklistView({
                                               </div>)}
                                         </div>
                                       </div>
-                                      {/* Quantity done info for industrial items */}
-                                      {(item as any).target_quantity > 0 && completion && (
-                                        <div className="flex items-center gap-2 mt-1 text-[11px]">
-                                          <span className="text-success font-semibold">
-                                            ✓ {(completion as any).quantity_done || 0}/{(item as any).target_quantity} peças
-                                          </span>
-                                        </div>
-                                      )}
+                                      {/* Quantity done info for industrial items (cross-shift) */}
+                                      {(item as any).target_quantity > 0 && (() => {
+                                        const cs = getCrossShiftItemProgress ? getCrossShiftItemProgress(item.id) : null;
+                                        const done = cs?.totalDone || (completion as any)?.quantity_done || 0;
+                                        const target = cs?.targetQty || (item as any).target_quantity;
+                                        return (
+                                          <div className="flex items-center gap-2 mt-1 text-[11px]">
+                                            <span className="text-success font-semibold">
+                                              ✓ {done}/{target} peças
+                                            </span>
+                                          </div>
+                                        );
+                                      })()}
                                       {isContested && contestedReason && (
                                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Contestado: {contestedReason}</p>
                                       )}
@@ -1116,12 +1126,12 @@ export function ChecklistView({
                               );
                             }
 
-                            // Industrial: calculate quantity progress
-                            const targetQty = (item as any).target_quantity || 0;
+                            // Industrial: calculate quantity progress (cross-shift)
+                            const crossShift = getCrossShiftItemProgress ? getCrossShiftItemProgress(item.id) : null;
+                            const targetQty = crossShift?.targetQty || (item as any).target_quantity || 0;
                             const dimensions = (item as any).piece_dimensions || '';
-                            const itemCompletions = completions.filter(c => c.item_id === item.id && !c.is_skipped);
-                            const totalDone = itemCompletions.reduce((sum, c) => sum + ((c as any).quantity_done || 0), 0);
-                            const remaining = Math.max(0, targetQty - totalDone);
+                            const totalDone = crossShift?.totalDone || completions.filter(c => c.item_id === item.id && !c.is_skipped).reduce((sum, c) => sum + ((c as any).quantity_done || 0), 0);
+                            const remaining = crossShift?.remaining ?? Math.max(0, targetQty - totalDone);
                             const hasIndustrialData = targetQty > 0;
                             const progressPercent = targetQty > 0 ? Math.min(100, Math.round((totalDone / targetQty) * 100)) : 0;
 

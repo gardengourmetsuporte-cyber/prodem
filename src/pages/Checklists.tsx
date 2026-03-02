@@ -93,10 +93,12 @@ export default function ChecklistsPage() {
     completions,
     completionsFetched,
     isLoading,
+    allShiftCompletions,
     addSector, updateSector, deleteSector, reorderSectors,
     addSubcategory, updateSubcategory, deleteSubcategory, reorderSubcategories,
     addItem, updateItem, deleteItem, reorderItems,
     toggleCompletion, contestCompletion, splitCompletion, isItemCompleted, getItemStatus, getCompletionProgress,
+    getCrossShiftItemProgress,
     startProduction, finishProduction,
     fetchCompletions,
   } = useChecklists();
@@ -141,29 +143,33 @@ export default function ChecklistsPage() {
     staleTime: 30_000,
   });
 
-  // Compute progress per type from sectors
+  // Compute progress per type — cross-shift: both turnos share the same items
   const getTypeProgress = useMemo(() => {
-    const calc = (type: ChecklistType, completionsList: { item_id: string }[]) => {
-      let total = 0;
-      const completedIds = new Set(completionsList.map(c => c.item_id));
-      const validIds: string[] = [];
-      sectors.forEach((s: any) => {
-        s.subcategories?.forEach((sub: any) => {
-          sub.items?.forEach((item: any) => {
-            if (item.is_active && item.checklist_type === type) {
-              total++;
-              if (completedIds.has(item.id)) validIds.push(item.id);
-            }
-          });
+    const allCompletedIds = new Set([
+      ...aberturaCompletions.map(c => c.item_id),
+      ...fechamentoCompletions.map(c => c.item_id),
+    ]);
+
+    // Count all standard (non-bonus) active items 
+    let total = 0;
+    const validItemIds: string[] = [];
+    sectors.forEach((s: any) => {
+      s.subcategories?.forEach((sub: any) => {
+        sub.items?.forEach((item: any) => {
+          if (item.is_active && item.checklist_type !== 'bonus') {
+            total++;
+            if (allCompletedIds.has(item.id)) validItemIds.push(item.id);
+          }
         });
       });
-      const completed = validIds.length;
-      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-      return { completed, total, percent };
-    };
+    });
+    const completed = validItemIds.length;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    // Both turnos share the same progress
     return {
-      abertura: calc('abertura', aberturaCompletions),
-      fechamento: calc('fechamento', fechamentoCompletions),
+      abertura: { completed, total, percent },
+      fechamento: { completed, total, percent },
     };
   }, [sectors, aberturaCompletions, fechamentoCompletions]);
   // ── Deadline logic (centralized) ──
@@ -239,7 +245,7 @@ export default function ChecklistsPage() {
       if (checklistType === 'bonus' ? s.scope === 'bonus' : s.scope !== 'bonus') {
         s.subcategories?.forEach((sub: any) => {
           sub.items?.forEach((item: any) => {
-            if (item.is_active && item.checklist_type === checklistType) {
+            if (item.is_active && (checklistType === 'bonus' ? item.checklist_type === 'bonus' : item.checklist_type !== 'bonus')) {
               activeItemIds.push(item.id);
             }
           });
@@ -649,12 +655,14 @@ export default function ChecklistsPage() {
                   checklistType={checklistType}
                   date={currentDate}
                   completions={completions}
+                  allShiftCompletions={allShiftCompletions}
                   isItemCompleted={isItemCompleted}
                   getItemStatus={getItemStatus}
                   onToggleItem={handleToggleItem}
                   onStartProduction={handleStartProduction}
                   onFinishProduction={handleFinishProduction}
                   getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
+                  getCrossShiftItemProgress={getCrossShiftItemProgress}
                   currentUserId={user?.id}
                   isAdmin={isAdmin}
                   deadlinePassed={deadlinePassed}

@@ -70,3 +70,15 @@ export async function fetchCompletionsData(date: string, type: ChecklistType, un
 
   return sorted as unknown as ChecklistCompletion[];
 }
+
+/** Fetch completions for ALL shifts on a given date (cross-shift accumulation) */
+export async function fetchAllShiftCompletionsData(date: string, unitId: string | null) {
+  let query = supabase
+    .from('checklist_completions')
+    .select('item_id, checklist_type, quantity_done, points_awarded, is_skipped, status')
+    .eq('date', date);
+  if (unitId) query = query.or(`unit_id.eq.${unitId},unit_id.is.null`);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as { item_id: string; checklist_type: string; quantity_done: number; points_awarded: number; is_skipped: boolean; status: string }[];
+}
