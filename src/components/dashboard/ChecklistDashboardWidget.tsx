@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProductionOrders } from '@/hooks/useProductionOrders';
 import { useUnit } from '@/contexts/UnitContext';
@@ -7,7 +8,13 @@ import { cn } from '@/lib/utils';
 export function ChecklistDashboardWidget() {
   const navigate = useNavigate();
   const { activeUnitId } = useUnit();
-  const { totals, report, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
+  const { totals, report, isLoading, hasOrder, invalidate } = useProductionOrders(activeUnitId, new Date());
+
+  // Poll for updates every 15 seconds so dashboard stays fresh
+  useEffect(() => {
+    const interval = setInterval(() => invalidate(), 15_000);
+    return () => clearInterval(interval);
+  }, [invalidate]);
 
   if (isLoading) {
     return (
