@@ -131,11 +131,6 @@ export default function ProductionPage() {
       <div className="min-h-screen production-page-bg pb-24">
         {/* Header Bar */}
         <div className="production-header-bar px-4 py-3 flex items-center justify-end gap-3">
-          {/* Live indicator */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 ring-1 ring-success/30">
-            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-            <span className="text-[9px] font-bold text-success uppercase tracking-wider">LIVE</span>
-          </div>
         </div>
 
         <div className="px-4 py-3 lg:px-6 space-y-4 lg:max-w-4xl lg:mx-auto">
