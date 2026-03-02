@@ -58,7 +58,7 @@ export function QuoteRequestDialog({ open, onOpenChange }: QuoteRequestDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg bg-[#0f1729] border-white/10 text-white">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-lg bg-[#0f1729] border-white/10 text-white">
         <DialogHeader>
           <DialogTitle className="text-xl font-display font-bold text-white flex items-center gap-2">
             <AppIcon name="FileText" size={22} className="text-orange-400" />
