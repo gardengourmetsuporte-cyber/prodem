@@ -2,11 +2,12 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
 import { EmployeeDashboard } from '@/components/dashboard/EmployeeDashboard';
+import { LiderDashboard } from '@/components/dashboard/LiderDashboard';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardPage() {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isLider, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -21,7 +22,7 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="min-h-screen pb-36">
-          {isAdmin ? <AdminDashboard /> : <EmployeeDashboard />}
+        {isAdmin ? <AdminDashboard /> : isLider ? <LiderDashboard /> : <EmployeeDashboard />}
       </div>
     </AppLayout>
   );

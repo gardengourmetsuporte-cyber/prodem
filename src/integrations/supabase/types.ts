@@ -2594,6 +2594,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           avatar_url: string | null
           created_at: string
           department: string | null
@@ -2603,11 +2605,14 @@ export type Database = {
           plan: string
           plan_status: string
           selected_frame: string | null
+          status: Database["public"]["Enums"]["user_status"]
           stripe_customer_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           avatar_url?: string | null
           created_at?: string
           department?: string | null
@@ -2617,11 +2622,14 @@ export type Database = {
           plan?: string
           plan_status?: string
           selected_frame?: string | null
+          status?: Database["public"]["Enums"]["user_status"]
           stripe_customer_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           avatar_url?: string | null
           created_at?: string
           department?: string | null
@@ -2631,6 +2639,7 @@ export type Database = {
           plan?: string
           plan_status?: string
           selected_frame?: string | null
+          status?: Database["public"]["Enums"]["user_status"]
           stripe_customer_id?: string | null
           updated_at?: string
           user_id?: string
@@ -3157,6 +3166,53 @@ export type Database = {
           },
           {
             foreignKeyName: "reward_redemptions_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sector_modules: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          modules: string[]
+          sector_name: string
+          sort_order: number
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          modules?: string[]
+          sector_name: string
+          sort_order?: number
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          modules?: string[]
+          sector_name?: string
+          sort_order?: number
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sector_modules_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
@@ -4094,6 +4150,7 @@ export type Database = {
           id: string
           is_default: boolean
           role: string
+          sector_module_id: string | null
           unit_id: string
           user_id: string
         }
@@ -4103,6 +4160,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           role?: string
+          sector_module_id?: string | null
           unit_id: string
           user_id: string
         }
@@ -4112,6 +4170,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           role?: string
+          sector_module_id?: string | null
           unit_id?: string
           user_id?: string
         }
@@ -4121,6 +4180,13 @@ export type Database = {
             columns: ["access_level_id"]
             isOneToOne: false
             referencedRelation: "access_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_units_sector_module_id_fkey"
+            columns: ["sector_module_id"]
+            isOneToOne: false
+            referencedRelation: "sector_modules"
             referencedColumns: ["id"]
           },
           {
@@ -4533,6 +4599,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_user: {
+        Args: {
+          p_role?: Database["public"]["Enums"]["app_role"]
+          p_sector_module_id?: string
+          p_target_user_id: string
+          p_unit_id?: string
+        }
+        Returns: undefined
+      }
       auto_provision_unit: { Args: { p_user_id: string }; Returns: string }
       batch_reorder_checklist_items: {
         Args: { p_ids: string[]; p_orders: number[] }
@@ -4632,13 +4707,14 @@ export type Database = {
         Args: { p_customer_id: string }
         Returns: undefined
       }
+      suspend_user: { Args: { p_target_user_id: string }; Returns: undefined }
       user_has_unit_access: {
         Args: { _unit_id: string; _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "funcionario" | "super_admin"
+      app_role: "admin" | "funcionario" | "super_admin" | "lider"
       cash_closing_status: "pending" | "approved" | "divergent"
       chat_conversation_type: "direct" | "group" | "announcement"
       checklist_type: "abertura" | "fechamento" | "limpeza" | "bonus"
@@ -4658,6 +4734,7 @@ export type Database = {
       task_priority: "low" | "medium" | "high"
       transaction_type: "income" | "expense" | "transfer" | "credit_card"
       unit_type: "unidade" | "kg" | "litro"
+      user_status: "pending" | "approved" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4785,7 +4862,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "funcionario", "super_admin"],
+      app_role: ["admin", "funcionario", "super_admin", "lider"],
       cash_closing_status: ["pending", "approved", "divergent"],
       chat_conversation_type: ["direct", "group", "announcement"],
       checklist_type: ["abertura", "fechamento", "limpeza", "bonus"],
@@ -4800,6 +4877,7 @@ export const Constants = {
       task_priority: ["low", "medium", "high"],
       transaction_type: ["income", "expense", "transfer", "credit_card"],
       unit_type: ["unidade", "kg", "litro"],
+      user_status: ["pending", "approved", "suspended"],
     },
   },
 } as const

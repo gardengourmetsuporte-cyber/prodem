@@ -10,7 +10,8 @@
 
 // ---- Enum-like string unions ----
 
-export type AppRole = 'admin' | 'funcionario' | 'super_admin';
+export type AppRole = 'admin' | 'funcionario' | 'super_admin' | 'lider';
+export type UserStatus = 'pending' | 'approved' | 'suspended';
 export type UnitType = 'unidade' | 'kg' | 'litro';
 export type MovementType = 'entrada' | 'saida';
 export type OrderStatus = 'draft' | 'sent' | 'received' | 'cancelled';
@@ -29,6 +30,9 @@ export interface Profile {
   avatar_url: string | null;
   job_title: string | null;
   department: string | null;
+  status: UserStatus;
+  approved_by: string | null;
+  approved_at: string | null;
   created_at: string;
   updated_at: string;
 }
