@@ -42,46 +42,48 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
     <div className="space-y-2">
       {/* Project selector — modern segmented tabs */}
       {onSelectProject && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-muted/20 rounded-xl p-1 ring-1 ring-border/10">
-          {activeProjects.map((p) => {
-            const isActive = selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id);
-            return (
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-1.5 bg-muted/20 rounded-xl p-1.5 ring-1 ring-border/10">
+            {activeProjects.map((p) => {
+              const isActive = selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id);
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => onSelectProject(p.id)}
+                  className={cn(
+                    "relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200",
+                    isActive
+                      ? "bg-background text-warning shadow-md shadow-warning/5 ring-1 ring-warning/25"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-warning" />
+                  )}
+                  <span className="font-black text-xs tracking-tight">#{p.project_number}</span>
+                  {p.client && (
+                    <span className={cn(
+                      "text-[9px] font-semibold uppercase tracking-wider",
+                      isActive ? "text-warning/70" : "opacity-50"
+                    )}>
+                      {p.client}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            {/* History button */}
+            {onViewHistory && (
               <button
-                key={p.id}
-                onClick={() => onSelectProject(p.id)}
-                className={cn(
-                  "relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 min-h-[42px]",
-                  isActive
-                    ? "bg-background text-warning shadow-md shadow-warning/5 ring-1 ring-warning/25"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                )}
+                onClick={onViewHistory}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold text-muted-foreground/60 hover:text-foreground hover:bg-background/40 transition-all ml-auto"
+                title="Histórico de OS"
               >
-                {isActive && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-warning" />
-                )}
-                <span className="font-black text-sm tracking-tight">#{p.project_number}</span>
-                {p.client && (
-                  <span className={cn(
-                    "text-[10px] font-semibold uppercase tracking-wider",
-                    isActive ? "text-warning/70" : "opacity-50"
-                  )}>
-                    {p.client}
-                  </span>
-                )}
+                <AppIcon name="History" size={14} />
+                <span className="text-[10px]">Todas</span>
               </button>
-            );
-          })}
-          {/* History button */}
-          {onViewHistory && (
-            <button
-              onClick={onViewHistory}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap text-muted-foreground/60 hover:text-foreground hover:bg-background/40 transition-all min-h-[42px]"
-              title="Histórico de OS"
-            >
-              <AppIcon name="History" size={14} />
-              <span className="text-[10px]">Todas</span>
-            </button>
-          )}
+            )}
+          </div>
         </div>
       )}
 
