@@ -119,20 +119,20 @@ export default function ChecklistsPage() {
 
   const currentDate = format(selectedDate, 'yyyy-MM-dd');
 
-  // Determine current shift from checklistType
+  // Determine current shift from checklistType (kept for UI labels only)
   const currentShift = checklistType === 'fechamento' ? 2 : 1;
 
-  // Production orders — shift-aware, aggregate all projects
+  // Production orders — aggregate all projects (no shift concept anymore)
   const {
-    order: productionOrder, orderItems: productionItems, report: productionReport,
-    totals: productionTotals, hasOrder: hasProductionOrder,
-    isShift1Closed,
-    saveOrder, closeOrder, deleteOrder, closeShiftAndCreateNext, copyFromDate, getPendingFromDate, resetDayOrders,
-  } = useProductionOrders(activeUnitId, selectedDate, currentShift, '__all__');
+    orderItems: productionItems, report: productionReport,
+    totals: productionTotals,
+    saveProjectItems, deleteProjectItems, resetDayOrders, copyFromDate, getPendingFromDate,
+  } = useProductionOrders(activeUnitId, selectedDate, '__all__');
+  const hasProductionOrder = productionReport.length > 0;
 
-  // Also fetch both shifts independently for card progress
-  const shift1Hook = useProductionOrders(activeUnitId, selectedDate, 1, '__all__');
-  const shift2Hook = useProductionOrders(activeUnitId, selectedDate, 2, '__all__');
+  // Alias for shift-based card progress (both point to the same data now)
+  const shift1Hook = useProductionOrders(activeUnitId, selectedDate, '__all__');
+  const shift2Hook = shift1Hook; // No shift distinction anymore
 
   // Production projects
   const { projects, activeProjects, createProject, updateProject, deleteProject } = useProductionProjects(activeUnitId);
@@ -158,12 +158,8 @@ export default function ChecklistsPage() {
   const [reportShiftView, setReportShiftView] = useState<number>(1);
   const [projectSheetOpen, setProjectSheetOpen] = useState(false);
 
-  // Auto-switch to Turno 2 if shift 1 is closed and user is viewing Turno 1
-  useEffect(() => {
-    if (isShift1Closed && checklistType === 'abertura') {
-      setChecklistType('fechamento');
-    }
-  }, [isShift1Closed, checklistType]);
+  // No shift locking anymore — kept for compatibility
+  const isShift1Closed = false;
 
   // Build a map of checklist_item_id -> quantity_ordered from production plan
   const productionQtyMap = useMemo(() => {
@@ -268,7 +264,7 @@ export default function ChecklistsPage() {
   // Compute progress per shift INDEPENDENTLY using quantity-based totals
   const getTypeProgress = useMemo(() => {
     const computeShiftProgress = (shiftHook: typeof shift1Hook) => {
-      if (!shiftHook.hasOrder || shiftHook.orderItems.length === 0) {
+      if (shiftHook.orderItems.length === 0) {
         return { completed: 0, total: 0, percent: 0 };
       }
 
@@ -704,12 +700,12 @@ export default function ChecklistsPage() {
               {/* Fechamento / Turno 2 Card */}
               <button
                 onClick={() => {
-                  if (!isShift1Closed && shift1Hook.hasOrder) {
+                  if (!isShift1Closed && shift1Hook.report.length > 0) {
                     toast.error('Feche o Turno 1 antes de acessar o Turno 2');
                     return;
                   }
                   // If shift 2 has an order, open its report (closed or active)
-                  if (shift2Hook.hasOrder) {
+                  if (shift2Hook.report.length > 0) {
                     setReportShiftView(2);
                     setReportSheetOpen(true);
                     return;
@@ -721,7 +717,7 @@ export default function ChecklistsPage() {
                   checklistType === 'fechamento'
                     ? "finance-hero-card checklist-gradient-slow ring-0 scale-[1.02]"
                     : "ring-1 ring-border/40 hover:ring-border bg-card/60 opacity-70 hover:opacity-90",
-                  !isShift1Closed && shift1Hook.hasOrder && checklistType !== 'fechamento' && "opacity-40 cursor-not-allowed"
+                  !isShift1Closed && shift1Hook.report.length > 0 && checklistType !== 'fechamento' && "opacity-40 cursor-not-allowed"
                 )}
               >
                 {settingsMode && isAdmin && (
@@ -734,7 +730,7 @@ export default function ChecklistsPage() {
                   />
                 )}
                 <div className="flex items-center gap-3 mb-3">
-                  {!isShift1Closed && shift1Hook.hasOrder ? (
+                  {!isShift1Closed && shift1Hook.report.length > 0 ? (
                     <AppIcon name="Lock" size={22} className="text-muted-foreground/50" />
                   ) : (
                     <AppIcon
@@ -751,7 +747,7 @@ export default function ChecklistsPage() {
                 </div>
                 {!settingsMode && (
                   <div className="space-y-1.5">
-                    {!isShift1Closed && shift1Hook.hasOrder ? (
+                    {!isShift1Closed && shift1Hook.report.length > 0 ? (
                       <p className="text-[10px] text-muted-foreground">Feche o Turno 1 para liberar</p>
                     ) : (
                       <>
@@ -820,7 +816,7 @@ export default function ChecklistsPage() {
 
                   // Show empty state if no production order and not bonus
                   if (!isBonus && !hasProductionOrder) {
-                    const isShift2Locked = checklistType === 'fechamento' && shift1Hook.hasOrder && !isShift1Closed;
+                    const isShift2Locked = checklistType === 'fechamento' && shift1Hook.report.length > 0 && !isShift1Closed;
 
                     return (
                       <div className="card-command p-8 text-center space-y-3">
@@ -1061,7 +1057,11 @@ export default function ChecklistsPage() {
         sectors={sectors}
         existingItems={productionItems}
         date={selectedDate}
-        onSave={saveOrder}
+        onSave={async (items, notes, projectId) => {
+          if (projectId) {
+            await saveProjectItems(items, projectId);
+          }
+        }}
         onPullPendingFromYesterday={async () => {
           const yesterday = format(subDays(selectedDate, 1), 'yyyy-MM-dd');
           return getPendingFromDate(yesterday);
@@ -1070,12 +1070,7 @@ export default function ChecklistsPage() {
         currentShift={currentShift}
         isShift1Closed={isShift1Closed}
         activeProjects={activeProjects}
-        selectedProjectId={productionOrder?.project_id || activeProject?.id}
-        onCloseShift={async () => {
-          await closeShiftAndCreateNext();
-          toast.success('Turno 1 fechado! Turno 2 pronto para continuar.');
-          setChecklistType('fechamento');
-        }}
+        selectedProjectId={activeProject?.id}
         onDeletePlan={async () => {
           await resetDayOrders();
           toast.success('Dia zerado! Pode testar novamente.');
@@ -1087,7 +1082,7 @@ export default function ChecklistsPage() {
         onOpenChange={setReportSheetOpen}
         report={reportShiftView === 1 ? shift1Hook.report : shift2Hook.report}
         totals={reportShiftView === 1 ? shift1Hook.totals : shift2Hook.totals}
-        order={reportShiftView === 1 ? shift1Hook.order : shift2Hook.order}
+        order={null}
         date={selectedDate}
         isAdmin={isAdmin}
         currentShift={reportShiftView}
@@ -1095,13 +1090,14 @@ export default function ChecklistsPage() {
         shift1Totals={shift1Hook.totals}
         shift2Report={shift2Hook.report}
         shift2Totals={shift2Hook.totals}
-        hasShift2={shift2Hook.hasOrder}
+        hasShift2={shift2Hook.report.length > 0}
         onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
       />
       <ProjectSheet
         open={projectSheetOpen}
         onOpenChange={setProjectSheetOpen}
         projects={projects}
+        sectors={sectors}
         onCreateProject={createProject}
         onUpdateProject={updateProject}
         onDeleteProject={deleteProject}

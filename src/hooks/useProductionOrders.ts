@@ -90,20 +90,20 @@ export function useProductionOrders(unitId: string | null, date: Date, projectId
       if (!projectId || projectId === '__null__') return [];
 
       // Fetch item IDs that belong to this project
-      const { data: freshItems, error: itemsErr } = await supabase
+      const { data: freshItems, error: itemsErr } = await (supabase
         .from('production_order_items')
         .select('checklist_item_id')
-        .eq('unit_id', unitId!)
+        .eq('unit_id', unitId!) as any)
         .eq('project_id', projectId);
       if (itemsErr) throw itemsErr;
 
-      const itemIds = [...new Set((freshItems || []).map(i => i.checklist_item_id))];
+      const itemIds = [...new Set((freshItems || []).map((i: any) => i.checklist_item_id))] as string[];
       if (itemIds.length === 0) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('checklist_completions')
         .select('item_id, quantity_done, is_skipped, started_at, finished_at, status')
-        .eq('unit_id', unitId!)
+        .eq('unit_id', unitId!) as any)
         .eq('project_id', projectId)
         .in('status', ['completed', 'done', 'in_progress'])
         .in('item_id', itemIds);
@@ -227,7 +227,7 @@ export function useProductionOrders(unitId: string | null, date: Date, projectId
         quantity_ordered: i.quantity_ordered,
         unit_id: unitId,
       }));
-      const { error } = await supabase.from('production_order_items').insert(rows);
+      const { error } = await supabase.from('production_order_items').insert(rows as any);
       if (error) throw error;
     }
 
@@ -356,6 +356,8 @@ export function useProductionOrders(unitId: string | null, date: Date, projectId
     saveProjectItems,
     deleteProjectItems,
     resetDayOrders,
+    copyFromDate,
+    getPendingFromDate,
     invalidate,
   };
 }

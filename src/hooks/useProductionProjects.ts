@@ -60,7 +60,7 @@ export function useProductionProjects(unitId: string | null) {
         quantity_ordered: i.quantity_ordered,
         unit_id: unitId,
       }));
-      const { error: itemsError } = await supabase.from('production_order_items').insert(rows);
+      const { error: itemsError } = await supabase.from('production_order_items').insert(rows as any);
       if (itemsError) throw itemsError;
     }
 
@@ -83,7 +83,7 @@ export function useProductionProjects(unitId: string | null) {
     // 2. Update Items if provided
     if (items) {
       // Clear existing for a clean sync
-      await supabase.from('production_order_items').delete().eq('project_id', id);
+      await (supabase.from('production_order_items') as any).delete().eq('project_id', id);
 
       if (items.length > 0) {
         const rows = items.map(i => ({
@@ -92,7 +92,7 @@ export function useProductionProjects(unitId: string | null) {
           quantity_ordered: i.quantity_ordered,
           unit_id: unitId!,
         }));
-        const { error: itemsError } = await supabase.from('production_order_items').insert(rows);
+        const { error: itemsError } = await supabase.from('production_order_items').insert(rows as any);
         if (itemsError) throw itemsError;
       }
       queryClient.invalidateQueries({ queryKey: ['production-project-items'] });
@@ -103,7 +103,7 @@ export function useProductionProjects(unitId: string | null) {
 
   const deleteProject = useCallback(async (id: string) => {
     // Delete completions
-    await supabase.from('checklist_completions').delete().eq('project_id', id);
+    await (supabase.from('checklist_completions') as any).delete().eq('project_id', id);
     // Delete items
     await supabase.from('production_order_items').delete().eq('project_id', id);
     // Delete groupings

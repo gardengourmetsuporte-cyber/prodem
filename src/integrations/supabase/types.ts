@@ -415,6 +415,7 @@ export type Database = {
           notes: string | null
           photo_url: string | null
           points_awarded: number
+          project_id: string | null
           quantity_done: number
           quantity_shipped: number
           shipped_at: string | null
@@ -441,6 +442,7 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           points_awarded?: number
+          project_id?: string | null
           quantity_done?: number
           quantity_shipped?: number
           shipped_at?: string | null
@@ -467,6 +469,7 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           points_awarded?: number
+          project_id?: string | null
           quantity_done?: number
           quantity_shipped?: number
           shipped_at?: string | null
@@ -481,6 +484,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
             referencedColumns: ["id"]
           },
           {
@@ -2831,7 +2841,8 @@ export type Database = {
           checklist_item_id: string
           created_at: string
           id: string
-          order_id: string
+          order_id: string | null
+          project_id: string | null
           quantity_ordered: number
           unit_id: string
         }
@@ -2839,7 +2850,8 @@ export type Database = {
           checklist_item_id: string
           created_at?: string
           id?: string
-          order_id: string
+          order_id?: string | null
+          project_id?: string | null
           quantity_ordered?: number
           unit_id: string
         }
@@ -2847,7 +2859,8 @@ export type Database = {
           checklist_item_id?: string
           created_at?: string
           id?: string
-          order_id?: string
+          order_id?: string | null
+          project_id?: string | null
           quantity_ordered?: number
           unit_id?: string
         }
@@ -2864,6 +2877,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "production_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_order_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
             referencedColumns: ["id"]
           },
           {
