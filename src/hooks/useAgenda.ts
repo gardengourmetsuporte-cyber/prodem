@@ -52,7 +52,7 @@ export function useAgenda() {
 
   // Auto-create default categories for new users
   useEffect(() => {
-    if (!user?.id || defaultsInitRef.current || categories.length > 0) return;
+    if (!user?.id || !activeUnitId || defaultsInitRef.current || categories.length > 0) return;
     defaultsInitRef.current = true;
     
     const init = async () => {
@@ -63,11 +63,40 @@ export function useAgenda() {
         icon: cat.icon,
         sort_order: i,
       }));
-      await supabase.from('task_categories' as any).insert(rows as any);
+      const { data: insertedCats } = await supabase.from('task_categories' as any).insert(rows as any).select('id, name') as any;
       queryClient.invalidateQueries({ queryKey: ['task-categories'] });
+
+      // Create demo tasks for new users
+      if (insertedCats && insertedCats.length > 0) {
+        const prodCat = insertedCats.find((c: any) => c.name === 'Produção');
+        const compCat = insertedCats.find((c: any) => c.name === 'Compras');
+        const manutCat = insertedCats.find((c: any) => c.name === 'Manutenção');
+        const today = new Date().toISOString().split('T')[0];
+
+        const demoTasks = [
+          { title: 'Revisar ordem de produção #1042', category_id: prodCat?.id, priority: 'high' as const },
+          { title: 'Solicitar cotação de chapas de aço', category_id: compCat?.id, priority: 'medium' as const },
+          { title: 'Agendar manutenção preventiva do transportador', category_id: manutCat?.id, priority: 'low' as const },
+        ].filter(t => t.category_id);
+
+        if (demoTasks.length > 0) {
+          await supabase.from('manager_tasks').insert(
+            demoTasks.map((t, i) => ({
+              user_id: user.id,
+              unit_id: activeUnitId,
+              title: t.title,
+              category_id: t.category_id,
+              priority: t.priority,
+              date: today,
+              sort_order: i,
+            }))
+          );
+          queryClient.invalidateQueries({ queryKey });
+        }
+      }
     };
     init();
-  }, [user?.id, categories.length, DEFAULT_TASK_CATEGORIES, queryClient]);
+  }, [user?.id, activeUnitId, categories.length, DEFAULT_TASK_CATEGORIES, queryClient, queryKey]);
 
   // Fetch all tasks for user
   const { data: allTasks = [], isLoading: tasksLoading } = useQuery({
