@@ -1,4 +1,4 @@
-// entry
+// Prodem entry
 import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
