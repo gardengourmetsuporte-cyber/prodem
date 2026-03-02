@@ -25,6 +25,7 @@ import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { preloadRoute, preloadRoutes } from '@/lib/routePreload';
+import { useAutoAvatar } from '@/hooks/useAutoAvatar';
 import { lazy, Suspense, memo } from 'react';
 
 // Lazy-load BottomTabBar — only used on mobile
@@ -77,6 +78,9 @@ function AppLayoutContent({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const { leaderboard } = useLeaderboard();
   const myPosition = useMemo(() => leaderboard.find(e => e.user_id === user?.id)?.rank, [leaderboard, user?.id]);
+
+  // Auto-generate AI avatar for users without one
+  useAutoAvatar();
   const [notifOpen, setNotifOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
