@@ -20,7 +20,6 @@ const routeImporters: Record<string, RouteImporter> = {
   '/gamification': () => import('@/pages/Gamification'),
   '/ranking': () => import('@/pages/Ranking'),
   
-  '/plans': () => import('@/pages/Plans'),
   
 };
 

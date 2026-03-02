@@ -20,7 +20,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/settings': 'Configurações',
   '/copilot': 'Copilot IA',
   '/whatsapp': 'WhatsApp',
-  '/plans': 'Planos',
+  
   '/calendar': 'Calendário',
   '/menu-admin': 'Cardápio',
 };
