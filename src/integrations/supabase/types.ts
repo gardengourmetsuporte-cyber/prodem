@@ -530,6 +530,7 @@ export type Database = {
           frequency: string
           id: string
           is_active: boolean
+          material_code: string | null
           name: string
           piece_dimensions: string | null
           points: number
@@ -548,6 +549,7 @@ export type Database = {
           frequency?: string
           id?: string
           is_active?: boolean
+          material_code?: string | null
           name: string
           piece_dimensions?: string | null
           points?: number
@@ -566,6 +568,7 @@ export type Database = {
           frequency?: string
           id?: string
           is_active?: boolean
+          material_code?: string | null
           name?: string
           piece_dimensions?: string | null
           points?: number

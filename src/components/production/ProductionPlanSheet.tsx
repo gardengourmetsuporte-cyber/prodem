@@ -15,6 +15,7 @@ interface PlanItem {
   name: string;
   target_quantity: number;
   piece_dimensions: string | null;
+  material_code: string | null;
   quantity_ordered: number;
   sectorName: string;
   sectorColor: string;
@@ -69,6 +70,7 @@ export function ProductionPlanSheet({
             name: item.name,
             target_quantity: item.target_quantity || 0,
             piece_dimensions: item.piece_dimensions || null,
+            material_code: item.material_code || null,
             quantity_ordered: 0,
             sectorName: sector.name,
             sectorColor: sector.color || '#64748b',
@@ -127,6 +129,7 @@ export function ProductionPlanSheet({
           name: ei.checklist_item?.name || 'Item',
           target_quantity: ei.checklist_item?.target_quantity || 0,
           piece_dimensions: ei.checklist_item?.piece_dimensions || null,
+          material_code: (ei.checklist_item as any)?.material_code || avail?.material_code || null,
           quantity_ordered: ei.quantity_ordered,
           sectorName: avail?.sectorName || '',
           sectorColor: avail?.sectorColor || '#64748b',
@@ -367,9 +370,14 @@ export function ProductionPlanSheet({
                               </button>
                               <div className="flex-1 min-w-0">
                                 <p className="text-[13px] font-medium truncate leading-tight">{item.name}</p>
-                                {item.piece_dimensions && (
-                                  <p className="text-[10px] text-muted-foreground/60">{item.piece_dimensions}</p>
-                                )}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {item.material_code && (
+                                    <span className="text-[10px] font-mono text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded">{item.material_code}</span>
+                                  )}
+                                  {item.piece_dimensions && (
+                                    <span className="text-[10px] text-muted-foreground/60">📐 {item.piece_dimensions}</span>
+                                  )}
+                                </div>
                               </div>
                               {isSelected && (
                                 <div className="flex items-center gap-1">
