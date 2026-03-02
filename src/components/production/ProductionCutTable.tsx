@@ -134,54 +134,50 @@ export function ProductionCutTable({
         </div>
       </div>
 
-      {grouped.map(group => {
+      {grouped.map((group, groupIndex) => {
         const isCollapsed = collapsedSectors.has(group.sectorName);
         const groupDone = group.items.reduce((s, i) => s + i.quantity_done, 0);
         const groupTotal = group.items.reduce((s, i) => s + i.quantity_ordered, 0);
         const groupInProg = group.items.filter(i => inProgressIds.has(i.checklist_item_id)).length;
 
         return (
-          <div key={group.sectorName} className="industrial-card rounded-xl overflow-hidden">
+          <div key={group.sectorName} className={cn("industrial-card rounded-[20px] overflow-hidden bg-card border-none", groupIndex > 0 && "mt-3")}>
             {/* Sector header — process/machine group */}
             <button
               onClick={() => toggleSector(group.sectorName)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/[0.02] transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-white/[0.02] transition-colors"
             >
               <div
-                className="w-3 h-8 rounded-sm shrink-0"
+                className="w-3.5 h-12 rounded-full shrink-0 shadow-sm"
                 style={{ backgroundColor: group.sectorColor }}
               />
-              <span className="text-[11px] font-black text-foreground uppercase tracking-wider flex-1 text-left">
+              <span className="text-sm font-black text-foreground uppercase tracking-widest flex-1 text-left">
                 {group.sectorName}
               </span>
               {groupInProg > 0 && (
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-warning/10">
-                  <div className="w-1 h-1 rounded-full bg-warning animate-pulse" />
-                  <span className="text-[8px] font-bold text-warning">{groupInProg}</span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/10">
+                  <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+                  <span className="text-[10px] font-bold text-warning">{groupInProg}</span>
                 </div>
               )}
-              <span className={cn(
-                "text-[10px] font-mono font-bold px-2 py-0.5 rounded",
-                groupDone >= groupTotal ? "bg-success/10 text-success" : "text-muted-foreground"
-              )}>
+              <span className="text-[13px] font-mono font-bold text-muted-foreground mr-2">
                 {groupDone}/{groupTotal}
               </span>
               <AppIcon
                 name="ChevronRight"
-                size={14}
-                className={cn("text-muted-foreground/40 transition-transform", !isCollapsed && "rotate-90")}
+                size={16}
+                className={cn("text-muted-foreground transition-transform duration-200", !isCollapsed && "rotate-90")}
               />
             </button>
 
             {/* Items — industrial row format */}
             {!isCollapsed && (
-              <div className="border-t border-border/10">
+              <div className="border-t border-border/10 bg-background/20">
                 {/* Column headers */}
-                <div className="grid grid-cols-[56px_1fr_80px_72px] px-3 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-muted-foreground/40 bg-background/30">
-                  <span className="text-center">MINIATURA</span>
-                  <span className="pl-1">NOME DA PEÇA</span>
+                <div className="grid grid-cols-[80px_1fr_80px_100px] px-4 py-3 text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/40 bg-card">
+                  <span className="col-span-2 text-left">MINIATURA NOME DA PEÇA</span>
                   <span className="text-right pr-2">TAMANHO</span>
-                  <span className="text-center">CONTAGEM</span>
+                  <span className="text-right">CONTAGEM</span>
                 </div>
 
                 {group.items.map((item, idx) => {
@@ -192,76 +188,72 @@ export function ProductionCutTable({
                     <div
                       key={item.checklist_item_id}
                       className={cn(
-                        "grid grid-cols-[56px_1fr_80px_72px] items-center px-3 py-2 transition-all min-h-[56px]",
+                        "grid grid-cols-[70px_1fr_80px_100px] items-center px-4 py-3 transition-all min-h-[70px]",
                         idx < group.items.length - 1 && "border-b border-border/5",
-                        isInProgress && "bg-warning/[0.06] border-l-2 border-l-warning",
-                        isComplete && "opacity-60",
+                        isInProgress && "bg-warning/[0.04]",
+                        isComplete && "opacity-50",
                       )}
                     >
                       {/* Miniatura */}
-                      <div className="flex justify-center items-center">
-                        <div className="w-10 h-7 border-[1.5px] border-border/60 rounded flex items-center justify-center bg-background/50 text-muted-foreground/30">
-                          <AppIcon name="Maximize" size={14} />
+                      <button onClick={() => onTapItem(item.checklist_item_id)} className="flex items-center">
+                        <div className="w-14 h-11 border border-border/40 rounded-lg flex items-center justify-center bg-card/50 text-muted-foreground/20 hover:border-border transition-colors">
+                          <AppIcon name="Minus" size={12} className="opacity-40" />
                         </div>
-                      </div>
+                      </button>
 
                       {/* Item info */}
-                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left min-w-0 pl-1 flex flex-col justify-center py-1">
+                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left flex flex-col justify-center py-2 h-full">
                         <p className={cn(
-                          "text-[12px] font-bold leading-tight truncate",
-                          isComplete && "line-through text-muted-foreground/50",
-                          isInProgress && "text-warning font-black",
+                          "text-sm font-bold truncate pr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]",
+                          isComplete ? "text-muted-foreground/50 line-through" : "text-foreground",
+                          isInProgress && "text-warning",
                         )}>
                           {item.item_name}
                         </p>
-                        {itemGroupingMap?.has(item.checklist_item_id) && (
-                          <span className="inline-flex items-center gap-0.5 text-[7px] font-black text-warning bg-warning/10 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                            AG{itemGroupingMap.get(item.checklist_item_id)!.groupingNumber}
-                          </span>
-                        )}
                       </button>
 
                       {/* Tamanho */}
-                      <div className="text-right pr-2 flex flex-col justify-center">
+                      <div className="text-right pr-4 flex flex-col justify-center h-full border-r border-border/10">
                         {item.dimensions ? (
-                          <span className="text-[10px] font-mono text-muted-foreground">{item.dimensions}</span>
+                          <span className="text-xs font-mono text-muted-foreground/70">{item.dimensions}</span>
                         ) : item.materialCode ? (
-                          <span className="text-[10px] font-mono text-muted-foreground">{item.materialCode}</span>
+                          <span className="text-xs font-mono text-muted-foreground/70">{item.materialCode}</span>
                         ) : (
-                          <span className="text-[10px] font-mono text-muted-foreground/40">-</span>
+                          <span className="text-xs font-mono text-muted-foreground/40">-</span>
                         )}
                       </div>
 
                       {/* Contagem / Action */}
-                      <div className="flex justify-between items-center px-1">
-                        <span className="text-[13px] font-mono font-black text-foreground">
+                      <div className="flex justify-end items-center gap-4 pl-3">
+                        <span className="text-[17px] font-black text-foreground">
                           {item.quantity_ordered}
                         </span>
 
                         {isClosed ? (
-                          <AppIcon name="Lock" size={14} className="text-muted-foreground/20 ml-2" />
+                          <AppIcon name="Lock" size={18} className="text-muted-foreground/30" />
                         ) : isComplete ? (
-                          <div className="flex flex-col items-center ml-2">
-                            <span className="text-[12px] font-black italic text-blue-500 font-display">OK</span>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center mr-1">
+                            <span className="text-[12px] font-black italic text-success font-display">OK</span>
                           </div>
                         ) : (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (onQuickComplete) {
-                                onQuickComplete(item.checklist_item_id, item.quantity_ordered);
+                              if (isInProgress) {
+                                if (onQuickComplete) onQuickComplete(item.checklist_item_id, item.quantity_ordered);
+                                else onFinishItem(item.checklist_item_id);
                               } else {
-                                onFinishItem(item.checklist_item_id);
+                                onStartItem(item.checklist_item_id);
                               }
                             }}
                             className={cn(
-                              "w-7 h-7 shrink-0 rounded-full border-[1.5px] flex items-center justify-center ml-2 transition-colors",
+                              "w-10 h-10 shrink-0 rounded-full border-[2.5px] flex items-center justify-center transition-all mr-1",
                               isInProgress
                                 ? "border-warning/50 bg-warning/10"
-                                : "border-muted-foreground/30 hover:bg-success/10 hover:border-success/40"
+                                : "border-border/30 bg-card hover:bg-success/5 hover:border-success/30"
                             )}
                           >
-                            {isInProgress && <div className="w-2.5 h-2.5 rounded-full bg-warning animate-pulse" />}
+                            {isInProgress && <div className="w-3.5 h-3.5 rounded-full bg-warning animate-pulse" />}
                           </button>
                         )}
                       </div>
