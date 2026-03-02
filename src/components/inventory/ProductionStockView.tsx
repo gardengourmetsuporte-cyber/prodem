@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppIcon } from '@/components/ui/app-icon';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -6,6 +7,18 @@ import { useProductionOrders, ProductionReportItem } from '@/hooks/useProduction
 import { useUnit } from '@/contexts/UnitContext';
 import { cn } from '@/lib/utils';
 import { InventoryItem } from '@/types/database';
+
+/* ── helpers ── */
+function getUnitLabel(u: string) {
+  switch (u) {
+    case 'unidade': return 'un';
+    case 'kg': return 'kg';
+    case 'litro': return 'L';
+    case 'metro': return 'm';
+    case 'metro_quadrado': return 'm²';
+    default: return u;
+  }
+}
 
 /* ── Status Badge ── */
 function StatusBadge({ status }: { status: ProductionReportItem['status'] }) {
@@ -56,37 +69,6 @@ function ProductionItem({ item, onClick }: { item: ProductionReportItem; onClick
   );
 }
 
-/* ── Material card (inventory item in production) ── */
-function MaterialCard({ item, onClick }: { item: InventoryItem; onClick: () => void }) {
-  const stock = item.production_stock ?? 0;
-  const unitLabel = item.unit_type === 'unidade' ? 'un' : item.unit_type === 'kg' ? 'kg' : item.unit_type === 'litro' ? 'L' : item.unit_type === 'metro' ? 'm' : 'm²';
-
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border hover:border-warning/30 transition-all text-left"
-    >
-      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
-        <AppIcon name="Package" size={18} className="text-warning" />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <span className="text-sm font-semibold text-foreground truncate block">{item.name}</span>
-        {item.category?.name && (
-          <span className="text-[11px] text-muted-foreground">{item.category.name}</span>
-        )}
-      </div>
-
-      <div className="text-right flex-shrink-0">
-        <p className="text-sm font-bold text-foreground leading-none">{stock}</p>
-        <p className="text-[10px] text-muted-foreground">{unitLabel}</p>
-      </div>
-
-      <AppIcon name="ArrowRightFromLine" size={16} className="text-muted-foreground flex-shrink-0" />
-    </button>
-  );
-}
-
 /* ── Props ── */
 interface ProductionStockViewProps {
   items?: InventoryItem[];
@@ -101,11 +83,29 @@ export function ProductionStockView({ items = [], onItemClick }: ProductionStock
 
   const productionItems = items.filter(i => (i.production_stock ?? 0) > 0);
 
+  // Group by category
+  const grouped: Record<string, InventoryItem[]> = {};
+  productionItems.forEach(item => {
+    const cat = item.category?.name || 'Sem Categoria';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(item);
+  });
+  const categoryNames = Object.keys(grouped).sort();
+
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const toggleCat = (name: string) => {
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-20 rounded-2xl bg-muted animate-pulse" />
+          <div key={i} className="h-16 rounded-2xl bg-muted animate-pulse" />
         ))}
       </div>
     );
@@ -133,7 +133,6 @@ export function ProductionStockView({ items = [], onItemClick }: ProductionStock
       {/* ── Produção (checklist progress) ── */}
       {hasProduction && (
         <div className="space-y-4">
-          {/* Summary bar */}
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border">
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
@@ -148,7 +147,6 @@ export function ProductionStockView({ items = [], onItemClick }: ProductionStock
             </div>
           </div>
 
-          {/* Items list */}
           <div className="space-y-2">
             {report.map(item => (
               <ProductionItem
@@ -161,7 +159,7 @@ export function ProductionStockView({ items = [], onItemClick }: ProductionStock
         </div>
       )}
 
-      {/* ── Materiais em Produção ── */}
+      {/* ── Materiais em Produção (grouped by category) ── */}
       {hasMaterials && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -170,15 +168,56 @@ export function ProductionStockView({ items = [], onItemClick }: ProductionStock
             <span className="text-xs text-muted-foreground">({productionItems.length})</span>
           </div>
 
-          <div className="space-y-2">
-            {productionItems.map(item => (
-              <MaterialCard
-                key={item.id}
-                item={item}
-                onClick={() => onItemClick?.(item)}
-              />
-            ))}
-          </div>
+          {categoryNames.map(catName => {
+            const catItems = grouped[catName];
+            const isCollapsed = collapsed.has(catName);
+            const catColor = catItems[0]?.category?.color || '#6b7280';
+
+            return (
+              <div key={catName} className="space-y-1">
+                <button
+                  onClick={() => toggleCat(catName)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-secondary/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: catColor }} />
+                    <span className="text-xs font-semibold text-foreground">{catName}</span>
+                    <span className="text-[11px] text-muted-foreground">({catItems.length})</span>
+                  </div>
+                  <AppIcon
+                    name="ChevronDown"
+                    size={14}
+                    className={cn("text-muted-foreground transition-transform duration-200", !isCollapsed && "rotate-180")}
+                  />
+                </button>
+
+                <div className={cn(
+                  "overflow-hidden transition-all duration-300 ease-out",
+                  isCollapsed ? "max-h-0 opacity-0" : "max-h-[2000px] opacity-100"
+                )}>
+                  <div className="space-y-1 pl-2">
+                    {catItems.map(item => {
+                      const stock = item.production_stock ?? 0;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => onItemClick?.(item)}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-card/50 border border-border/50 hover:border-warning/30 transition-all text-left"
+                        >
+                          <span className="text-sm text-foreground truncate flex-1">{item.name}</span>
+                          <span className="text-sm font-bold text-foreground whitespace-nowrap">
+                            {stock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}
+                            <span className="text-[10px] font-normal text-muted-foreground ml-0.5">{getUnitLabel(item.unit_type)}</span>
+                          </span>
+                          <AppIcon name="ArrowRightFromLine" size={14} className="text-muted-foreground/50 flex-shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
