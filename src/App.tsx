@@ -100,7 +100,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// PageLoader imported from @/components/PageLoader
+// PageLoader — lazy fallback
 
 function RouteErrorBoundary({ children }: { children: React.ReactNode }) {
   return <ErrorBoundary>{children}</ErrorBoundary>;
