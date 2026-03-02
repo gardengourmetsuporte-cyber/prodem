@@ -10,6 +10,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   piece: ProductionPiece | null;
   elapsedSeconds: number;
+  alreadyDone?: number;
   onFinish: (quantity: number, machineRef?: string) => Promise<void>;
 }
 
@@ -22,7 +23,7 @@ function formatDuration(seconds: number): string {
   return `${s}s`;
 }
 
-export function FinishTaskDialog({ open, onOpenChange, piece, elapsedSeconds, onFinish }: Props) {
+export function FinishTaskDialog({ open, onOpenChange, piece, elapsedSeconds, alreadyDone = 0, onFinish }: Props) {
   const [quantity, setQuantity] = useState<number | ''>('');
   const [machineRef, setMachineRef] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,9 +33,11 @@ export function FinishTaskDialog({ open, onOpenChange, piece, elapsedSeconds, on
   const handleSubmit = async () => {
     const qty = Number(quantity);
     if (!qty || qty <= 0) return;
+    const maxQty = Math.max(0, piece.qty_total - (alreadyDone || 0));
+    const cappedQty = Math.min(qty, maxQty > 0 ? maxQty : qty);
     try {
       setLoading(true);
-      await onFinish(qty, machineRef || undefined);
+      await onFinish(cappedQty, machineRef || undefined);
       onOpenChange(false);
       setQuantity('');
       setMachineRef('');
@@ -81,10 +84,10 @@ export function FinishTaskDialog({ open, onOpenChange, piece, elapsedSeconds, on
                 autoFocus
               />
               <button
-                onClick={() => setQuantity(piece.qty_total)}
+                onClick={() => setQuantity(Math.max(0, piece.qty_total - alreadyDone))}
                 className="px-3 py-2 rounded-lg border border-border/50 text-[10px] font-bold text-primary hover:bg-primary/5 transition-colors whitespace-nowrap"
               >
-                MAX
+                MAX ({Math.max(0, piece.qty_total - alreadyDone)})
               </button>
             </div>
           </div>
