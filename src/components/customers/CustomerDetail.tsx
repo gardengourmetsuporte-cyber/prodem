@@ -1,4 +1,5 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { AppIcon } from '@/components/ui/app-icon';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -123,7 +124,7 @@ export function CustomerDetail({ open, onOpenChange, customer, events, eventsLoa
             )}
             {customer.birthday && (
               <p className="text-sm flex items-center gap-2">
-                <span className="material-symbols-rounded text-muted-foreground" style={{ fontSize: 16 }}>cake</span>
+                <AppIcon name="Cake" size={16} className="text-muted-foreground" />
                 {format(new Date(customer.birthday + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR })}
               </p>
             )}
