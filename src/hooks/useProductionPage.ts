@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { subDays, isSameDay, format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUnit } from '@/contexts/UnitContext';
@@ -59,6 +59,14 @@ export function useProductionPage() {
       dateProjectIds.includes(p.id) || !projectsWithOrders.includes(p.id)
     );
   }, [allActiveProjects, dateProjectIds, projectsWithOrders]);
+
+  // Auto-sync selectedProjectId when activeProjects changes
+  useEffect(() => {
+    if (activeProjects.length === 0) return;
+    if (selectedProjectId && activeProjects.some(p => p.id === selectedProjectId)) return;
+    // Selected project is no longer in the list — fallback to first
+    setSelectedProjectId(activeProjects[0]?.id || null);
+  }, [activeProjects, selectedProjectId]);
 
   const activeProject = selectedProjectId
     ? activeProjects.find(p => p.id === selectedProjectId) || activeProjects[0] || null
