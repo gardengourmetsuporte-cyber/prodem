@@ -1,72 +1,40 @@
-import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProductionOrders } from '@/hooks/useProductionOrders';
 import { useUnit } from '@/contexts/UnitContext';
 import { AppIcon } from '@/components/ui/app-icon';
 import { cn } from '@/lib/utils';
-import { getTodayDateStr } from '@/lib/checklistTiming';
 
 export function ChecklistDashboardWidget() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { activeUnitId } = useUnit();
-  const today = getTodayDateStr();
+  const { totals, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
 
-  const { data: sectors = [] } = useQuery({
-    queryKey: ['dashboard-checklist-sectors', activeUnitId],
-    queryFn: async () => {
-      let query = supabase
-        .from('checklist_sectors')
-        .select(`*, subcategories:checklist_subcategories(*, items:checklist_items(*))`)
-        .eq('scope', 'standard')
-        .order('sort_order');
-      if (activeUnitId) query = query.or(`unit_id.eq.${activeUnitId},unit_id.is.null`);
-      const { data } = await query;
-      return (data || []).map((s: any) => ({
-        ...s,
-        subcategories: (s.subcategories || []).map((sub: any) => ({
-          ...sub,
-          items: (sub.items || []).filter((i: any) => i.deleted_at === null),
-        })),
-      }));
-    },
-    enabled: !!user && !!activeUnitId,
-    staleTime: 2 * 60 * 1000,
-  });
+  if (isLoading) {
+    return (
+      <div className="w-full rounded-2xl p-4 bg-card animate-pulse h-24" />
+    );
+  }
 
-  const { data: completions = [] } = useQuery({
-    queryKey: ['dashboard-checklist-completions-all', today, activeUnitId],
-    queryFn: async () => {
-      let query = supabase.from('checklist_completions').select('item_id').eq('date', today);
-      if (activeUnitId) query = query.or(`unit_id.eq.${activeUnitId},unit_id.is.null`);
-      const { data } = await query;
-      return data || [];
-    },
-    enabled: !!user && !!activeUnitId,
-    staleTime: 30 * 1000,
-  });
+  if (!hasOrder) {
+    return (
+      <button
+        onClick={() => navigate('/checklists')}
+        className="w-full text-left rounded-2xl p-4 bg-card transition-all duration-200 active:scale-[0.98]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted">
+            <AppIcon name="ClipboardCheck" size={20} className="text-muted-foreground" />
+          </div>
+          <div className="flex-1">
+            <span className="text-base font-bold block font-display text-foreground">Produção do Dia</span>
+            <span className="text-[11px] font-medium text-muted-foreground">Nenhum plano hoje</span>
+          </div>
+        </div>
+      </button>
+    );
+  }
 
-  const progress = useMemo(() => {
-    const completedIds = new Set(completions.map((c: any) => c.item_id));
-    let total = 0;
-    let completed = 0;
-    sectors.forEach((s: any) => {
-      s.subcategories?.forEach((sub: any) => {
-        sub.items?.forEach((item: any) => {
-          if (item.is_active && item.checklist_type !== 'bonus') {
-            total++;
-            if (completedIds.has(item.id)) completed++;
-          }
-        });
-      });
-    });
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { completed, total, percent };
-  }, [sectors, completions]);
-
-  const isComplete = progress.percent === 100;
+  const isComplete = totals.percent >= 100;
 
   return (
     <button
@@ -85,36 +53,35 @@ export function ChecklistDashboardWidget() {
             "text-base font-bold block font-display",
             isComplete ? "text-success" : "text-foreground"
           )}>
-            Checklist do Dia
+            Produção do Dia
           </span>
           <span className={cn(
             "text-[11px] font-medium",
-            isComplete ? "text-success" : progress.percent > 0 ? "text-warning" : "text-muted-foreground"
+            isComplete ? "text-success" : totals.percent > 0 ? "text-warning" : "text-muted-foreground"
           )}>
-            {isComplete ? "✓ Concluído" : progress.percent > 0 ? "Em andamento" : "Pendente"}
+            {isComplete ? "✓ Concluído" : totals.percent > 0 ? "Em andamento" : "Pendente"}
           </span>
         </div>
         <span className={cn(
           "text-2xl font-black",
           isComplete ? "text-success" : "text-warning"
         )}>
-          {progress.percent}%
+          {totals.percent}%
         </span>
       </div>
 
-      {/* Progress bar */}
       <div className="w-full h-2 rounded-full bg-secondary/50 overflow-hidden mb-2">
         <div
           className={cn(
             "h-full rounded-full transition-all duration-700 ease-out",
             isComplete ? "bg-success" : "bg-warning"
           )}
-          style={{ width: `${progress.percent}%` }}
+          style={{ width: `${totals.percent}%` }}
         />
       </div>
 
       <span className="text-xs text-muted-foreground">
-        {progress.completed} de {progress.total} itens concluídos
+        {totals.done} de {totals.ordered} peças concluídas
       </span>
     </button>
   );
