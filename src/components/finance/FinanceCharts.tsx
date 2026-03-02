@@ -128,7 +128,7 @@ export function FinanceCharts({
     label: new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
   }));
 
-  const strokeColor = dataType === 'expense' ? '#ef4444' : '#22c55e';
+  const strokeColor = dataType === 'expense' ? '#ef4444' : 'hsl(142, 71%, 45%)';
   const gradientId = dataType === 'expense' ? 'expenseGradient' : 'incomeGradient';
 
   return (

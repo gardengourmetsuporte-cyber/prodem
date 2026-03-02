@@ -84,7 +84,7 @@ export function TaskItem({ task, onToggle, onDelete, onClick, onInlineUpdate, on
         className={cn(
           'card-surface rounded-xl overflow-hidden transition-all duration-300',
           task.is_completed && 'opacity-45',
-          isDragging && 'shadow-[0_0_30px_rgba(16,185,129,0.15)] ring-1 ring-primary/40 scale-[1.02]',
+          isDragging && 'shadow-glow-primary ring-1 ring-primary/40 scale-[1.02]',
         )}
       >
         {/* Parent task row */}

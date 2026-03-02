@@ -35,7 +35,7 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
   return (
     <div
       onClick={onClick}
-      className="card-surface p-3.5 cursor-pointer hover:shadow-[0_0_20px_rgba(16,185,129,0.05)] hover:border-white/10 active:scale-[0.98] transition-all duration-300 relative overflow-hidden group"
+      className="card-surface p-3.5 cursor-pointer hover:shadow-glow-primary hover:border-white/10 active:scale-[0.98] transition-all duration-300 relative overflow-hidden group"
     >
       {/* Subtle background glow on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

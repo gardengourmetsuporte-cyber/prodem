@@ -303,7 +303,7 @@ export function OrdersTab({
                         <Button
                           size="sm"
                           onClick={() => handleSendWhatsApp(order)}
-                          className="gap-2 bg-green-600 hover:bg-green-700"
+                          className="gap-2 bg-success hover:bg-success/90"
                         >
                           <AppIcon name="Chat" size={16} />
                           Enviar WhatsApp

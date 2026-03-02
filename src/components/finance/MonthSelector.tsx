@@ -84,7 +84,7 @@ export function MonthSelector({ selectedMonth, onMonthChange }: MonthSelectorPro
                   className={cn(
                     "flex items-center justify-center p-2 rounded-xl text-xs font-medium capitalize transition-all",
                     isSelected
-                      ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                      ? "bg-primary text-primary-foreground shadow-glow-primary"
                       : isCurrentMonth
                         ? "bg-primary/10 text-primary border border-primary/20"
                         : "bg-secondary/40 text-foreground hover:bg-secondary/80 hover:text-foreground"

@@ -229,10 +229,10 @@ export function SlotMachine({ prizes, onResult, disabled }: SlotMachineProps) {
         style={{
           background: spinning
             ? 'linear-gradient(180deg, #666, #444)'
-            : 'linear-gradient(180deg, #22c55e, #16a34a, #15803d)',
+            : 'linear-gradient(180deg, hsl(25, 85%, 54%), hsl(25, 85%, 44%), hsl(25, 85%, 34%))',
           boxShadow: spinning
             ? '0 4px 15px rgba(0,0,0,0.3)'
-            : '0 4px 20px rgba(34, 197, 94, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
+            : '0 4px 20px hsla(25, 85%, 54%, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
         }}
       >
         {spinning ? '⏳ GIRANDO...' : '🎰 GIRAR'}

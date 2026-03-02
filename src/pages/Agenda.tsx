@@ -212,7 +212,7 @@ export default function Agenda() {
         </div>
       ) : pendingTasks.length === 0 && !showCompleted ? (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4 finance-hero-card checklist-gradient-slow shadow-[0_0_20px_rgba(16,185,129,0.2)] border border-primary/20">
+          <div className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4 finance-hero-card checklist-gradient-slow shadow-glow-primary border border-primary/20">
             <AppIcon name="Sparkles" size={32} className="text-primary drop-shadow-md" />
           </div>
           <p className="text-foreground text-base font-semibold">Tudo em dia! 🎉</p>
