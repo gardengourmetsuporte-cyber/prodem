@@ -485,33 +485,33 @@ export default function ChecklistsPage() {
               </div>
             )}
 
-            {/* Production Plan Card — admin only */}
-            {!settingsMode && checklistType !== 'bonus' && isAdmin && (
-              <ProductionDayCard
-                order={productionOrder}
-                totals={productionTotals}
-                isAdmin={isAdmin}
-                currentShift={currentShift}
-                isShift1Closed={isShift1Closed}
-                onCreatePlan={() => setPlanSheetOpen(true)}
-                onViewReport={() => setReportSheetOpen(true)}
-                onEditPlan={() => setPlanSheetOpen(true)}
-                onReopenShift={async () => {
-                  await reopenOrder();
-                  toast.success('Turno reaberto com sucesso!');
-                }}
-                shift1={{ order: shift1Hook.order, totals: shift1Hook.totals }}
-                shift2={shift2Hook.hasOrder ? { order: shift2Hook.order, totals: shift2Hook.totals } : undefined}
-              />
+            {/* Create plan button — admin only, no plan yet */}
+            {!settingsMode && checklistType !== 'bonus' && isAdmin && !hasProductionOrder && (
+              <button
+                onClick={() => setPlanSheetOpen(true)}
+                className="w-full rounded-2xl p-4 text-left transition-all bg-card ring-1 ring-border/40 hover:ring-primary/30 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <AppIcon name="Factory" size={18} className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-bold text-foreground">Plano de Produção</span>
+                    <p className="text-[11px] text-muted-foreground">Toque para criar</p>
+                  </div>
+                  <AppIcon name="Plus" size={18} className="text-primary" />
+                </div>
+              </button>
             )}
 
             {/* Checklist Type Cards — always visible */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Abertura Card */}
+              {/* Abertura / Turno 1 Card */}
               <button
                 onClick={() => {
                   if (isShift1Closed) {
-                    toast('Turno 1 já foi fechado e não pode ser alterado.');
+                    // Open report for closed shift 1
+                    setReportSheetOpen(true);
                     return;
                   }
                   setChecklistType('abertura');
@@ -521,7 +521,7 @@ export default function ChecklistsPage() {
                   checklistType === 'abertura' && !isShift1Closed
                     ? "finance-hero-card checklist-gradient-slow ring-0 scale-[1.02]"
                     : isShift1Closed
-                      ? "ring-1 ring-border/40 bg-card/40 opacity-50 cursor-not-allowed"
+                      ? "ring-1 ring-border/40 bg-card/40 opacity-60"
                       : "ring-1 ring-border/40 hover:ring-border bg-card/60 opacity-70 hover:opacity-90"
                 )}
               >
@@ -576,15 +576,18 @@ export default function ChecklistsPage() {
                       </span>
                       <span className={cn(
                         "text-sm font-black",
-                        getTypeProgress.abertura.percent === 100 ? "text-success" : "text-orange-500"
+                        getTypeProgress.abertura.percent === 100 ? "text-success" : "text-warning"
                       )}>
                         {getTypeProgress.abertura.percent}%
                       </span>
                     </div>
+                    {isShift1Closed && (
+                      <p className="text-[10px] text-muted-foreground mt-1">Toque para ver relatório</p>
+                    )}
                   </div>
                 )}
-                {checklistType === 'abertura' && (
-                  <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                {checklistType === 'abertura' && !isShift1Closed && (
+                  <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-warning animate-pulse" />
                 )}
               </button>
 
