@@ -68,11 +68,24 @@ export function AdminDashboard() {
         </p>
       </div>
 
-      {/* ═══ 1. GLASS HERO — SALDO ═══ */}
+      {/* ═══ 1. PRODUCTION FLIGHT BOARD ═══ */}
+      {hasAccess('checklists') && (
+        <div className="animate-spring-in spring-stagger-1">
+          <ProductionFlightBoard
+            report={report}
+            totals={totals}
+            hasOrder={hasOrder}
+            isLoading={prodLoading}
+            onNavigate={() => navigate('/production')}
+          />
+        </div>
+      )}
+
+      {/* ═══ 2. GLASS HERO — SALDO ═══ */}
       {hasAccess('finance') && (
         <button
           onClick={() => navigate('/finance')}
-          className="w-full text-left animate-spring-in spring-stagger-1"
+          className="w-full text-left animate-spring-in spring-stagger-2"
         >
           <div className="glass-hero-balance relative overflow-hidden rounded-2xl p-5">
             {/* Animated gradient orbs */}
@@ -128,9 +141,28 @@ export function AdminDashboard() {
         </button>
       )}
 
-      {/* ═══ ALERTS RIBBON ═══ */}
+      {/* ═══ 3. RESUMO DA SEMANA ═══ */}
+      <div className="animate-spring-in spring-stagger-3">
+        <WeeklySummary closings={closings} />
+      </div>
+
+      {/* ═══ QUOTE REQUESTS ═══ */}
+      <QuoteRequestsInline />
+
+      {/* ═══ FINANCE CHART ═══ */}
+      {hasAccess('finance') && (
+        <div className="animate-spring-in">
+          <SectionLabel label="Despesas por categoria" icon="PieChart" iconColor="text-destructive" onNavigate={() => navigate('/finance')} />
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl" />}>
+            <LazyFinanceChart />
+          </Suspense>
+        </div>
+      )}
+
+      {/* ═══ AVISOS ═══ */}
       {alerts.length > 0 && (
-        <div className="space-y-1.5 animate-spring-in spring-stagger-2">
+        <div className="space-y-1.5 animate-spring-in">
+          <SectionLabel label="Avisos" icon="AlertTriangle" iconColor="text-warning" />
           {alerts.map((a, i) => (
             <button
               key={i}
@@ -144,37 +176,6 @@ export function AdminDashboard() {
               <AppIcon name="ChevronRight" size={14} className="text-muted-foreground/40" />
             </button>
           ))}
-        </div>
-      )}
-
-      {/* ═══ 2. RESUMO DA SEMANA ═══ */}
-      <div className="animate-spring-in spring-stagger-3">
-        <WeeklySummary closings={closings} />
-      </div>
-
-      {/* ═══ 3. PRODUCTION FLIGHT BOARD ═══ */}
-      {hasAccess('checklists') && (
-        <div className="animate-spring-in spring-stagger-4">
-          <ProductionFlightBoard
-            report={report}
-            totals={totals}
-            hasOrder={hasOrder}
-            isLoading={prodLoading}
-            onNavigate={() => navigate('/production')}
-          />
-        </div>
-      )}
-
-      {/* ═══ QUOTE REQUESTS ═══ */}
-      <QuoteRequestsInline />
-
-      {/* ═══ FINANCE CHART ═══ */}
-      {hasAccess('finance') && (
-        <div className="animate-spring-in">
-          <SectionLabel label="Despesas por categoria" icon="PieChart" iconColor="text-destructive" onNavigate={() => navigate('/finance')} />
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-2xl" />}>
-            <LazyFinanceChart />
-          </Suspense>
         </div>
       )}
 

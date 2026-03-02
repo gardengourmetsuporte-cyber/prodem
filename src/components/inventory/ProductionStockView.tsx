@@ -79,7 +79,8 @@ interface ProductionStockViewProps {
 export function ProductionStockView({ items = [], onItemClick }: ProductionStockViewProps) {
   const navigate = useNavigate();
   const { activeUnitId } = useUnit();
-  const { report, totals, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
+  const { report, totals, isLoading } = useProductionOrders(activeUnitId, new Date());
+  const hasOrder = report.length > 0;
 
   const productionItems = items.filter(i => (i.production_stock ?? 0) > 0);
 
