@@ -23,13 +23,12 @@ interface ProductionReportSheetProps {
   shift2Totals: { ordered: number; done: number; pending: number; percent: number };
   hasShift2: boolean;
   onEditPlan: () => void;
-  onReopenShift?: () => void;
 }
 
 export function ProductionReportSheet({
   open, onOpenChange, report, totals, order, date, isAdmin, currentShift,
   shift1Report, shift1Totals, shift2Report, shift2Totals, hasShift2,
-  onEditPlan, onReopenShift,
+  onEditPlan,
 }: ProductionReportSheetProps) {
   const [viewMode, setViewMode] = useState<'current' | 'day'>('current');
 
@@ -117,19 +116,12 @@ export function ProductionReportSheet({
         </div>
 
         {/* Admin actions */}
-        {isAdmin && order && (
+        {isAdmin && order?.status !== 'closed' && (
           <div className="flex gap-2 pt-3 border-t border-border/40">
-            {order.status === 'closed' && onReopenShift ? (
-              <Button variant="outline" className="flex-1" onClick={() => { onReopenShift(); onOpenChange(false); }}>
-                <AppIcon name="RotateCcw" size={14} />
-                Reabrir Turno {currentShift}
-              </Button>
-            ) : order.status !== 'closed' ? (
-              <Button variant="outline" className="flex-1" onClick={onEditPlan}>
-                <AppIcon name="Pencil" size={14} />
-                Editar Plano
-              </Button>
-            ) : null}
+            <Button variant="outline" className="flex-1" onClick={onEditPlan}>
+              <AppIcon name="Pencil" size={14} />
+              Editar Plano
+            </Button>
           </div>
         )}
       </SheetContent>

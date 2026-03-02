@@ -54,7 +54,7 @@ export function ProductionPlanSheet({
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set(['__init__']));
-  const [showDangerZone, setShowDangerZone] = useState(false);
+  
 
   // Build available items from sectors
   const availableItems = useMemo(() => {
@@ -114,7 +114,7 @@ export function ProductionPlanSheet({
   // Initialize from existing items or defaults
   useEffect(() => {
     if (!open) return;
-    setShowDangerZone(false);
+    
     const allSectorNames = new Set(availableItems.map(a => a.sectorName));
     setCollapsedSectors(allSectorNames);
 
@@ -207,6 +207,33 @@ export function ProductionPlanSheet({
     }
   };
 
+  const handleCloseShift = async () => {
+    if (!onCloseShift) return;
+    if (!confirm('Fechar Turno 1 e criar/atualizar Turno 2 com pendentes?')) return;
+
+    setSaving(true);
+    try {
+      await onCloseShift();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err?.message || 'Não foi possível fechar o turno');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePlan = async () => {
+    if (!onDeletePlan) return;
+    if (!confirm('Zerar todo o dia de produção (Turno 1 e Turno 2) para testar novamente?')) return;
+
+    try {
+      await onDeletePlan();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err?.message || 'Não foi possível zerar o dia');
+    }
+  };
+
   const handleReset = () => {
     setPlanItems(availableItems.map(a => ({ ...a, quantity_ordered: 0 })));
     setCollapsedSectors(new Set());
@@ -218,7 +245,7 @@ export function ProductionPlanSheet({
   const totalOrdered = planItems.reduce((s, p) => s + p.quantity_ordered, 0);
 
   const canCloseShift = onCloseShift && currentShift === 1 && !isShift1Closed;
-  const hasDangerActions = hasExistingPlan && (canCloseShift || onDeletePlan);
+  const canResetDay = hasExistingPlan && !!onDeletePlan;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -239,9 +266,9 @@ export function ProductionPlanSheet({
             </SheetTitle>
           </SheetHeader>
 
-          {/* Search with inline actions */}
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
+          {/* Search + quick actions */}
+          <div className="space-y-2">
+            <div className="relative">
               <AppIcon name="Search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar peça..."
@@ -250,21 +277,24 @@ export function ProductionPlanSheet({
                 className="h-9 pl-9 text-sm"
               />
             </div>
-            <button
-              onClick={handlePullPending}
-              className="h-9 px-3 rounded-lg bg-secondary/60 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 shrink-0"
-              title="Puxar pendentes do último turno"
-            >
-              <AppIcon name="History" size={14} />
-              <span className="hidden min-[380px]:inline">Importar</span>
-            </button>
-            <button
-              onClick={handleReset}
-              className="h-9 w-9 rounded-lg bg-secondary/60 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center shrink-0"
-              title="Zerar quantidades"
-            >
-              <AppIcon name="RotateCcw" size={14} />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handlePullPending}
+                className="h-9 flex-1 rounded-lg bg-secondary/60 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5"
+                title="Puxar pendentes do último turno"
+              >
+                <AppIcon name="History" size={14} />
+                <span>Puxar último turno</span>
+              </button>
+              <button
+                onClick={handleReset}
+                className="h-9 px-3 rounded-lg bg-secondary/60 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5"
+                title="Zerar quantidades"
+              >
+                <AppIcon name="RotateCcw" size={14} />
+                <span>Zerar qtd.</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -384,6 +414,27 @@ export function ProductionPlanSheet({
 
         {/* Fixed Footer */}
         <div className="px-6 pb-5 pt-3 space-y-2 border-t border-border/30 bg-background">
+          {canCloseShift && (
+            <button
+              onClick={handleCloseShift}
+              disabled={saving}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-xs font-semibold text-foreground disabled:opacity-60"
+            >
+              <AppIcon name="ArrowRight" size={14} />
+              Fechar Turno 1 e liberar Turno 2
+            </button>
+          )}
+
+          {canResetDay && (
+            <button
+              onClick={handleDeletePlan}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-destructive/5 border border-destructive/15 hover:bg-destructive/10 transition-colors text-xs font-semibold text-destructive"
+            >
+              <AppIcon name="Trash2" size={14} />
+              Zerar tudo do dia (teste)
+            </button>
+          )}
+
           {/* Notes — compact */}
           <Input
             placeholder="Observações (opcional)"
@@ -401,48 +452,6 @@ export function ProductionPlanSheet({
               {saving ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
-
-          {/* Danger actions — collapsible */}
-          {hasDangerActions && (
-            <div>
-              <button
-                onClick={() => setShowDangerZone(!showDangerZone)}
-                className="w-full text-center text-[11px] text-muted-foreground/50 hover:text-muted-foreground py-1 transition-colors"
-              >
-                {showDangerZone ? 'Ocultar opções' : 'Mais opções ···'}
-              </button>
-              {showDangerZone && (
-                <div className="space-y-2 pt-1">
-                  {canCloseShift && (
-                    <button
-                      onClick={() => {
-                        if (!confirm('Fechar Turno 1 e criar Turno 2 com pendentes?')) return;
-                        onCloseShift!();
-                        onOpenChange(false);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors text-xs font-semibold text-muted-foreground"
-                    >
-                      <AppIcon name="ArrowRight" size={14} />
-                      Fechar Turno 1 → Turno 2
-                    </button>
-                  )}
-                  {onDeletePlan && (
-                    <button
-                      onClick={() => {
-                        if (!confirm('Apagar plano e todos os registros? Não pode ser desfeito.')) return;
-                        onDeletePlan();
-                        onOpenChange(false);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-destructive/5 border border-destructive/15 hover:bg-destructive/10 transition-colors text-xs font-semibold text-destructive"
-                    >
-                      <AppIcon name="Trash2" size={14} />
-                      Apagar plano
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </SheetContent>
     </Sheet>
