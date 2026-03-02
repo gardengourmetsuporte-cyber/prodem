@@ -327,16 +327,7 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
 
             {/* Settings + Logout */}
             <div className="space-y-1.5 mt-2 px-4 pb-4">
-              <button
-                onClick={() => setTabPickerOpen(true)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl card-surface hover:bg-card/90 active:scale-[0.98] transition-all"
-              >
-                <div className="w-9 h-9 rounded-full bg-black/40 border border-white/5 flex items-center justify-center shrink-0">
-                  <AppIcon name="Settings2" size={18} className="text-foreground/70" />
-                </div>
-                <span className="text-sm font-medium text-foreground">Personalizar barra inferior</span>
-                <AppIcon name="ChevronRight" size={16} className="text-muted-foreground ml-auto shrink-0" />
-              </button>
+              
               <button
                 onClick={() => { navigate('/settings'); onOpenChange(false); }}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl card-surface hover:bg-card/90 active:scale-[0.98] transition-all"
