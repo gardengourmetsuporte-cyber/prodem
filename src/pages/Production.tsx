@@ -15,6 +15,9 @@ import { FinishTaskDialog } from '@/components/production/FinishTaskDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { fetchSectorsData } from '@/hooks/checklists/useChecklistFetch';
+import { ChecklistSector } from '@/types/database';
 
 export default function ProductionPage() {
   const { isAdmin, user } = useAuth();
@@ -44,6 +47,12 @@ export default function ProductionPage() {
   // Projects
   const { projects, createProject, updateProject, deleteProject, isLoading: projectsLoading } = useProductionProjects(activeUnitId);
 
+  // Fetch checklist sectors for piece selection in OS creation
+  const { data: sectors = [] } = useQuery<ChecklistSector[]>({
+    queryKey: ['checklist-sectors', activeUnitId],
+    queryFn: () => fetchSectorsData(activeUnitId),
+    enabled: !!activeUnitId,
+  });
   // Pieces for selected project
   const { pieces, isLoading: piecesLoading } = useProductionPieces(selectedProjectId, activeUnitId);
 
@@ -237,7 +246,7 @@ export default function ProductionPage() {
         open={projectSheetOpen}
         onOpenChange={setProjectSheetOpen}
         projects={projects}
-        sectors={[]}
+        sectors={sectors}
         onCreateProject={createProject}
         onUpdateProject={updateProject}
         onDeleteProject={deleteProject}
