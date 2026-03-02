@@ -160,7 +160,13 @@ export default function ProductionPage() {
             isAdmin={isAdmin}
             onManageProjects={() => setProjectSheetOpen(true)}
             groupings={groupingsWithItems}
-            onManageGroupings={() => setGroupingSheetOpen(true)}
+            onManageGroupings={() => {
+              if (!activeProject) {
+                toast.error('Crie um projeto/OS primeiro antes de adicionar agrupamentos');
+                return;
+              }
+              setGroupingSheetOpen(true);
+            }}
           />
 
           {/* Shift Panel */}
