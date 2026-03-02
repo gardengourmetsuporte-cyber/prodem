@@ -1192,6 +1192,7 @@ export type Database = {
           id: string
           is_active: boolean
           notes: string | null
+          pin_code: string | null
           role: string | null
           unit_id: string | null
           updated_at: string
@@ -1208,6 +1209,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           notes?: string | null
+          pin_code?: string | null
           role?: string | null
           unit_id?: string | null
           updated_at?: string
@@ -1224,6 +1226,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           notes?: string | null
+          pin_code?: string | null
           role?: string | null
           unit_id?: string | null
           updated_at?: string

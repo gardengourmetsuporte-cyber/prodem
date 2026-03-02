@@ -82,12 +82,19 @@ export default function ProductionPage() {
     setActiveLogId(null);
   }, []);
 
-  // Validate PIN - accepts any 4-digit code for now
-  // TODO: validate against employee pin_code in profiles table
+  // Validate PIN against employees table
   const validatePin = useCallback(async (pin: string): Promise<boolean> => {
-    // Accept any 4-digit PIN for now
-    return pin.length === 4;
-  }, []);
+    if (pin.length !== 4 || !activeUnitId) return false;
+    const { data, error } = await (supabase
+      .from('employees') as any)
+      .select('id, full_name')
+      .eq('unit_id', activeUnitId)
+      .eq('pin_code', pin)
+      .eq('is_active', true)
+      .limit(1);
+    if (error || !data || data.length === 0) return false;
+    return true;
+  }, [activeUnitId]);
 
   // Handle START piece
   const handleStartPiece = useCallback((piece: ProductionPiece) => {
