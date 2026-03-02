@@ -2484,3 +2484,122 @@ select:focus {
   background: hsl(var(--card));
   overflow: hidden;
 }
+
+/* =========================================================
+   GLASS HERO BALANCE CARD
+   ========================================================= */
+
+.glass-hero-balance {
+  background: linear-gradient(145deg,
+    hsl(25 40% 6%) 0%,
+    hsl(25 55% 14%) 40%,
+    hsl(25 45% 10%) 70%,
+    hsl(25 35% 6%) 100%);
+  background-size: 200% 200%;
+  animation: navyCardFlow 12s ease-in-out infinite;
+  border: 1px solid hsl(25 85% 54% / 0.3);
+  box-shadow:
+    0 8px 40px hsl(25 85% 54% / 0.12),
+    0 20px 60px hsl(0 0% 0% / 0.3),
+    inset 0 1px 1px hsl(0 0% 100% / 0.06);
+  color: hsl(0 0% 98%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .glass-hero-balance {
+  background: linear-gradient(145deg,
+    hsl(0 0% 97%) 0%,
+    hsl(0 0% 94%) 25%,
+    hsl(25 30% 90%) 50%,
+    hsl(25 35% 87%) 65%,
+    hsl(0 0% 95%) 80%,
+    hsl(0 0% 98%) 100%);
+  background-size: 200% 200%;
+  animation: darkCardShimmer 8s ease-in-out infinite;
+  color: hsl(25 20% 15%);
+  border-color: hsl(25 30% 70% / 0.25);
+  box-shadow:
+    0 4px 24px hsl(0 0% 0% / 0.15),
+    0 12px 48px hsl(25 60% 40% / 0.08),
+    inset 0 1px 0 hsl(0 0% 100% / 0.9);
+}
+
+/* Shine sweep */
+.glass-hero-balance::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg,
+    transparent 25%,
+    hsl(25 60% 50% / 0.06) 45%,
+    hsl(25 80% 70% / 0.12) 50%,
+    hsl(25 60% 50% / 0.06) 55%,
+    transparent 75%);
+  background-size: 250% 100%;
+  animation: cardShineSwipe 6s ease-in-out infinite;
+}
+
+.glass-hero-balance:active {
+  transform: scale(0.98);
+}
+
+/* Dark mode text overrides */
+.dark .glass-hero-balance .text-white,
+.dark .glass-hero-balance .text-white\/90,
+.dark .glass-hero-balance .text-white\/50,
+.dark .glass-hero-balance .text-white\/40,
+.dark .glass-hero-balance .text-white\/25 {
+  color: hsl(25 20% 25%);
+}
+
+.dark .glass-hero-balance .bg-white\/10,
+.dark .glass-hero-balance .bg-white\/\[0\.06\],
+.dark .glass-hero-balance .bg-white\/\[0\.02\] {
+  background: hsl(25 20% 50% / 0.08);
+}
+
+.dark .glass-hero-balance .border-white\/10,
+.dark .glass-hero-balance .border-white\/\[0\.08\] {
+  border-color: hsl(25 20% 50% / 0.15);
+}
+
+/* =========================================================
+   FLIGHT BOARD — Airport-style production monitor
+   ========================================================= */
+
+.flight-board {
+  background: hsl(222 30% 7%);
+  border-color: hsl(0 0% 100% / 0.06);
+  box-shadow:
+    0 4px 24px hsl(0 0% 0% / 0.4),
+    inset 0 1px 0 hsl(0 0% 100% / 0.04);
+}
+
+.dark .flight-board {
+  background: hsl(0 0% 98%);
+  border-color: hsl(0 0% 0% / 0.06);
+  box-shadow:
+    0 2px 12px hsl(0 0% 0% / 0.08),
+    inset 0 1px 0 hsl(0 0% 100% / 0.8);
+}
+
+/* Dark mode overrides for flight board */
+.dark .flight-board .text-muted-foreground,
+.dark .flight-board .text-muted-foreground\/50,
+.dark .flight-board .text-muted-foreground\/60,
+.dark .flight-board .text-muted-foreground\/30,
+.dark .flight-board .text-muted-foreground\/40 {
+  color: hsl(220 10% 45%);
+}
+
+.dark .flight-board .border-white\/\[0\.06\],
+.dark .flight-board .border-white\/\[0\.04\] {
+  border-color: hsl(0 0% 0% / 0.06);
+}
+
+.dark .flight-board .bg-white\/\[0\.02\],
+.dark .flight-board .bg-white\/\[0\.01\] {
+  background: hsl(0 0% 0% / 0.02);
+}
