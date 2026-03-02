@@ -25,7 +25,11 @@ export function AdminDashboard() {
   const { activeUnitId } = useUnit();
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
   const { stats, isLoading: statsLoading } = useDashboardStats();
-  const { report, totals, isLoading: prodLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
+  const shift1 = useProductionOrders(activeUnitId, new Date(), 1);
+  const shift2 = useProductionOrders(activeUnitId, new Date(), 2);
+  // Use shift 2 if shift 1 is closed and shift 2 has an order; otherwise use shift 1
+  const activeProd = (shift1.order?.status === 'closed' && shift2.hasOrder) ? shift2 : shift1;
+  const { report, totals, isLoading: prodLoading, hasOrder } = activeProd;
 
   const isReady = !statsLoading && !modulesLoading && !!profile;
 
