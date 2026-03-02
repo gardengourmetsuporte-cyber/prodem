@@ -1,20 +1,23 @@
 
 
-## Problema: Teclado some ao digitar
+## Seletor de Projeto na Tela de Produção
 
-O componente `FieldRow` está definido **dentro** do corpo do componente `GroupingSheet` (linha ~113). Isso faz com que, a cada keystroke, o React crie uma nova referência de componente, desmonte o input anterior e monte um novo — causando perda de foco e o teclado sumindo.
+Atualmente o sistema pega automaticamente `activeProjects[0]`. Vou adicionar um seletor para alternar entre projetos.
 
-## Solução
+### Alterações
 
-Mover o `FieldRow` para **fora** do componente `GroupingSheet`, como um componente separado no mesmo arquivo. Isso mantém a referência estável entre renders.
+**1. `src/hooks/useProductionPage.ts`**
+- Adicionar estado `selectedProjectId` com controle manual
+- Substituir `activeProject = activeProjects[0]` por seleção baseada no `selectedProjectId`
+- Expor `setSelectedProjectId` no retorno
 
-```typescript
-// ANTES (dentro do componente):
-const FieldRow = ({ label, value, onChange, placeholder }) => (...)
+**2. `src/components/production/ProductionProjectHero.tsx`**
+- Quando houver mais de 1 projeto ativo, renderizar chips/tabs horizontais acima do hero card para alternar entre projetos (ex: `#OS001`, `#OS002`)
+- Chip selecionado fica destacado com estilo warning/ativo
+- Manter o botão "Cadastrar OS" para admin
 
-// DEPOIS (fora do componente, no topo do arquivo):
-function FieldRow({ label, value, onChange, placeholder }: { ... }) { return (...) }
-```
+**3. `src/pages/Production.tsx`**
+- Passar `setSelectedProjectId` e `activeProjects` para o `ProductionProjectHero`
 
-Alteração de 1 arquivo: `src/components/production/GroupingSheet.tsx`.
+O seletor aparecerá como uma fila horizontal de chips com o número da OS, no estilo industrial já usado no app.
 
