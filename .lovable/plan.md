@@ -1,88 +1,93 @@
 
 
-## Análise: Sistema Atual vs Método Manual da Prodem
+## Plano: Reestruturação Completa do Módulo de Produção
 
-### O que a Prodem faz no papel
+### Diagnóstico do Estado Atual
 
-Baseado nos 5 documentos:
+O módulo de produção está **embutido dentro da página de Checklists** (`/checklists`), que é um componente monolítico de **925 linhas** misturando conceitos de checklist operacional (abertura/fechamento) com produção industrial. O `ChecklistView.tsx` tem **1644 linhas** e trata tanto itens de checklist simples quanto peças de produção com lógica condicional extremamente complexa. Isso gera:
 
-1. **Tabela de Cortes de Barras** (documento master): Lista todos os materiais de um projeto com código, descrição, medida de corte, qtd/rack, qtd total e processo (SERRA, METALEIRA, METALERADORA)
-2. **Ordens de Produção** (fichas individuais #1302, #1303): Uma ficha por peça com campos para cada operação: hora inicial/final, data, qtd produzida, operador, qtd expedida, ref máquina
-3. **Planilhas de acompanhamento**: Itens **grifados** (marca-texto amarelo/verde) = em produção; itens **riscados** = concluídos
+- Confusão para o usuário (produção e checklists são coisas diferentes)
+- Código frágil com muitos `(item as any).target_quantity > 0` para distinguir itens de produção
+- UX subótima: o operador precisa entender "Turno 1 = abertura", navegar entre cards de checklist e encontrar suas peças
+- O conceito de Projeto/OS existe no banco mas mal aparece na interface
 
-### O que o sistema atual já suporta bem
+### Visão: O que o papel nos ensina
 
-| Funcionalidade | Status |
-|---|---|
-| Setores = Processos (SERRA, METALEIRA, METALERADORA, Solda, Montagem, Pintura) | ✅ Funcionando — 6 setores criados |
-| Items com material_code, piece_dimensions, target_quantity | ✅ ~30 itens reais importados |
-| Pedido de Produção (seleção de itens + quantidades por turno) | ✅ ProductionPlanSheet |
-| Turnos 1 e 2 com fechamento e herança de pendentes | ✅ useProductionOrders |
-| Acompanhamento: Iniciar produção (Play), Finalizar (qtd), status in_progress/partial/complete | ✅ ChecklistView |
-| Visual de grifo (amarelo brilhante para in_progress) | ✅ Implementado |
-| Visual de risco (line-through + opacity para complete) | ✅ Implementado |
-| Relatório por turno com totais pedido/produzido/pendente | ✅ ProductionReport |
-| Progress bar por item e por turno | ✅ Funcionando |
-| Timer ao vivo durante produção | ✅ Implementado |
+Baseado nos documentos reais da Prodem:
 
-### O que falta adaptar
+1. **TABELA DE CORTES DE BARRAS** (documento master do projeto): Lista completa de materiais com código, descrição, medida de corte, qtd/rack, qtd total e PROCESSO (SERRA, METALEIRA, etc.)
+2. **ORDEM DE PRODUÇÃO** (ficha por peça): Cada peça tem uma ficha individual com múltiplas operações, hora inicial/final, operador, ref máquina, qtd expedida
+3. **Planilha de acompanhamento**: Grifo amarelo = em produção, riscado = concluído
 
-**1. Conceito de "Projeto" / Ordem de Serviço**
-O papel mostra que tudo gira em torno de um **Projeto** (ex: #6421 RACK BOOK ALTENADOR VW, Cliente: VALEO). O sistema atual não tem esse conceito — os pedidos são por data, sem vínculo a um projeto/cliente. Precisamos:
-- Nova tabela `production_projects` (numero_projeto, descricao, cliente, status)
-- Vincular `production_orders` a um projeto
-- Card no topo mostrando "Projeto #6421 — RACK BOOK ALTENADOR VW — VALEO"
+### Plano de Ação (7 tarefas)
 
-**2. Múltiplas operações por peça (Ordem de Produção)**
-No papel, uma mesma peça passa por **várias operações em sequência** (ex: METALEIRA → depois outra operação). O sistema atual trata cada item como uma tarefa única num setor. Para replicar:
-- Adicionar campo `operations` ou criar registros de "etapas" por item
-- Ou manter como está (cada medida de corte já está no setor correto) — **o sistema já modela isso corretamente** pois cada registro de item é "material X na medida Y no processo Z"
+#### 1. Criar página dedicada `/production`
+Separar produção de checklists. Nova rota `/production` com componente `src/pages/Production.tsx`. Redirecionar o item "Produção" do menu para `/production`. A página `/checklists` continuará existindo para checklists operacionais (limpeza, bônus, etc).
 
-**3. Campos da Ordem de Produção não capturados**
-- **Operador** por operação: O sistema já registra `completed_by` (quem finalizou)
-- **Hora Inicial/Final**: O sistema já tem `started_at` e `finished_at` ✅
-- **Ref. Máquina**: Não existe campo para isso
-- **Qtd. Expedida**: Não existe — é um conceito de logística pós-produção
-- **Roteiro**: Não existe — número sequencial da rota de fabricação
+#### 2. Criar layout focado no Projeto/OS
+A nova página abre com o **Projeto ativo** no topo (hero card premium):
+- `#6421 — RACK BOOK ALTENADOR VW`
+- Cliente: VALEO
+- Progresso geral do projeto (não apenas do dia)
+- Botão para trocar/gerenciar projetos
 
-**4. Duplicatas de setores**
-Há 3 setores "SERRA" duplicados no banco. Precisa limpar.
+#### 3. Painel de Controle de Turnos (redesign)
+Abaixo do projeto, dois cards lado a lado estilo o atual `ProductionDayCard`, mas com:
+- Date strip horizontal para navegação entre dias
+- Indicador visual claro de turno ativo
+- Progresso em tempo real (manter o polling de 15s que já existe)
 
-### Plano de implementação
+#### 4. Criar "Ordem de Produção Digital" (view por peça)
+Replicar fielmente a ficha de papel. Ao tocar em uma peça na lista, abrir um Sheet com:
+- Cabeçalho: código do material, descrição, medida de corte, processo
+- Tabela de operações: hora inicial/final, data, qtd produzida, operador, ref máquina
+- Campo de qtd expedida (novo conceito)
+- Status visual: grifo amarelo (em andamento) / riscado (concluído)
 
-**Passo 1 — Limpar duplicatas de SERRA**
-Migrar itens dos setores SERRA duplicados para um único e deletar os vazios.
+#### 5. Lista de peças estilo "Tabela de Cortes"
+A lista principal de peças do turno exibida como tabela industrial (não cards de checklist):
+- Colunas: Código | Descrição | Medida | Processo | Qtd Pedida | Qtd Feita | Status
+- Agrupada por PROCESSO (setor)
+- Visual de grifo (highlight amarelo) para itens em produção
+- Visual de riscado para itens concluídos
+- Botão Play para iniciar, Stop para finalizar com quantidade + ref máquina
 
-**Passo 2 — Adicionar tabela `production_projects`**
-```sql
-CREATE TABLE production_projects (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  unit_id UUID NOT NULL REFERENCES units(id),
-  project_number TEXT NOT NULL,
-  description TEXT NOT NULL,
-  client TEXT,
-  status TEXT DEFAULT 'active',
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-Vincular `production_orders.project_id` a esta tabela.
+#### 6. Adicionar campo `quantity_shipped` (Expedição)
+Nova coluna na tabela `checklist_completions` ou nova tabela `production_shipments`:
+- Qtd expedida por item
+- Data/hora, colaborador, destino, solicitante
+- Isso replica a seção "EXPEDIÇÃO" do papel
 
-**Passo 3 — Criar projeto real de exemplo**
-Inserir Projeto #6421 — RACK BOOK ALTENADOR VW — VALEO como dados reais.
+#### 7. Migrar lógica de produção do ChecklistView
+Extrair toda a lógica de produção (Play/Stop, quantity_done, machine_ref, timer, progress) que hoje está no ChecklistView para componentes dedicados na pasta `src/components/production/`:
+- `ProductionItemRow.tsx` — linha da peça na tabela
+- `ProductionItemSheet.tsx` — ficha detalhada da peça (ordem de produção digital)
+- `ProductionShiftPanel.tsx` — painel de controle do turno
+- Manter o `ChecklistView` limpo para checklists simples
 
-**Passo 4 — UI do Projeto no topo da página de produção**
-Card com número do projeto, descrição e cliente acima dos cards de turno.
+### Detalhes Técnicos
 
-**Passo 5 — Adicionar campo `machine_ref` na completion** (opcional)
-Para registrar a referência da máquina usada (campo "REF MÁQUINA" do papel).
+**Banco de dados:**
+- Nova migração para `quantity_shipped` em `checklist_completions`
+- Habilitar realtime na tabela `production_orders` para atualizações em tempo real
+- Tabela `production_projects` já existe e será aproveitada
 
-### Conclusão
+**Hooks:**
+- `useProductionOrders` já existe e será reutilizado
+- `useProductionProjects` já existe
+- Criar `useProductionPage` como hook principal da nova página, compondo os dois acima
 
-O sistema já cobre **~85% do fluxo manual**. Os gaps principais são:
-- Falta o conceito de **Projeto/OS** que agrupa tudo
-- Falta campo **Ref. Máquina** (baixa prioridade)
-- Falta **Expedição** (fase posterior, pode ser implementada depois)
-- Duplicatas de SERRA precisam ser limpas
+**Roteamento:**
+- Adicionar `Route path="/production"` no `App.tsx`
+- Atualizar `modules.ts` para apontar para `/production`
+- Manter `/checklists` para checklists operacionais
 
-A adaptação é relativamente pequena — o modelo de dados atual (setores → subcategorias → itens com material_code, medidas e quantidades + completions com started_at/finished_at/quantity_done) já replica fielmente o que fazem no papel.
+**Dashboard:**
+- O `ProductionFlightBoard` no AdminDashboard já funciona e continuará igual, apenas apontando o link para `/production`
+
+### O que NÃO muda
+- Backend (hooks, queries, tabelas) permanecem praticamente iguais
+- Gamificação (pontos, estrelas) continua funcionando
+- Sistema de turnos 1 e 2 com herança de pendentes permanece
+- Realtime via polling de 15s continua
 
