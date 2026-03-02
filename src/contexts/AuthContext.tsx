@@ -232,7 +232,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = effectiveRole === 'super_admin';
   const isLider = effectiveRole === 'lider';
   const userStatus = (profile?.status as UserStatus) || null;
-  const isPending = userStatus === 'pending';
+  // Treat null profile (trigger failed or not yet created) as pending when user is logged in
+  const isPending = userStatus === 'pending' || (user !== null && !isLoading && profile === null);
   const isSuspended = userStatus === 'suspended';
   const setDevRole = useCallback((r: AppRole) => setDevRoleState(r), []);
 
