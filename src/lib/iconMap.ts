@@ -9,6 +9,7 @@ export const ICON_MAP: Record<string, string> = {
   ChevronDown: 'expand_more',
   ChevronUp: 'expand_less',
   ChevronLeft: 'chevron_left',
+  ChevronsUpDown: 'unfold_more',
   ArrowLeft: 'arrow_back_ios_new',
   ArrowRight: 'arrow_forward_ios',
   ArrowUpRight: 'north_east',
