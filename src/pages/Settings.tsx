@@ -12,15 +12,13 @@ const CategorySettings = lazy(() => import('@/components/settings/CategorySettin
 const SupplierSettings = lazy(() => import('@/components/settings/SupplierSettings').then(m => ({ default: m.SupplierSettings })));
 const ChecklistSettingsManager = lazy(() => import('@/components/settings/ChecklistSettingsManager').then(m => ({ default: m.ChecklistSettingsManager })));
 const RewardSettings = lazy(() => import('@/components/settings/RewardSettings').then(m => ({ default: m.RewardSettings })));
-const PaymentMethodSettings = lazy(() => import('@/components/settings/PaymentMethodSettings').then(m => ({ default: m.PaymentMethodSettings })));
+
 
 const UnitManagement = lazy(() => import('@/components/settings/UnitManagement').then(m => ({ default: m.UnitManagement })));
 const TeamHub = lazy(() => import('@/components/settings/TeamHub').then(m => ({ default: m.TeamHub })));
 const MedalSettings = lazy(() => import('@/components/settings/MedalSettings').then(m => ({ default: m.MedalSettings })));
 const NotificationSettings = lazy(() => import('@/components/settings/NotificationSettings').then(m => ({ default: m.NotificationSettings })));
 const AuditLogSettings = lazy(() => import('@/components/settings/AuditLogSettings').then(m => ({ default: m.AuditLogSettings })));
-const CardapioSettings = lazy(() => import('@/components/settings/CardapioSettings').then(m => ({ default: m.CardapioSettings })));
-const LoyaltySettings = lazy(() => import('@/components/settings/LoyaltySettings').then(m => ({ default: m.LoyaltySettings })));
 
 interface MenuItem {
   value: string;
@@ -37,15 +35,11 @@ const allMenuItems: MenuItem[] = [
   { value: 'team', icon: 'Users', label: 'Equipe', description: 'Membros, convites e níveis de acesso', variant: 'cyan', section: 'Conta' },
   { value: 'categories', icon: 'Tag', label: 'Categorias', description: 'Categorias de estoque', variant: 'amber', section: 'Operação' },
   { value: 'suppliers', icon: 'Truck', label: 'Fornecedores', description: 'Cadastro de fornecedores', variant: 'amber', section: 'Operação' },
-  { value: 'checklists', icon: 'ClipboardCheck', label: 'Checklists', description: 'Setores, itens e pontuação', variant: 'amber', section: 'Operação' },
-  { value: 'payments', icon: 'Wallet', label: 'Métodos de Pagamento', description: 'Taxas e prazos de recebimento', variant: 'amber', section: 'Operação' },
-  
+  { value: 'checklists', icon: 'ClipboardCheck', label: 'Produção', description: 'Setores, itens e pontuação', variant: 'amber', section: 'Operação' },
   { value: 'rewards', icon: 'Gift', label: 'Loja de Recompensas', description: 'Prêmios para colaboradores', variant: 'purple', section: 'Sistema' },
   { value: 'medals', icon: 'Award', label: 'Medalhas', description: 'Conceder medalhas de prestígio', variant: 'purple', section: 'Sistema' },
-  { value: 'units', icon: 'Store', label: 'Lojas', description: 'Gerenciar suas lojas', variant: 'purple', section: 'Sistema' },
+  { value: 'units', icon: 'Store', label: 'Unidades', description: 'Gerenciar suas unidades', variant: 'purple', section: 'Sistema' },
   { value: 'audit-log', icon: 'FileText', label: 'Log de Atividades', description: 'Registro de ações no sistema', variant: 'purple', section: 'Sistema' },
-  { value: 'cardapio-digital', icon: 'BookOpen', label: 'Cardápio Digital', description: 'PDV, mesas, QR e roleta', variant: 'amber', section: 'Operação' },
-  { value: 'loyalty', icon: 'Heart', label: 'Fidelidade', description: 'Regras de pontos e recompensas', variant: 'purple', section: 'Sistema' },
 ];
 
 function SettingsFallback() {
@@ -110,14 +104,10 @@ export default function SettingsPage() {
       {activeSection === 'checklists' && <ChecklistSettingsManager />}
       {activeSection === 'team' && <TeamHub />}
       {activeSection === 'rewards' && <RewardSettings />}
-      {activeSection === 'payments' && <PaymentMethodSettings />}
-      
       {activeSection === 'units' && <UnitManagement />}
       {activeSection === 'medals' && <MedalSettings />}
       {activeSection === 'notifications' && <NotificationSettings />}
       {activeSection === 'audit-log' && <AuditLogSettings />}
-      {activeSection === 'cardapio-digital' && <CardapioSettings />}
-      {activeSection === 'loyalty' && <LoyaltySettings />}
     </Suspense>
   ) : null;
 
