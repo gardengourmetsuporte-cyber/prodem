@@ -60,26 +60,13 @@ export function AdminDashboard() {
   return (
     <div className="space-y-5 px-4 py-3 lg:px-6">
       {/* ═══ HEADER ═══ */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-extrabold text-foreground font-display" style={{ letterSpacing: '-0.03em' }}>
-            {greeting}, {firstName} 👋
-          </h2>
-          <p className="text-muted-foreground text-xs capitalize mt-0.5">
-            {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/notifications')}
-          className="relative w-10 h-10 rounded-xl bg-card border border-border/50 flex items-center justify-center hover:bg-muted/50 transition-colors"
-        >
-          <AppIcon name="Bell" size={18} className="text-muted-foreground" />
-          {alerts.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
-              <span className="text-[9px] font-bold text-destructive-foreground">{alerts.length}</span>
-            </span>
-          )}
-        </button>
+      <div>
+        <h2 className="text-xl font-extrabold text-foreground font-display" style={{ letterSpacing: '-0.03em' }}>
+          {greeting}, {firstName} 👋
+        </h2>
+        <p className="text-muted-foreground text-xs capitalize mt-0.5">
+          {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
+        </p>
       </div>
 
       {/* ═══ 1. GLASS HERO — SALDO ═══ */}
