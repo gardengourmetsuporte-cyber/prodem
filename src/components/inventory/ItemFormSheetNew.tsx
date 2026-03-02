@@ -141,7 +141,7 @@ export function ItemFormSheetNew({
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Hambúrguer 150g"
+              placeholder="Ex: Chapa 3mm (1200x3000)"
               className="input-large"
             />
           </div>

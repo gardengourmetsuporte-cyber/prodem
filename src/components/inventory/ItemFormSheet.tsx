@@ -16,14 +16,14 @@ interface ItemFormSheetProps {
 }
 
 const categories = [
-  'Carnes',
-  'Pães',
-  'Molhos',
-  'Bebidas',
-  'Vegetais',
-  'Laticínios',
-  'Embalagens',
-  'Limpeza',
+  'Chapas de Aço',
+  'Barras e Perfis',
+  'Parafusos e Fixadores',
+  'Tintas e Acabamento',
+  'Rodízios e Componentes',
+  'Consumíveis',
+  'Ferramentas',
+  'EPI',
   'Outros',
 ];
 
@@ -90,7 +90,7 @@ export function ItemFormSheet({ item, open, onOpenChange, onSave, onDelete }: It
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Hambúrguer 150g"
+              placeholder="Ex: Chapa 3mm (1200x3000)"
               className="input-large"
             />
           </div>
