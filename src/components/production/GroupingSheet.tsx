@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,9 +30,10 @@ interface GroupingSheetProps {
   onCreateGrouping: (data: any) => Promise<ProductionGrouping>;
   onUpdateGrouping: (id: string, data: any) => Promise<void>;
   onDeleteGrouping: (id: string) => Promise<void>;
+  onImageUpload?: (groupingId: string, file: File) => void;
 }
 
-export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping, onUpdateGrouping, onDeleteGrouping }: GroupingSheetProps) {
+export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping, onUpdateGrouping, onDeleteGrouping, onImageUpload }: GroupingSheetProps) {
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -50,6 +51,8 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
   const [totalPieces, setTotalPieces] = useState('');
   const [uniquePieces, setUniquePieces] = useState('');
   const [notes, setNotes] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
     setGroupingNumber('');
@@ -64,6 +67,7 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
     setTotalPieces('');
     setUniquePieces('');
     setNotes('');
+    setPreviewUrl(null);
     setEditingId(null);
   };
 
@@ -80,7 +84,17 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
     setTotalPieces(String(g.total_pieces || ''));
     setUniquePieces(String(g.unique_pieces || ''));
     setNotes(g.notes || '');
+    setPreviewUrl(g.image_url || null);
     setEditingId(g.id);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && editingId && onImageUpload) {
+      setPreviewUrl(URL.createObjectURL(file));
+      onImageUpload(editingId, file);
+    }
+    e.target.value = '';
   };
 
   const getFormData = () => ({
@@ -191,9 +205,15 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
 
                   <div className="flex flex-col md:flex-row gap-4">
                     {/* Visual Cut Plan Placeholder */}
-                    <div className="w-full md:w-32 h-28 bg-background/50 border-[1.5px] border-border/40 border-dashed rounded-xl flex flex-col items-center justify-center shrink-0">
-                      <AppIcon name="Image" size={24} className="text-muted-foreground/30 mb-2" />
-                      <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Plano de Corte</span>
+                    <div className="w-full md:w-32 h-28 bg-background/50 border-[1.5px] border-border/40 border-dashed rounded-xl flex flex-col items-center justify-center shrink-0 overflow-hidden">
+                      {g.image_url ? (
+                        <img src={g.image_url} alt="Plano de Corte" className="w-full h-full object-cover" />
+                      ) : (
+                        <>
+                          <AppIcon name="Image" size={24} className="text-muted-foreground/30 mb-2" />
+                          <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Plano de Corte</span>
+                        </>
+                      )}
                     </div>
 
                     {/* Technical specs & Times like paper sheet */}
@@ -237,6 +257,39 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
             </div>
           ) : (
             <div className="space-y-3">
+              {/* Image Upload Area for Edit Mode */}
+              {mode === 'edit' && onImageUpload && (
+                <div className="mb-4">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block">
+                    Plano de Corte (Imagem)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 overflow-hidden transition-colors active:scale-[0.98]",
+                      previewUrl ? "border-transparent bg-background/50" : "border-border/60 bg-secondary/30 hover:bg-secondary/50"
+                    )}
+                  >
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Plano" className="w-full h-full object-cover rounded-xl" />
+                    ) : (
+                      <>
+                        <AppIcon name="Camera" size={24} className="text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Toque para anexar o desenho</span>
+                      </>
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <FieldRow label="Nº Agrupamento" value={groupingNumber} onChange={setGroupingNumber} placeholder="1" />
                 <FieldRow label="Espessura" value={thickness} onChange={setThickness} placeholder="4,75 mm" />

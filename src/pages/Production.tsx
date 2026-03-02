@@ -15,6 +15,7 @@ import { GroupingSheet } from '@/components/production/GroupingSheet';
 import { ProductionOrdersHistory } from '@/components/production/ProductionOrdersHistory';
 import { AppIcon } from '@/components/ui/app-icon';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useFabAction } from '@/contexts/FabActionContext';
 
 export default function ProductionPage() {
@@ -111,6 +112,30 @@ export default function ProductionPage() {
       toast.success(`Turno ${shift} reaberto`);
     }
   }, [shift1, shift2]);
+
+  const handleGroupingImageUpload = useCallback(async (groupingId: string, file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${groupingId}-${Math.random()}.${fileExt}`;
+      const filePath = `groupings/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('production')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('production')
+        .getPublicUrl(filePath);
+
+      await updateGrouping(groupingId, { image_url: publicUrl });
+      toast.success('Plano de corte anexado com sucesso!');
+    } catch (err: any) {
+      console.error('Error uploading image:', err);
+      toast.error('Erro ao enviar a imagem. Tente novamente.');
+    }
+  }, [updateGrouping]);
 
   const finishingItemMeta = finishingItemId ? getItemMeta(finishingItemId) : null;
   const finishingItemReport = finishingItemId ? getItemFromReport(finishingItemId) : null;
@@ -278,6 +303,7 @@ export default function ProductionPage() {
         onCreateGrouping={createGrouping}
         onUpdateGrouping={updateGrouping}
         onDeleteGrouping={deleteGrouping}
+        onImageUpload={handleGroupingImageUpload}
       />
 
       <ProductionItemSheet

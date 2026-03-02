@@ -18,6 +18,7 @@ export interface ProductionGrouping {
   total_pieces: number;
   unique_pieces: number;
   notes: string | null;
+  image_url: string | null;
   unit_id: string | null;
   created_at: string;
   updated_at: string;
@@ -93,6 +94,7 @@ export function useProductionGroupings(projectId: string | null, unitId: string 
     total_pieces?: number;
     unique_pieces?: number;
     notes?: string;
+    image_url?: string;
   }) => {
     if (!projectId || !unitId) throw new Error('Missing project/unit');
     const { data: created, error } = await (supabase as any)
