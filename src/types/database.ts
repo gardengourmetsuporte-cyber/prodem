@@ -75,6 +75,8 @@ export interface InventoryItem {
   internal_code: string | null;
   location: string | null;
   weight_per_unit: number | null;
+  warehouse_stock: number;
+  production_stock: number;
   created_at: string;
   updated_at: string;
   category?: Category;

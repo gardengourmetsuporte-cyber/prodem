@@ -234,7 +234,10 @@ export default function InventoryPage() {
           {/* Content with fade transition */}
           <div className="animate-fade-in" key={`${view}-${locationFilter}`}>
             {locationFilter === 'producao' ? (
-              <ProductionStockView />
+              <ProductionStockView
+                items={items}
+                onItemClick={(item) => { setSelectedItem(item); setMovementSheetOpen(true); }}
+              />
             ) : view === 'items' ? (
               <div className="space-y-4">
                 {filteredItems.length === 0 ? (
