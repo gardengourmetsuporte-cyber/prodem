@@ -253,6 +253,13 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     invalidate();
   }, [order?.id, invalidate]);
 
+  // Reopen a closed shift
+  const reopenOrder = useCallback(async () => {
+    if (!order?.id) return;
+    await supabase.from('production_orders').update({ status: 'active' }).eq('id', order.id);
+    invalidate();
+  }, [order?.id, invalidate]);
+
   // Close shift 1 and auto-create shift 2 with remaining items
   const closeShiftAndCreateNext = useCallback(async () => {
     if (!order?.id || !user || !unitId) return;
@@ -332,6 +339,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     shift2Order,
     saveOrder,
     closeOrder,
+    reopenOrder,
     closeShiftAndCreateNext,
     copyFromDate,
     invalidate,

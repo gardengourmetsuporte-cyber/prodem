@@ -124,7 +124,7 @@ export default function ChecklistsPage() {
     order: productionOrder, orderItems: productionItems, report: productionReport,
     totals: productionTotals, hasOrder: hasProductionOrder,
     isShift1Closed,
-    saveOrder, closeOrder, closeShiftAndCreateNext, copyFromDate,
+    saveOrder, closeOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate,
   } = useProductionOrders(activeUnitId, selectedDate, currentShift);
 
   // Also fetch shift 1 data when on shift 2 to show remaining context
@@ -504,6 +504,10 @@ export default function ChecklistsPage() {
                   await closeShiftAndCreateNext();
                   toast.success('Turno 1 fechado! Turno 2 criado com itens pendentes.');
                   setChecklistType('fechamento');
+                }}
+                onReopenShift={async () => {
+                  await reopenOrder();
+                  toast.success('Turno reaberto com sucesso!');
                 }}
               />
             )}

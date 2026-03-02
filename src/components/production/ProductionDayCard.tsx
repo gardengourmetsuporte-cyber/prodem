@@ -11,11 +11,12 @@ interface ProductionDayCardProps {
   onCreatePlan: () => void;
   onViewReport: () => void;
   onCloseShift: () => void;
+  onReopenShift?: () => void;
 }
 
 export function ProductionDayCard({
   order, totals, isAdmin, currentShift, isShift1Closed,
-  onCreatePlan, onViewReport, onCloseShift,
+  onCreatePlan, onViewReport, onCloseShift, onReopenShift,
 }: ProductionDayCardProps) {
   if (!order) {
     if (!isAdmin) return null;
@@ -106,6 +107,17 @@ export function ProductionDayCard({
         >
           <AppIcon name="ArrowRight" size={16} />
           Fechar Turno 1 e abrir Turno 2
+        </button>
+      )}
+
+      {/* Reopen shift button — only for admin when shift is closed */}
+      {isAdmin && order.status === 'closed' && onReopenShift && (
+        <button
+          onClick={onReopenShift}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-card border border-warning/30 hover:bg-warning/5 transition-colors text-sm font-semibold text-warning"
+        >
+          <AppIcon name="RotateCcw" size={16} />
+          Reabrir Turno {currentShift}
         </button>
       )}
     </div>
