@@ -2776,6 +2776,73 @@ export type Database = {
           },
         ]
       }
+      production_logs: {
+        Row: {
+          created_at: string
+          date: string
+          finished_at: string | null
+          id: string
+          machine_ref: string | null
+          operation: string
+          operator_id: string | null
+          piece_id: string
+          project_id: string
+          quantity_done: number
+          started_at: string | null
+          unit_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          finished_at?: string | null
+          id?: string
+          machine_ref?: string | null
+          operation: string
+          operator_id?: string | null
+          piece_id: string
+          project_id: string
+          quantity_done?: number
+          started_at?: string | null
+          unit_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          finished_at?: string | null
+          id?: string
+          machine_ref?: string | null
+          operation?: string
+          operator_id?: string | null
+          piece_id?: string
+          project_id?: string
+          quantity_done?: number
+          started_at?: string | null
+          unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_logs_piece_id_fkey"
+            columns: ["piece_id"]
+            isOneToOne: false
+            referencedRelation: "production_pieces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_logs_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       production_operations: {
         Row: {
           completion_id: string
@@ -2958,6 +3025,66 @@ export type Database = {
           },
         ]
       }
+      production_pieces: {
+        Row: {
+          created_at: string
+          cut_length_mm: number | null
+          description: string
+          id: string
+          material_code: string | null
+          process_type: string | null
+          project_id: string
+          qty_per_rack: number | null
+          qty_total: number
+          sort_order: number | null
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cut_length_mm?: number | null
+          description: string
+          id?: string
+          material_code?: string | null
+          process_type?: string | null
+          project_id: string
+          qty_per_rack?: number | null
+          qty_total?: number
+          sort_order?: number | null
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cut_length_mm?: number | null
+          description?: string
+          id?: string
+          material_code?: string | null
+          process_type?: string | null
+          project_id?: string
+          qty_per_rack?: number | null
+          qty_total?: number
+          sort_order?: number | null
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_pieces_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_pieces_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       production_projects: {
         Row: {
           client: string | null
@@ -3010,57 +3137,54 @@ export type Database = {
       }
       production_shipments: {
         Row: {
-          checklist_item_id: string
           created_at: string
           destination: string | null
           id: string
-          notes: string | null
-          order_id: string
-          quantity_shipped: number
+          operator_id: string | null
+          piece_id: string
+          project_id: string
+          quantity: number
           requester: string | null
-          shipped_at: string
-          shipped_by: string | null
-          unit_id: string | null
+          shipped_at: string | null
+          unit_id: string
         }
         Insert: {
-          checklist_item_id: string
           created_at?: string
           destination?: string | null
           id?: string
-          notes?: string | null
-          order_id: string
-          quantity_shipped?: number
+          operator_id?: string | null
+          piece_id: string
+          project_id: string
+          quantity?: number
           requester?: string | null
-          shipped_at?: string
-          shipped_by?: string | null
-          unit_id?: string | null
+          shipped_at?: string | null
+          unit_id: string
         }
         Update: {
-          checklist_item_id?: string
           created_at?: string
           destination?: string | null
           id?: string
-          notes?: string | null
-          order_id?: string
-          quantity_shipped?: number
+          operator_id?: string | null
+          piece_id?: string
+          project_id?: string
+          quantity?: number
           requester?: string | null
-          shipped_at?: string
-          shipped_by?: string | null
-          unit_id?: string | null
+          shipped_at?: string | null
+          unit_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "production_shipments_checklist_item_id_fkey"
-            columns: ["checklist_item_id"]
+            foreignKeyName: "production_shipments_piece_id_fkey"
+            columns: ["piece_id"]
             isOneToOne: false
-            referencedRelation: "checklist_items"
+            referencedRelation: "production_pieces"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "production_shipments_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "production_shipments_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "production_orders"
+            referencedRelation: "production_projects"
             referencedColumns: ["id"]
           },
           {
