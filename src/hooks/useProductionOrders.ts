@@ -93,7 +93,7 @@ export function useProductionOrders(unitId: string | null, date: Date) {
         .select('item_id, quantity_done, is_skipped, started_at, finished_at')
         .eq('date', dateStr)
         .eq('unit_id', unitId)
-        .eq('status', 'done')
+        .in('status', ['completed', 'done'])
         .in('item_id', itemIds);
       if (error) throw error;
       return data || [];
