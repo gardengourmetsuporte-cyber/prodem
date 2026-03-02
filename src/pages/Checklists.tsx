@@ -116,12 +116,20 @@ export default function ChecklistsPage() {
 
   const currentDate = format(selectedDate, 'yyyy-MM-dd');
 
-  // Production orders
+  // Determine current shift from checklistType
+  const currentShift = checklistType === 'fechamento' ? 2 : 1;
+
+  // Production orders — shift-aware
   const {
     order: productionOrder, orderItems: productionItems, report: productionReport,
     totals: productionTotals, hasOrder: hasProductionOrder,
-    saveOrder, closeOrder, copyFromDate,
-  } = useProductionOrders(activeUnitId, selectedDate);
+    isShift1Closed,
+    saveOrder, closeOrder, closeShiftAndCreateNext, copyFromDate,
+  } = useProductionOrders(activeUnitId, selectedDate, currentShift);
+
+  // Also fetch shift 1 data when on shift 2 to show remaining context
+  const shift1Hook = useProductionOrders(activeUnitId, selectedDate, 1);
+
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
@@ -488,8 +496,15 @@ export default function ChecklistsPage() {
                 order={productionOrder}
                 totals={productionTotals}
                 isAdmin={isAdmin}
+                currentShift={currentShift}
+                isShift1Closed={isShift1Closed}
                 onCreatePlan={() => setPlanSheetOpen(true)}
                 onViewReport={() => setReportSheetOpen(true)}
+                onCloseShift={async () => {
+                  await closeShiftAndCreateNext();
+                  toast.success('Turno 1 fechado! Turno 2 criado com itens pendentes.');
+                  setChecklistType('fechamento');
+                }}
               />
             )}
 
@@ -562,14 +577,21 @@ export default function ChecklistsPage() {
                 )}
               </button>
 
-              {/* Fechamento Card */}
+              {/* Fechamento / Turno 2 Card */}
               <button
-                onClick={() => setChecklistType('fechamento')}
+                onClick={() => {
+                  if (!isShift1Closed && shift1Hook.hasOrder) {
+                    toast.error('Feche o Turno 1 antes de acessar o Turno 2');
+                    return;
+                  }
+                  setChecklistType('fechamento');
+                }}
                 className={cn(
                   "relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-300",
                   checklistType === 'fechamento'
                     ? "finance-hero-card checklist-gradient-slow ring-0 scale-[1.02]"
-                    : "ring-1 ring-border/40 hover:ring-border bg-card/60 opacity-70 hover:opacity-90"
+                    : "ring-1 ring-border/40 hover:ring-border bg-card/60 opacity-70 hover:opacity-90",
+                  !isShift1Closed && shift1Hook.hasOrder && checklistType !== 'fechamento' && "opacity-40 cursor-not-allowed"
                 )}
               >
                 {settingsMode && isAdmin && (
@@ -582,46 +604,56 @@ export default function ChecklistsPage() {
                   />
                 )}
                 <div className="flex items-center gap-3 mb-3">
-                  <AppIcon
-                    name={getTypeProgress.fechamento.percent === 100 ? 'check_circle' : 'Factory'}
-                    size={22}
-                    fill={getTypeProgress.fechamento.percent === 100 ? 1 : 0}
-                    className={cn(
-                      "transition-colors",
-                      getTypeProgress.fechamento.percent === 100 ? "text-success" : checklistType === 'fechamento' ? "text-foreground" : "text-muted-foreground"
-                    )}
-                  />
+                  {!isShift1Closed && shift1Hook.hasOrder ? (
+                    <AppIcon name="Lock" size={22} className="text-muted-foreground/50" />
+                  ) : (
+                    <AppIcon
+                      name={getTypeProgress.fechamento.percent === 100 ? 'check_circle' : 'Factory'}
+                      size={22}
+                      fill={getTypeProgress.fechamento.percent === 100 ? 1 : 0}
+                      className={cn(
+                        "transition-colors",
+                        getTypeProgress.fechamento.percent === 100 ? "text-success" : checklistType === 'fechamento' ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    />
+                  )}
                   <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Turno 2</h3>
                 </div>
                 {!settingsMode && (
                   <div className="space-y-1.5">
-                    <div className={cn("w-full h-1.5 rounded-full overflow-hidden", checklistType === 'fechamento' ? "bg-white/15" : "bg-secondary/60")}>
-                      <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{
-                          width: `${getTypeProgress.fechamento.percent}%`,
-                          background: getTypeProgress.fechamento.percent === 100
-                            ? 'hsl(var(--success))'
-                            : 'linear-gradient(90deg, hsl(234 89% 67%), hsl(234 70% 75% / 0.7))',
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">
-                        {getTypeProgress.fechamento.completed}/{getTypeProgress.fechamento.total}
-                        {deadlineLabel.fechamento && (
-                          <span className={cn("ml-1", getDeadlineInfo(currentDate, 'fechamento', deadlineSettings)?.passed ? "text-destructive/70" : "")}>
-                            · {getDeadlineInfo(currentDate, 'fechamento', deadlineSettings)?.passed ? 'Encerrado' : deadlineLabel.fechamento}
+                    {!isShift1Closed && shift1Hook.hasOrder ? (
+                      <p className="text-[10px] text-muted-foreground">Feche o Turno 1 para liberar</p>
+                    ) : (
+                      <>
+                        <div className={cn("w-full h-1.5 rounded-full overflow-hidden", checklistType === 'fechamento' ? "bg-white/15" : "bg-secondary/60")}>
+                          <div
+                            className="h-full rounded-full transition-all duration-700 ease-out"
+                            style={{
+                              width: `${getTypeProgress.fechamento.percent}%`,
+                              background: getTypeProgress.fechamento.percent === 100
+                                ? 'hsl(var(--success))'
+                                : 'linear-gradient(90deg, hsl(234 89% 67%), hsl(234 70% 75% / 0.7))',
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">
+                            {getTypeProgress.fechamento.completed}/{getTypeProgress.fechamento.total}
+                            {deadlineLabel.fechamento && (
+                              <span className={cn("ml-1", getDeadlineInfo(currentDate, 'fechamento', deadlineSettings)?.passed ? "text-destructive/70" : "")}>
+                                · {getDeadlineInfo(currentDate, 'fechamento', deadlineSettings)?.passed ? 'Encerrado' : deadlineLabel.fechamento}
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
-                      <span className={cn(
-                        "text-sm font-black",
-                        getTypeProgress.fechamento.percent === 100 ? "text-success" : "text-primary"
-                      )}>
-                        {getTypeProgress.fechamento.percent}%
-                      </span>
-                    </div>
+                          <span className={cn(
+                            "text-sm font-black",
+                            getTypeProgress.fechamento.percent === 100 ? "text-success" : "text-primary"
+                          )}>
+                            {getTypeProgress.fechamento.percent}%
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
                 {checklistType === 'fechamento' && (
@@ -737,18 +769,31 @@ export default function ChecklistsPage() {
 
                   // Show empty state if no production order and not bonus
                   if (!isBonus && filteredSectors.length === 0 && !hasProductionOrder) {
+                    // If on shift 2 and shift 1 not closed yet, show lock message
+                    const isShift2Locked = checklistType === 'fechamento' && shift1Hook.hasOrder && !isShift1Closed;
+
                     return (
                       <div className="card-command p-8 text-center space-y-3">
                         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-                          <AppIcon name="Factory" size={28} className="text-primary" />
+                          <AppIcon name={isShift2Locked ? "Lock" : "Factory"} size={28} className="text-primary" />
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground">Nenhum pedido de produção</p>
+                          <p className="font-semibold text-foreground">
+                            {isShift2Locked
+                              ? 'Turno 1 ainda em andamento'
+                              : checklistType === 'fechamento'
+                                ? 'Nenhum plano para o Turno 2'
+                                : 'Nenhum pedido de produção'}
+                          </p>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Crie um plano de produção para o dia e os itens aparecerão aqui.
+                            {isShift2Locked
+                              ? 'Feche o Turno 1 para que o Turno 2 seja criado automaticamente com os itens pendentes.'
+                              : checklistType === 'fechamento'
+                                ? 'O Turno 2 será criado automaticamente quando o Turno 1 for fechado.'
+                                : 'Crie um plano de produção para o dia e os itens aparecerão aqui.'}
                           </p>
                         </div>
-                        {isAdmin && (
+                        {isAdmin && checklistType === 'abertura' && (
                           <button
                             onClick={() => setPlanSheetOpen(true)}
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-colors hover:bg-primary/90"

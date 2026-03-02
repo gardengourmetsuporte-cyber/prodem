@@ -1,5 +1,4 @@
 import { AppIcon } from '@/components/ui/app-icon';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ProductionOrder } from '@/hooks/useProductionOrders';
 
@@ -7,13 +6,18 @@ interface ProductionDayCardProps {
   order: ProductionOrder | null;
   totals: { ordered: number; done: number; pending: number; percent: number };
   isAdmin: boolean;
+  currentShift: number;
+  isShift1Closed: boolean;
   onCreatePlan: () => void;
   onViewReport: () => void;
+  onCloseShift: () => void;
 }
 
-export function ProductionDayCard({ order, totals, isAdmin, onCreatePlan, onViewReport }: ProductionDayCardProps) {
+export function ProductionDayCard({
+  order, totals, isAdmin, currentShift, isShift1Closed,
+  onCreatePlan, onViewReport, onCloseShift,
+}: ProductionDayCardProps) {
   if (!order) {
-    // No plan for today
     if (!isAdmin) return null;
     return (
       <button
@@ -34,62 +38,76 @@ export function ProductionDayCard({ order, totals, isAdmin, onCreatePlan, onView
     );
   }
 
-  // Has plan — show summary
   return (
-    <button
-      onClick={onViewReport}
-      className={cn(
-        "w-full rounded-2xl p-5 text-left transition-all ring-1 hover:shadow-lg",
-        totals.percent >= 100
-          ? "bg-success/5 ring-success/20"
-          : "bg-card ring-border/40 hover:ring-primary/30"
-      )}
-    >
-      <div className="flex items-center gap-4">
-        <div className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-          totals.percent >= 100 ? "bg-success/15" : "bg-primary/10"
-        )}>
-          <AppIcon
-            name={totals.percent >= 100 ? "check_circle" : "ClipboardList"}
-            size={22}
-            fill={totals.percent >= 100 ? 1 : 0}
-            className={totals.percent >= 100 ? "text-success" : "text-primary"}
+    <div className="space-y-2">
+      <button
+        onClick={onViewReport}
+        className={cn(
+          "w-full rounded-2xl p-5 text-left transition-all ring-1 hover:shadow-lg",
+          totals.percent >= 100
+            ? "bg-success/5 ring-success/20"
+            : "bg-card ring-border/40 hover:ring-primary/30"
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+            totals.percent >= 100 ? "bg-success/15" : "bg-primary/10"
+          )}>
+            <AppIcon
+              name={totals.percent >= 100 ? "check_circle" : "ClipboardList"}
+              size={22}
+              fill={totals.percent >= 100 ? 1 : 0}
+              className={totals.percent >= 100 ? "text-success" : "text-primary"}
+            />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-foreground">
+                Turno {currentShift}
+              </h3>
+              <span className={cn(
+                "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+                order.status === 'closed'
+                  ? "bg-muted text-muted-foreground"
+                  : totals.percent >= 100
+                    ? "bg-success/15 text-success"
+                    : "bg-warning/15 text-warning"
+              )}>
+                {order.status === 'closed' ? 'Fechado' : `${totals.percent}%`}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {totals.done}/{totals.ordered} peças · {totals.pending} pendentes
+            </p>
+          </div>
+          <AppIcon name="ChevronRight" size={18} className="text-muted-foreground" />
+        </div>
+
+        {/* Mini progress bar */}
+        <div className="mt-3 w-full h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${totals.percent}%`,
+              background: totals.percent >= 100
+                ? 'hsl(var(--success))'
+                : 'linear-gradient(90deg, hsl(32 100% 50%), hsl(40 100% 55%))',
+            }}
           />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-foreground">Plano de Produção</h3>
-            <span className={cn(
-              "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
-              order.status === 'closed'
-                ? "bg-muted text-muted-foreground"
-                : totals.percent >= 100
-                  ? "bg-success/15 text-success"
-                  : "bg-amber-500/15 text-amber-500"
-            )}>
-              {order.status === 'closed' ? 'Fechado' : `${totals.percent}%`}
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {totals.done}/{totals.ordered} peças · {totals.pending} pendentes
-          </p>
-        </div>
-        <AppIcon name="ChevronRight" size={18} className="text-muted-foreground" />
-      </div>
+      </button>
 
-      {/* Mini progress bar */}
-      <div className="mt-3 w-full h-1.5 rounded-full bg-secondary/60 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{
-            width: `${totals.percent}%`,
-            background: totals.percent >= 100
-              ? 'hsl(var(--success))'
-              : 'linear-gradient(90deg, hsl(32 100% 50%), hsl(40 100% 55%))',
-          }}
-        />
-      </div>
-    </button>
+      {/* Close shift button — only for admin, active shift 1, when it has an order */}
+      {isAdmin && currentShift === 1 && order.status !== 'closed' && (
+        <button
+          onClick={onCloseShift}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-card border border-border/50 hover:bg-muted/50 transition-colors text-sm font-semibold text-muted-foreground"
+        >
+          <AppIcon name="ArrowRight" size={16} />
+          Fechar Turno 1 e abrir Turno 2
+        </button>
+      )}
+    </div>
   );
 }
