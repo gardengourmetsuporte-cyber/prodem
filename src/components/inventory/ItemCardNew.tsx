@@ -13,6 +13,8 @@ function getUnitLabel(unitType: string): string {
     case 'unidade': return 'un';
     case 'kg': return 'kg';
     case 'litro': return 'L';
+    case 'metro': return 'm';
+    case 'metro_quadrado': return 'm²';
     default: return unitType;
   }
 }
@@ -50,10 +52,17 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm text-foreground truncate">{item.name}</h3>
+          {(item as any).internal_code && (
+            <p className="text-[10px] font-mono text-primary/70 truncate">{(item as any).internal_code}</p>
+          )}
           <div className="flex items-center gap-1.5 mt-0.5">
             <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: categoryColor }} />
             <p className="text-xs text-muted-foreground truncate">
-              {item.category?.name || 'Sem categoria'}
+              {[
+                item.category?.name,
+                (item as any).material_type,
+                (item as any).dimensions,
+              ].filter(Boolean).join(' · ') || 'Sem categoria'}
             </p>
           </div>
           {/* Dual stock display */}

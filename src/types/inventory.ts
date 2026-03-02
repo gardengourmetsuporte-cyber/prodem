@@ -1,4 +1,4 @@
-export type UnitType = 'unidade' | 'kg' | 'litro';
+export type UnitType = 'unidade' | 'kg' | 'litro' | 'metro' | 'metro_quadrado';
 
 export type MovementType = 'entrada' | 'saida';
 

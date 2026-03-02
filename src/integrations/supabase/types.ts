@@ -1721,54 +1721,75 @@ export type Database = {
           created_at: string
           current_stock: number
           deleted_at: string | null
+          dimensions: string | null
           id: string
+          internal_code: string | null
+          location: string | null
+          material_type: string | null
           min_stock: number
           name: string
           production_stock: number | null
           recipe_unit_price: number | null
           recipe_unit_type: string | null
           supplier_id: string | null
+          technical_spec: string | null
+          thickness: string | null
           unit_id: string | null
           unit_price: number | null
           unit_type: Database["public"]["Enums"]["unit_type"]
           updated_at: string
           warehouse_stock: number | null
+          weight_per_unit: number | null
         }
         Insert: {
           category_id?: string | null
           created_at?: string
           current_stock?: number
           deleted_at?: string | null
+          dimensions?: string | null
           id?: string
+          internal_code?: string | null
+          location?: string | null
+          material_type?: string | null
           min_stock?: number
           name: string
           production_stock?: number | null
           recipe_unit_price?: number | null
           recipe_unit_type?: string | null
           supplier_id?: string | null
+          technical_spec?: string | null
+          thickness?: string | null
           unit_id?: string | null
           unit_price?: number | null
           unit_type?: Database["public"]["Enums"]["unit_type"]
           updated_at?: string
           warehouse_stock?: number | null
+          weight_per_unit?: number | null
         }
         Update: {
           category_id?: string | null
           created_at?: string
           current_stock?: number
           deleted_at?: string | null
+          dimensions?: string | null
           id?: string
+          internal_code?: string | null
+          location?: string | null
+          material_type?: string | null
           min_stock?: number
           name?: string
           production_stock?: number | null
           recipe_unit_price?: number | null
           recipe_unit_type?: string | null
           supplier_id?: string | null
+          technical_spec?: string | null
+          thickness?: string | null
           unit_id?: string | null
           unit_price?: number | null
           unit_type?: Database["public"]["Enums"]["unit_type"]
           updated_at?: string
           warehouse_stock?: number | null
+          weight_per_unit?: number | null
         }
         Relationships: [
           {
@@ -4868,7 +4889,7 @@ export type Database = {
       schedule_status: "pending" | "approved" | "rejected"
       task_priority: "low" | "medium" | "high"
       transaction_type: "income" | "expense" | "transfer" | "credit_card"
-      unit_type: "unidade" | "kg" | "litro"
+      unit_type: "unidade" | "kg" | "litro" | "metro" | "metro_quadrado"
       user_status: "pending" | "approved" | "suspended"
     }
     CompositeTypes: {
@@ -5011,7 +5032,7 @@ export const Constants = {
       schedule_status: ["pending", "approved", "rejected"],
       task_priority: ["low", "medium", "high"],
       transaction_type: ["income", "expense", "transfer", "credit_card"],
-      unit_type: ["unidade", "kg", "litro"],
+      unit_type: ["unidade", "kg", "litro", "metro", "metro_quadrado"],
       user_status: ["pending", "approved", "suspended"],
     },
   },

@@ -12,7 +12,7 @@
 
 export type AppRole = 'admin' | 'funcionario' | 'super_admin' | 'lider';
 export type UserStatus = 'pending' | 'approved' | 'suspended';
-export type UnitType = 'unidade' | 'kg' | 'litro';
+export type UnitType = 'unidade' | 'kg' | 'litro' | 'metro' | 'metro_quadrado';
 export type MovementType = 'entrada' | 'saida';
 export type OrderStatus = 'draft' | 'sent' | 'received' | 'cancelled';
 export type ChecklistType = 'abertura' | 'fechamento' | 'bonus';
@@ -68,6 +68,13 @@ export interface InventoryItem {
   min_stock: number;
   recipe_unit_type: string | null;
   recipe_unit_price: number | null;
+  material_type: string | null;
+  dimensions: string | null;
+  thickness: string | null;
+  technical_spec: string | null;
+  internal_code: string | null;
+  location: string | null;
+  weight_per_unit: number | null;
   created_at: string;
   updated_at: string;
   category?: Category;

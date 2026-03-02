@@ -88,12 +88,19 @@ export function useInventoryDB() {
       name: string;
       category_id: string | null;
       supplier_id?: string | null;
-      unit_type: 'unidade' | 'kg' | 'litro';
+      unit_type: 'unidade' | 'kg' | 'litro' | 'metro' | 'metro_quadrado';
       current_stock: number;
       min_stock: number;
       unit_price?: number | null;
       recipe_unit_type?: string | null;
       recipe_unit_price?: number | null;
+      material_type?: string | null;
+      dimensions?: string | null;
+      thickness?: string | null;
+      technical_spec?: string | null;
+      internal_code?: string | null;
+      location?: string | null;
+      weight_per_unit?: number | null;
     }) => {
       const { data, error } = await supabase
         .from('inventory_items')
