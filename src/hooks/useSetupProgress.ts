@@ -51,7 +51,8 @@ export function useSetupProgress() {
       return { steps, isNewUnit: true };
     },
     enabled: !!user && !!unitId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const steps = data?.steps ?? [];
