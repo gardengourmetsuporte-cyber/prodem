@@ -110,14 +110,14 @@ export function ProductionDayCard({
         </button>
       )}
 
-      {/* Reopen shift button — only for admin when shift is closed */}
-      {isAdmin && order.status === 'closed' && onReopenShift && (
+      {/* Reopen shift button — only for admin when shift 2 is closed (shift 1 stays locked) */}
+      {isAdmin && order.status === 'closed' && currentShift === 2 && onReopenShift && (
         <button
           onClick={onReopenShift}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-card border border-warning/30 hover:bg-warning/5 transition-colors text-sm font-semibold text-warning"
         >
           <AppIcon name="RotateCcw" size={16} />
-          Reabrir Turno {currentShift}
+          Reabrir Turno 2
         </button>
       )}
     </div>
