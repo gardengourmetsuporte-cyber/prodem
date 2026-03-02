@@ -151,8 +151,8 @@ export function ChecklistSettingsManager() {
               : "border-border bg-card text-muted-foreground hover:bg-secondary/50"
           )}
         >
-          <AppIcon name="Sun" className="w-5 h-5" />
-          <span className="font-semibold text-sm">Abertura</span>
+          <AppIcon name="Factory" className="w-5 h-5" />
+          <span className="font-semibold text-sm">Turno 1</span>
         </button>
         <button
           onClick={() => setSelectedType('fechamento')}
@@ -163,8 +163,8 @@ export function ChecklistSettingsManager() {
               : "border-border bg-card text-muted-foreground hover:bg-secondary/50"
           )}
         >
-          <AppIcon name="Moon" className="w-5 h-5" />
-          <span className="font-semibold text-sm">Fechamento</span>
+          <AppIcon name="Wrench" className="w-5 h-5" />
+          <span className="font-semibold text-sm">Turno 2</span>
         </button>
         <button
           onClick={() => setSelectedType('bonus' as any)}
