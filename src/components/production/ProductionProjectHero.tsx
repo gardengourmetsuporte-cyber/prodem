@@ -39,25 +39,37 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
 
   return (
     <div className="space-y-2">
-      {/* Project selector chips */}
+      {/* Project selector — modern segmented tabs */}
       {activeProjects.length > 1 && onSelectProject && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {activeProjects.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => onSelectProject(p.id)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all ring-1 min-h-[40px]",
-                (selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id))
-                  ? "bg-warning/15 text-warning ring-warning/40 shadow-sm shadow-warning/10"
-                  : "bg-muted/30 text-muted-foreground ring-border/30 hover:ring-warning/20"
-              )}
-            >
-              <AppIcon name="Briefcase" size={14} />
-              <span>#{p.project_number}</span>
-              {p.client && <span className="text-[10px] font-semibold opacity-60 normal-case">· {p.client}</span>}
-            </button>
-          ))}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-muted/20 rounded-xl p-1 ring-1 ring-border/10">
+          {activeProjects.map((p) => {
+            const isActive = selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id);
+            return (
+              <button
+                key={p.id}
+                onClick={() => onSelectProject(p.id)}
+                className={cn(
+                  "relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 min-h-[42px]",
+                  isActive
+                    ? "bg-background text-warning shadow-md shadow-warning/5 ring-1 ring-warning/25"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                )}
+              >
+                {isActive && (
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-warning" />
+                )}
+                <span className="font-black text-sm tracking-tight">#{p.project_number}</span>
+                {p.client && (
+                  <span className={cn(
+                    "text-[10px] font-semibold uppercase tracking-wider",
+                    isActive ? "text-warning/70" : "opacity-50"
+                  )}>
+                    {p.client}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
