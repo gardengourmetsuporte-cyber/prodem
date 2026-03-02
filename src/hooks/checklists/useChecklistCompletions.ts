@@ -240,7 +240,7 @@ export function useChecklistCompletions({
     completedByUserId?: string
   ) => {
     const targetUserId = completedByUserId || userId;
-    const { error } = await supabase
+      const { error } = await supabase
       .from('checklist_completions')
       .upsert({
         item_id: itemId,
@@ -253,6 +253,7 @@ export function useChecklistCompletions({
         unit_id: activeUnitId,
         status: 'in_progress',
         quantity_done: 0,
+        started_at: new Date().toISOString(),
       } as any, { onConflict: 'item_id,completed_by,date,checklist_type' });
     if (error) throw error;
 
@@ -279,6 +280,7 @@ export function useChecklistCompletions({
         quantity_done: quantityDone,
         awarded_points: points > 0,
         points_awarded: points,
+        finished_at: new Date().toISOString(),
       } as any)
       .eq('id', existing.id);
     if (error) throw error;
