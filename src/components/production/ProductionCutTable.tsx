@@ -9,7 +9,6 @@ interface ProductionCutTableProps {
   report: ProductionReportItem[];
   orderItems: ProductionOrderItem[];
   sectors: ChecklistSector[];
-  completions: any[];
   onStartItem: (itemId: string) => void;
   onFinishItem: (itemId: string) => void;
   onTapItem: (itemId: string) => void;
@@ -25,7 +24,7 @@ interface GroupedRow {
 }
 
 export function ProductionCutTable({
-  report, orderItems, sectors, completions,
+  report, orderItems, sectors,
   onStartItem, onFinishItem, onTapItem,
   isAdmin, isClosed, itemGroupingMap,
 }: ProductionCutTableProps) {
@@ -51,13 +50,13 @@ export function ProductionCutTable({
 
   const inProgressIds = useMemo(() => {
     const ids = new Set<string>();
-    completions.forEach((c: any) => {
-      if (c.started_at && !c.finished_at && c.status === 'in_progress') {
-        ids.add(c.item_id);
+    report.forEach(r => {
+      if (r.status === 'in_progress') {
+        ids.add(r.checklist_item_id);
       }
     });
     return ids;
-  }, [completions]);
+  }, [report]);
 
   const grouped = useMemo(() => {
     const groups: GroupedRow[] = [];
