@@ -59,7 +59,7 @@ const Rewards = lazy(() => lazyRetry(() => import("./pages/Rewards")));
 const Settings = lazy(() => lazyRetry(() => import("./pages/Settings")));
 const NotFound = lazy(() => lazyRetry(() => import("./pages/NotFound")));
 const CashClosing = lazy(() => lazyRetry(() => import("./pages/CashClosing")));
-const Recipes = lazy(() => lazyRetry(() => import("./pages/Recipes")));
+
 const Employees = lazy(() => lazyRetry(() => import("./pages/Employees")));
 const TabletConfirm = lazy(() => lazyRetry(() => import("./pages/TabletConfirm")));
 const CardapioHub = lazy(() => lazyRetry(() => import("./pages/CardapioHub")));
@@ -189,7 +189,7 @@ function AppRoutes() {
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/cash-closing" element={<ProtectedRoute><CashClosing /></ProtectedRoute>} />
-          <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+          
           <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
           <Route path="/cotacao/:token" element={<QuotationPublic />} />
           <Route path="/m/:unitId" element={<DigitalMenu />} />
