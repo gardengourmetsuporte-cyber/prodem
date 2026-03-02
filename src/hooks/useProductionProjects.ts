@@ -161,19 +161,30 @@ export function useProductionProjects(unitId: string | null) {
   }, [unitId, queryClient]);
 
   const deleteProject = useCallback(async (id: string) => {
-    // Delete completions
-    await (supabase.from('checklist_completions') as any).delete().eq('project_id', id);
-    // Delete items
-    await supabase.from('production_order_items').delete().eq('project_id', id);
-    // Delete groupings
-    await supabase.from('production_groupings').delete().eq('project_id', id);
-    // Delete Project
-    const { error } = await supabase
-      .from('production_projects')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    try {
+      // Delete new tables first (production_logs → production_shipments → production_pieces)
+      await (supabase.from('production_logs') as any).delete().eq('project_id', id);
+      await (supabase.from('production_shipments') as any).delete().eq('project_id', id);
+      await (supabase.from('production_pieces') as any).delete().eq('project_id', id);
+      // Delete legacy tables
+      await (supabase.from('checklist_completions') as any).delete().eq('project_id', id);
+      await (supabase.from('production_order_items') as any).delete().eq('project_id', id);
+      // Delete orders referencing this project
+      await (supabase.from('production_orders') as any).delete().eq('project_id', id);
+      // Delete groupings
+      await (supabase.from('production_grouping_items') as any).delete().match({ project_id: id });
+      await (supabase.from('production_groupings') as any).delete().eq('project_id', id);
+      // Finally delete the project
+      const { error } = await supabase
+        .from('production_projects')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    } catch (err: any) {
+      throw new Error(err.message || 'Erro ao excluir projeto');
+    }
     queryClient.invalidateQueries({ queryKey: ['production-projects', unitId] });
+    queryClient.invalidateQueries({ queryKey: ['production-pieces'] });
     queryClient.invalidateQueries({ queryKey: ['production-project-items'] });
   }, [unitId, queryClient]);
 
