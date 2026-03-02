@@ -97,10 +97,10 @@ export function ProductionPlanSheet({
   const groupedItems = useMemo(() => {
     const source = search
       ? availableItems.filter(a =>
-          a.name.toLowerCase().includes(search.toLowerCase()) ||
-          a.subcategoryName.toLowerCase().includes(search.toLowerCase()) ||
-          a.sectorName.toLowerCase().includes(search.toLowerCase())
-        )
+        a.name.toLowerCase().includes(search.toLowerCase()) ||
+        a.subcategoryName.toLowerCase().includes(search.toLowerCase()) ||
+        a.sectorName.toLowerCase().includes(search.toLowerCase())
+      )
       : availableItems;
 
     const groups: GroupedItems[] = [];
@@ -127,7 +127,7 @@ export function ProductionPlanSheet({
   // Initialize from existing items or defaults
   useEffect(() => {
     if (!open) return;
-    
+
     const allSectorNames = new Set(availableItems.map(a => a.sectorName));
     setCollapsedSectors(allSectorNames);
 
@@ -273,11 +273,11 @@ export function ProductionPlanSheet({
         <div className="px-6 pt-5 pb-3 space-y-3">
           <SheetHeader className="p-0">
             <SheetTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AppIcon name="ClipboardList" size={20} className="text-primary" />
-                <span>Pedido — {format(date, "dd/MM", { locale: ptBR })}</span>
+              <div className="flex items-center gap-2.5">
+                <AppIcon name="ListChecks" size={24} className="text-warning" />
+                <span className="text-xl font-bold tracking-tight text-foreground">Pedido — {format(date, "dd/MM", { locale: ptBR })}</span>
                 {currentShift && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-warning/20 text-warning font-black ml-1">
                     T{currentShift}
                   </span>
                 )}
@@ -287,36 +287,39 @@ export function ProductionPlanSheet({
 
           {/* Project selector */}
           {activeProjects.length > 0 && (
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Projeto / OS</label>
-              <select
-                value={projectId || ''}
-                onChange={e => setProjectId(e.target.value || undefined)}
-                className="w-full h-9 rounded-lg bg-secondary/60 border border-border px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                <option value="">Sem projeto vinculado</option>
-                {activeProjects.map(p => (
-                  <option key={p.id} value={p.id}>#{p.project_number} — {p.description}{p.client ? ` (${p.client})` : ''}</option>
-                ))}
-              </select>
+            <div className="pt-2">
+              <label className="text-[11px] font-bold text-muted-foreground mb-1.5 block uppercase tracking-wider">Projeto / OS</label>
+              <div className="relative">
+                <select
+                  value={projectId || ''}
+                  onChange={e => setProjectId(e.target.value || undefined)}
+                  className="w-full h-11 rounded-xl bg-card border border-border/40 px-4 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-warning/30 appearance-none transition-colors"
+                >
+                  <option value="">Sem projeto vinculado</option>
+                  {activeProjects.map(p => (
+                    <option key={p.id} value={p.id}>#{p.project_number} — {p.description}{p.client ? ` (${p.client})` : ''}</option>
+                  ))}
+                </select>
+                <AppIcon name="ChevronDown" size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              </div>
             </div>
           )}
 
           {/* Search + quick actions */}
-          <div className="space-y-2">
+          <div className="space-y-3 pt-1">
             <div className="relative">
-              <AppIcon name="Search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <AppIcon name="Search" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar peça..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="h-9 pl-9 text-sm"
+                className="h-11 pl-10 text-sm rounded-full bg-card border-border/40 focus:bg-background transition-colors"
               />
             </div>
             <div className="flex gap-2">
               <button
                 onClick={handlePullPending}
-                className="h-9 flex-1 rounded-lg bg-secondary/60 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5"
+                className="h-10 flex-1 rounded-full bg-secondary hover:bg-secondary/80 text-xs font-bold text-muted-foreground hover:text-foreground transition-all flex items-center justify-center gap-1.5"
                 title="Puxar pendências do dia anterior"
               >
                 <AppIcon name="History" size={14} />
@@ -324,7 +327,7 @@ export function ProductionPlanSheet({
               </button>
               <button
                 onClick={handleReset}
-                className="h-9 px-3 rounded-lg bg-secondary/60 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5"
+                className="h-10 px-5 rounded-full bg-secondary hover:bg-secondary/80 text-xs font-bold text-muted-foreground hover:text-foreground transition-all flex items-center justify-center gap-1.5"
                 title="Zerar quantidades"
               >
                 <AppIcon name="RotateCcw" size={14} />
@@ -349,23 +352,23 @@ export function ProductionPlanSheet({
               <div key={group.sectorName}>
                 <button
                   onClick={() => toggleSector(group.sectorName)}
-                  className="w-full flex items-center gap-2.5 py-2.5 px-2 rounded-xl hover:bg-secondary/30 transition-colors"
+                  className="w-full flex items-center gap-3 py-4 px-2 hover:bg-white/5 transition-colors border-b border-border/10 last:border-0"
                 >
                   <div
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: group.sectorColor }}
                   />
-                  <span className="text-sm font-bold text-foreground flex-1 text-left">
+                  <span className="text-base font-bold text-foreground flex-1 text-left">
                     {group.sectorName}
                   </span>
                   {sectorQty > 0 && (
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
+                    <span className="text-[11px] font-black text-warning bg-warning/10 px-2 py-0.5 rounded-md">
                       {sectorQty} pç
                     </span>
                   )}
                   <AppIcon
                     name="ChevronRight"
-                    size={14}
+                    size={16}
                     className={cn("text-muted-foreground transition-transform duration-200", !isCollapsed && "rotate-90")}
                   />
                 </button>
@@ -454,35 +457,35 @@ export function ProductionPlanSheet({
         </div>
 
         {/* Fixed Footer */}
-        <div className="px-6 pb-5 pt-3 space-y-2.5 border-t border-border/30 bg-background">
+        <div className="px-6 pb-6 pt-4 space-y-4 border-t border-border/20 bg-background">
           {/* Notes — compact */}
           <Input
             placeholder="Observações (opcional)"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            className="h-9 text-sm"
+            className="h-12 text-sm rounded-full bg-card border-border/40 focus:bg-background transition-colors"
           />
 
           {/* Save row */}
-          <div className="flex items-center gap-2">
-            <p className="text-xs text-muted-foreground flex-1">
+          <div className="flex items-center gap-3">
+            <p className="text-[13px] text-muted-foreground flex-1 font-medium">
               <span className="font-bold text-foreground">{activeCount}</span> itens · <span className="font-bold text-foreground">{totalOrdered}</span> peças
             </p>
 
             {canCloseShift && (
               <Button
                 variant="outline"
-                size="sm"
+                size="lg"
                 onClick={handleCloseShift}
                 disabled={saving}
-                className="gap-1.5 text-xs border-warning/30 text-warning hover:bg-warning/10 hover:text-warning"
+                className="gap-1.5 text-sm font-bold rounded-full border-warning/30 text-warning hover:bg-warning/10 hover:text-warning px-5 h-12"
               >
-                <AppIcon name="ArrowRightToLine" size={14} />
+                <AppIcon name="ArrowRight" size={16} />
                 T1 → T2
               </Button>
             )}
 
-            <Button onClick={handleSave} disabled={saving} size="sm" className="min-w-[90px]">
+            <Button onClick={handleSave} disabled={saving} size="lg" className="min-w-[120px] rounded-full font-bold text-sm bg-warning hover:bg-warning/90 text-warning-foreground h-12">
               {saving ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>

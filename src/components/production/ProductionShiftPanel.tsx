@@ -102,58 +102,47 @@ function ShiftCard({
     return (
       <button
         onClick={onCreatePlan}
-        className="industrial-card rounded-xl p-4 hover:ring-warning/40 transition-all min-h-[110px] flex flex-col items-center justify-center gap-2 group"
+        className="industrial-card rounded-[20px] p-6 hover:ring-warning/40 transition-all min-h-[140px] flex flex-col items-center justify-center gap-3 group bg-card border-none"
       >
-        <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition-colors ring-1 ring-warning/30">
-          <AppIcon name="Plus" size={20} className="text-warning" />
+        <div className="w-12 h-12 rounded-full border border-warning/40 flex items-center justify-center group-hover:bg-warning/10 transition-colors">
+          <AppIcon name="Plus" size={24} className="text-warning" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-foreground">{label}</span>
-        <span className="text-[9px] text-muted-foreground">Criar plano</span>
+        <div className="space-y-1">
+          <span className="text-sm font-black uppercase tracking-widest text-foreground block">{label}</span>
+          <span className="text-[11px] text-muted-foreground block text-center">Criar plano</span>
+        </div>
       </button>
     );
   }
 
   return (
     <div className={cn(
-      "industrial-card rounded-xl p-4 transition-all relative min-h-[110px]",
-      isActive && "ring-warning/50 shadow-lg shadow-warning/5",
+      "industrial-card rounded-[20px] p-5 transition-all relative min-h-[140px] bg-card border-none flex flex-col",
+      isActive && "ring-1 ring-warning/50 shadow-lg shadow-warning/5",
       isClosed && "opacity-70",
     )}>
-      {/* Active indicator bar */}
-      {isActive && <div className="absolute top-0 left-0 right-0 h-0.5 bg-warning rounded-t-xl" />}
-      
-      <button onClick={onSelect} className="w-full text-left">
+      <button onClick={onSelect} className="w-full text-left flex-1 flex flex-col">
         <div className="flex items-center gap-2 mb-3">
           {isClosed ? (
-            <AppIcon name="Lock" size={13} className="text-muted-foreground" />
+            <AppIcon name="Lock" size={16} className="text-muted-foreground" />
           ) : isComplete ? (
-            <AppIcon name="CheckCircle" size={14} className="text-success" />
+            <AppIcon name="CheckCircle" size={16} className="text-success" />
           ) : isActive ? (
-            <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+            <AppIcon name="Settings2" size={16} className="text-foreground" />
           ) : (
-            <AppIcon name="Factory" size={13} className="text-muted-foreground" />
+            <AppIcon name="Factory" size={16} className="text-muted-foreground" />
           )}
-          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">{label}</span>
-          {isClosed && <span className="text-[8px] text-muted-foreground/60 ml-auto uppercase tracking-wider">Fechado</span>}
+          <span className="text-sm font-black uppercase tracking-widest text-foreground">{label}</span>
+          {isClosed && <span className="text-[9px] text-muted-foreground/60 ml-auto uppercase tracking-wider">Fechado</span>}
         </div>
 
-        {/* Progress */}
-        <div className="w-full h-1.5 rounded-sm bg-background/50 overflow-hidden mb-2 ring-1 ring-border/10">
-          <div
-            className="h-full transition-all duration-500"
-            style={{
-              width: `${totals.percent}%`,
-              background: isComplete
-                ? 'hsl(var(--success))'
-                : 'linear-gradient(90deg, hsl(var(--warning)), hsl(var(--warning) / 0.5))',
-            }}
-          />
-        </div>
+        {/* Separator line like in screenshot */}
+        <div className="w-full h-px bg-border/40 my-2" />
 
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground font-mono">{totals.done}/{totals.ordered} pç</span>
+        <div className="flex items-end justify-between mt-auto pt-2">
+          <span className="text-xs text-muted-foreground font-mono">{totals.done}/{totals.ordered} pç</span>
           <span className={cn(
-            "text-lg font-black font-display",
+            "text-3xl font-black font-display leading-[0.8]",
             isComplete ? "text-success" : isClosed ? "text-muted-foreground" : "text-warning"
           )}>
             {totals.percent}%

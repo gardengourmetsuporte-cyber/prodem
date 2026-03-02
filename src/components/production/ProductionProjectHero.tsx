@@ -140,133 +140,129 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
         </div>
       )}
 
-    <div className="relative overflow-hidden rounded-2xl bg-card/60 ring-1 ring-border/15 p-5">
-      <div className="space-y-3">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-warning/80">Ordem de Serviço</span>
-              <span className={cn(
-                "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
-                progress.percent >= 100
-                  ? "bg-success/20 text-success"
-                  : progress.percent > 0
-                    ? "bg-warning/20 text-warning"
-                    : "bg-muted/40 text-muted-foreground"
-              )}>
-                {progress.percent >= 100 ? '✓ CONCLUÍDO' : progress.percent > 0 ? '● EM PRODUÇÃO' : '○ AGUARDANDO'}
-              </span>
+      <div className="relative overflow-hidden rounded-2xl bg-card/60 ring-1 ring-border/15 p-5">
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-warning">Ordem de Serviço</span>
+                <span className={cn(
+                  "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-muted/40",
+                  progress.percent >= 100
+                    ? "text-success"
+                    : progress.percent > 0
+                      ? "text-warning"
+                      : "text-muted-foreground"
+                )}>
+                  {progress.percent >= 100 ? '○ CONCLUÍDO' : progress.percent > 0 ? '● EM PRODUÇÃO' : '○ AGUARDANDO'}
+                </span>
+              </div>
+              <h2 className="text-4xl font-black text-foreground tracking-tight font-display leading-[0.9] mb-1">
+                #{project.project_number}
+              </h2>
+              <p className="text-lg font-bold text-foreground/80 uppercase tracking-wide">{project.description}</p>
             </div>
-            <h2 className="text-2xl font-black text-foreground tracking-tight font-display">
-              #{project.project_number}
-            </h2>
-            <p className="text-sm font-semibold text-foreground/80 leading-tight mt-0.5">{project.description}</p>
-          </div>
-          {isAdmin && (
-            <button
-              onClick={onManageProjects}
-              className="p-2 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              <AppIcon name="Settings" size={16} className="text-muted-foreground" />
-            </button>
-          )}
-        </div>
-
-        {/* Client & Technical Specs */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {project.client && (
-            <div className="flex items-center gap-1.5">
-              <AppIcon name="Building2" size={12} className="text-warning/60" />
-              <span className="text-xs font-bold text-warning/80 uppercase tracking-wider">{project.client}</span>
-            </div>
-          )}
-          {(project as any).material && (
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-background/40 ring-1 ring-border/20 text-foreground/70">
-              {(project as any).material}
-            </span>
-          )}
-          {(project as any).thickness && (
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-background/40 ring-1 ring-border/20 text-foreground/70">
-              ⌀ {(project as any).thickness}
-            </span>
-          )}
-          {(project as any).plate_size && (
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-background/40 ring-1 ring-border/20 text-foreground/70">
-              📐 {(project as any).plate_size}
-            </span>
-          )}
-        </div>
-
-        {/* Groupings summary */}
-        {groupings.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {groupings.map(g => (
-              <button
-                key={g.id}
-                onClick={onManageGroupings}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-warning/10 ring-1 ring-warning/20 hover:ring-warning/40 transition-colors"
-              >
-                <span className="text-[9px] font-black text-warning">AG{g.grouping_number}</span>
-                <span className="text-[8px] text-muted-foreground">{g.total_pieces}pç</span>
-                {g.thickness && <span className="text-[8px] font-mono text-foreground/50">{g.thickness}</span>}
-              </button>
-            ))}
             {isAdmin && (
-              <button onClick={onManageGroupings} className="p-1 rounded-lg hover:bg-warning/10 transition-colors">
-                <AppIcon name="Plus" size={12} className="text-warning/60" />
+              <button
+                onClick={onManageProjects}
+                className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <AppIcon name="Settings" size={16} className="text-muted-foreground" />
               </button>
             )}
           </div>
-        )}
-        {groupings.length === 0 && isAdmin && onManageGroupings && (
-          <button
-            onClick={onManageGroupings}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warning/5 ring-1 ring-warning/15 hover:ring-warning/30 transition-colors text-left"
-          >
-            <AppIcon name="Layers" size={14} className="text-warning/50" />
-            <span className="text-[10px] text-muted-foreground">Cadastrar agrupamentos CNC</span>
-          </button>
-        )}
 
-        {/* Progress */}
-        <div className="space-y-2 pt-1">
-          <div className="w-full h-2.5 rounded-sm bg-background/50 overflow-hidden ring-1 ring-border/20">
-            <div
-              className="h-full transition-all duration-700 ease-out"
-              style={{
-                width: `${Math.min(progress.percent, 100)}%`,
-                background: progress.percent >= 100
-                  ? 'hsl(var(--success))'
-                  : 'linear-gradient(90deg, hsl(var(--warning)), hsl(var(--warning) / 0.7))',
-              }}
-            />
+          {/* Client & Technical Specs */}
+          <div className="flex items-center gap-3 flex-wrap pt-2">
+            {project.client && (
+              <div className="flex items-center gap-1.5 text-warning">
+                <AppIcon name="Building2" size={14} />
+                <span className="text-xs font-black uppercase tracking-wider">{project.client}</span>
+              </div>
+            )}
+            {(project as any).material && (
+              <span className="text-[10px] font-mono px-2 py-1 rounded-md bg-secondary/80 border border-border/20 text-foreground/70">
+                {(project as any).material}
+              </span>
+            )}
+            {(project as any).thickness && (
+              <span className="text-[10px] font-mono px-2 py-1 rounded-md bg-secondary/80 border border-border/20 text-foreground/70">
+                ⌀ {(project as any).thickness}
+              </span>
+            )}
+            {(project as any).plate_size && (
+              <span className="text-[10px] font-mono px-2 py-1 rounded-md bg-secondary/80 border border-border/20 text-foreground/70 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.3 15.3l-3.6-3.6" /><path d="M11.4 5.4l3.6 3.6" /><path d="M5.4 11.4l3.6 3.6" /><path d="M21.3 5.3a2 2 0 0 0-2.8 0l-13 13a2 2 0 0 0 0 2.8 2 2 0 0 0 2.8 0l13-13a2 2 0 0 0 0-2.8Z" /><path d="M15.3 21.3l3.6-3.6" /></svg>
+                {(project as any).plate_size}
+              </span>
+            )}
           </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground uppercase">Feito</span>
-                <span className="text-sm font-black text-foreground">{progress.done}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground uppercase">Total</span>
-                <span className="text-sm font-black text-muted-foreground">{progress.ordered}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground uppercase">Falta</span>
-                <span className="text-sm font-black text-warning">{progress.pending}</span>
-              </div>
+
+          {/* Groupings summary */}
+          {groupings.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap pt-2">
+              {groupings.map(g => (
+                <button
+                  key={g.id}
+                  onClick={onManageGroupings}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-warning/20 bg-warning/5 hover:border-warning/40 transition-colors"
+                >
+                  <span className="text-[10px] font-black text-warning">AG{g.grouping_number}</span>
+                  <span className="text-[10px] font-medium text-muted-foreground">{g.total_pieces}pç</span>
+                  {g.thickness && <span className="text-[10px] font-mono text-foreground/60 ml-0.5">{g.thickness}</span>}
+                </button>
+              ))}
+              {isAdmin && (
+                <button onClick={onManageGroupings} className="text-warning hover:scale-110 transition-transform p-1">
+                  <AppIcon name="Plus" size={16} />
+                </button>
+              )}
             </div>
-            <span className={cn(
-              "text-xl font-black font-display",
-              progress.percent >= 100 ? "text-success" : "text-warning"
-            )}>
-              {progress.percent}%
-            </span>
+          )}
+          {groupings.length === 0 && isAdmin && onManageGroupings && (
+            <button
+              onClick={onManageGroupings}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/20 bg-warning/5 hover:bg-warning/10 transition-colors text-left mt-2"
+            >
+              <AppIcon name="Plus" size={14} className="text-warning" />
+              <span className="text-[10px] font-bold text-warning uppercase">Adicionar agrupamento CNC</span>
+            </button>
+          )}
+
+          {/* Progress */}
+          <div className="space-y-4 pt-6">
+            <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden relative">
+              <div
+                className="absolute top-0 left-0 bottom-0 bg-warning transition-all duration-700 ease-out"
+                style={{ width: `${Math.min(progress.percent, 100)}%` }}
+              />
+            </div>
+            <div className="flex items-end justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground font-bold tracking-[0.1em] uppercase">Feito</span>
+                  <span className="text-lg font-black text-foreground">{progress.done}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground font-bold tracking-[0.1em] uppercase">Total</span>
+                  <span className="text-lg font-black text-muted-foreground">{progress.ordered}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground font-bold tracking-[0.1em] uppercase">Falta</span>
+                  <span className="text-lg font-black text-warning">{progress.pending}</span>
+                </div>
+              </div>
+              <span className={cn(
+                "text-5xl font-black font-display leading-[0.8]",
+                progress.percent >= 100 ? "text-success" : "text-warning"
+              )}>
+                {progress.percent}%
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }
