@@ -1,23 +1,33 @@
 
 
-## Seletor de Projeto na Tela de Produção
+## Situação Atual
 
-Atualmente o sistema pega automaticamente `activeProjects[0]`. Vou adicionar um seletor para alternar entre projetos.
+A funcionalidade **já existe** no código. No painel de planejamento (ícone ⚙️), há o botão **"Puxar último turno"** que:
 
-### Alterações
+1. Calcula a data de ontem
+2. Busca todos os pedidos daquele dia (Turno 1 + Turno 2)
+3. Soma as quantidades pedidas e subtrai as completadas
+4. Retorna apenas os itens **pendentes** (não finalizados)
+5. Soma essas quantidades ao plano atual do Turno 1 de hoje
 
-**1. `src/hooks/useProductionPage.ts`**
-- Adicionar estado `selectedProjectId` com controle manual
-- Substituir `activeProject = activeProjects[0]` por seleção baseada no `selectedProjectId`
-- Expor `setSelectedProjectId` no retorno
+### Como usar
 
-**2. `src/components/production/ProductionProjectHero.tsx`**
-- Quando houver mais de 1 projeto ativo, renderizar chips/tabs horizontais acima do hero card para alternar entre projetos (ex: `#OS001`, `#OS002`)
-- Chip selecionado fica destacado com estilo warning/ativo
-- Manter o botão "Cadastrar OS" para admin
+1. No novo dia, abra o painel de planejamento (⚙️)
+2. Clique no botão **"Puxar último turno"** (ícone de relógio/History)
+3. Os itens pendentes do dia anterior serão importados com as quantidades restantes
 
-**3. `src/pages/Production.tsx`**
-- Passar `setSelectedProjectId` e `activeProjects` para o `ProductionProjectHero`
+### Problemas identificados
 
-O seletor aparecerá como uma fila horizontal de chips com o número da OS, no estilo industrial já usado no app.
+O botão está com label **"Puxar último turno"**, que é ambíguo — parece referir-se ao turno anterior do mesmo dia, não ao dia anterior. Sugiro melhorar:
+
+1. **Renomear o botão** para **"Puxar pendências do dia anterior"** para deixar claro
+2. **Adicionar indicador visual** — mostrar um badge quando há pendências do dia anterior, para que o operador saiba que existem itens não concluídos
+3. **Mensagem mais detalhada** no toast, informando a data de origem (ex: "3 itens pendentes de 01/03 importados")
+
+### Mudanças
+
+- `ProductionPlanSheet.tsx`: Renomear label do botão e melhorar toast
+- `useProductionOrders.ts` (opcional): Adicionar função `hasPendingFromYesterday` para badge visual
+
+Escopo pequeno — apenas ajuste de texto e UX.
 
