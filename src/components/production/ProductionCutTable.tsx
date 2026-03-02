@@ -11,6 +11,7 @@ interface ProductionCutTableProps {
   sectors: ChecklistSector[];
   onStartItem: (itemId: string) => void;
   onFinishItem: (itemId: string) => void;
+  onQuickComplete?: (itemId: string, quantity: number) => void;
   onTapItem: (itemId: string) => void;
   isAdmin: boolean;
   isClosed: boolean;
@@ -25,7 +26,7 @@ interface GroupedRow {
 
 export function ProductionCutTable({
   report, orderItems, sectors,
-  onStartItem, onFinishItem, onTapItem,
+  onStartItem, onFinishItem, onQuickComplete, onTapItem,
   isAdmin, isClosed, itemGroupingMap,
 }: ProductionCutTableProps) {
   const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
@@ -176,11 +177,11 @@ export function ProductionCutTable({
             {!isCollapsed && (
               <div className="border-t border-border/10">
                 {/* Column headers */}
-                <div className="grid grid-cols-[1fr_48px_48px_40px] px-3 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-muted-foreground/40 bg-background/30">
-                  <span className="pl-1">PEÇA / CÓD</span>
-                  <span className="text-center">PED</span>
-                  <span className="text-center">FEITO</span>
-                  <span className="text-center">AÇÃo</span>
+                <div className="grid grid-cols-[56px_1fr_80px_72px] px-3 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-muted-foreground/40 bg-background/30">
+                  <span className="text-center">MINIATURA</span>
+                  <span className="pl-1">NOME DA PEÇA</span>
+                  <span className="text-right pr-2">TAMANHO</span>
+                  <span className="text-center">CONTAGEM</span>
                 </div>
 
                 {group.items.map((item, idx) => {
@@ -191,69 +192,76 @@ export function ProductionCutTable({
                     <div
                       key={item.checklist_item_id}
                       className={cn(
-                        "grid grid-cols-[1fr_48px_48px_40px] items-center px-3 py-2.5 transition-all",
+                        "grid grid-cols-[56px_1fr_80px_72px] items-center px-3 py-2 transition-all min-h-[56px]",
                         idx < group.items.length - 1 && "border-b border-border/5",
                         isInProgress && "bg-warning/[0.06] border-l-2 border-l-warning",
-                        isComplete && "opacity-50",
+                        isComplete && "opacity-60",
                       )}
                     >
+                      {/* Miniatura */}
+                      <div className="flex justify-center items-center">
+                        <div className="w-10 h-7 border-[1.5px] border-border/60 rounded flex items-center justify-center bg-background/50 text-muted-foreground/30">
+                          <AppIcon name="Maximize" size={14} />
+                        </div>
+                      </div>
+
                       {/* Item info */}
-                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left min-w-0 pl-1">
+                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left min-w-0 pl-1 flex flex-col justify-center py-1">
                         <p className={cn(
                           "text-[12px] font-bold leading-tight truncate",
-                          isComplete && "line-through text-muted-foreground/40",
+                          isComplete && "line-through text-muted-foreground/50",
                           isInProgress && "text-warning font-black",
                         )}>
                           {item.item_name}
                         </p>
-                        {item.materialCode && (
-                          <span className="text-[8px] font-mono text-muted-foreground/60">
-                            {item.materialCode}
-                            {item.dimensions && ` · ${item.dimensions}`}
-                          </span>
-                        )}
                         {itemGroupingMap?.has(item.checklist_item_id) && (
-                          <span className="inline-flex items-center gap-0.5 text-[7px] font-black text-warning bg-warning/10 px-1.5 py-0.5 rounded mt-0.5">
+                          <span className="inline-flex items-center gap-0.5 text-[7px] font-black text-warning bg-warning/10 px-1.5 py-0.5 rounded mt-0.5 w-fit">
                             AG{itemGroupingMap.get(item.checklist_item_id)!.groupingNumber}
-                            <span className="text-muted-foreground font-normal ml-0.5">
-                              ×{itemGroupingMap.get(item.checklist_item_id)!.quantity}
-                            </span>
                           </span>
                         )}
                       </button>
 
-                      {/* Qty ordered */}
-                      <span className="text-center text-[11px] font-mono font-bold text-foreground/60">
-                        {item.quantity_ordered}
-                      </span>
+                      {/* Tamanho */}
+                      <div className="text-right pr-2 flex flex-col justify-center">
+                        {item.dimensions ? (
+                          <span className="text-[10px] font-mono text-muted-foreground">{item.dimensions}</span>
+                        ) : item.materialCode ? (
+                          <span className="text-[10px] font-mono text-muted-foreground">{item.materialCode}</span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-muted-foreground/40">-</span>
+                        )}
+                      </div>
 
-                      {/* Qty done */}
-                      <span className={cn(
-                        "text-center text-[11px] font-mono font-black",
-                        isComplete ? "text-success" : item.quantity_done > 0 ? "text-warning" : "text-muted-foreground/30"
-                      )}>
-                        {item.quantity_done}
-                      </span>
+                      {/* Contagem / Action */}
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[13px] font-mono font-black text-foreground">
+                          {item.quantity_ordered}
+                        </span>
 
-                      {/* Action */}
-                      <div className="flex justify-center">
                         {isClosed ? (
-                          <AppIcon name="Lock" size={12} className="text-muted-foreground/20" />
+                          <AppIcon name="Lock" size={14} className="text-muted-foreground/20 ml-2" />
                         ) : isComplete ? (
-                          <AppIcon name="CheckCircle" size={16} className="text-success" />
-                        ) : isInProgress ? (
-                          <button
-                            onClick={() => onFinishItem(item.checklist_item_id)}
-                            className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center active:scale-90 transition-transform ring-1 ring-warning/30"
-                          >
-                            <AppIcon name="Square" size={12} className="text-warning" />
-                          </button>
+                          <div className="flex flex-col items-center ml-2">
+                            <span className="text-[12px] font-black italic text-blue-500 font-display">OK</span>
+                          </div>
                         ) : (
                           <button
-                            onClick={() => onStartItem(item.checklist_item_id)}
-                            className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center active:scale-90 transition-transform hover:bg-success/20 ring-1 ring-success/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onQuickComplete) {
+                                onQuickComplete(item.checklist_item_id, item.quantity_ordered);
+                              } else {
+                                onFinishItem(item.checklist_item_id);
+                              }
+                            }}
+                            className={cn(
+                              "w-7 h-7 shrink-0 rounded-full border-[1.5px] flex items-center justify-center ml-2 transition-colors",
+                              isInProgress
+                                ? "border-warning/50 bg-warning/10"
+                                : "border-muted-foreground/30 hover:bg-success/10 hover:border-success/40"
+                            )}
                           >
-                            <AppIcon name="Play" size={12} className="text-success" />
+                            {isInProgress && <div className="w-2.5 h-2.5 rounded-full bg-warning animate-pulse" />}
                           </button>
                         )}
                       </div>

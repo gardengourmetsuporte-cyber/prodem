@@ -76,6 +76,15 @@ export default function ProductionPage() {
     return meta;
   }, [sectors]);
 
+  const handleQuickComplete = useCallback(async (itemId: string, quantity: number) => {
+    try {
+      await finishProduction(itemId, checklistType, currentDate, quantity, 1, undefined, undefined);
+      toast.success('Peça concluída!');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao finalizar');
+    }
+  }, [finishProduction, checklistType, currentDate]);
+
   const handleStartItem = useCallback(async (itemId: string) => {
     try {
       await startProduction(itemId, checklistType, currentDate);
@@ -189,6 +198,7 @@ export default function ProductionPage() {
               sectors={sectors}
               onStartItem={handleStartItem}
               onFinishItem={(itemId) => setFinishingItemId(itemId)}
+              onQuickComplete={handleQuickComplete}
               onTapItem={(itemId) => setSelectedItemId(itemId)}
               isAdmin={isAdmin}
               isClosed={activeShift.order?.status === 'closed'}

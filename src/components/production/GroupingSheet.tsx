@@ -166,7 +166,7 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
               )}
 
               {groupings.map(g => (
-                <div key={g.id} className="rounded-xl p-4 industrial-card space-y-2">
+                <div key={g.id} className="rounded-xl p-4 industrial-card space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center ring-1 ring-warning/30">
@@ -189,42 +189,49 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
                     </div>
                   </div>
 
-                  {/* Technical specs */}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
-                    {g.material && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Material:</span>
-                        <span className="font-bold text-foreground">{g.material}</span>
-                      </div>
-                    )}
-                    {g.thickness && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-muted-foreground">Espessura:</span>
-                        <span className="font-bold text-foreground">{g.thickness}</span>
-                      </div>
-                    )}
-                    {g.plate_size && (
-                      <div className="flex items-center gap-1 col-span-2">
-                        <span className="text-muted-foreground">Chapa:</span>
-                        <span className="font-bold text-foreground">{g.plate_size}</span>
-                      </div>
-                    )}
-                  </div>
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Visual Cut Plan Placeholder */}
+                    <div className="w-full md:w-32 h-28 bg-background/50 border-[1.5px] border-border/40 border-dashed rounded-xl flex flex-col items-center justify-center shrink-0">
+                      <AppIcon name="Image" size={24} className="text-muted-foreground/30 mb-2" />
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/50">Plano de Corte</span>
+                    </div>
 
-                  {/* Times */}
-                  {(g.processing_time || g.cut_time || g.movement_time) && (
-                    <div className="flex items-center gap-3 text-[9px] font-mono pt-1 border-t border-border/10">
-                      {g.processing_time && (
-                        <span className="text-muted-foreground">⏱ Proc: <b className="text-foreground">{g.processing_time}</b></span>
-                      )}
-                      {g.cut_time && (
-                        <span className="text-muted-foreground">✂ Corte: <b className="text-foreground">{g.cut_time}</b></span>
-                      )}
-                      {g.movement_time && (
-                        <span className="text-muted-foreground">↔ Mov: <b className="text-foreground">{g.movement_time}</b></span>
+                    {/* Technical specs & Times like paper sheet */}
+                    <div className="flex-1 space-y-3 min-w-0">
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[10px]">
+                        <div className="space-y-0.5">
+                          <p className="text-muted-foreground font-medium">Material</p>
+                          <p className="font-bold text-foreground truncate">{g.material || '-'}</p>
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-muted-foreground font-medium">Espessura</p>
+                          <p className="font-bold text-foreground">{g.thickness || '-'}</p>
+                        </div>
+                        <div className="space-y-0.5 col-span-2">
+                          <p className="text-muted-foreground font-medium">Tamanho da chapa</p>
+                          <p className="font-bold text-foreground truncate">{g.plate_size || '-'}</p>
+                        </div>
+                      </div>
+
+                      {/* Times */}
+                      {(g.processing_time || g.cut_time || g.movement_time) && (
+                        <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border/10 text-[10px] font-mono">
+                          <div className="bg-background/40 p-2 rounded-lg border border-border/5">
+                            <p className="text-muted-foreground/70 mb-1 uppercase tracking-wider text-[8px] font-sans font-bold">Proc.</p>
+                            <p className="font-black text-foreground">{g.processing_time || '-'}</p>
+                          </div>
+                          <div className="bg-background/40 p-2 rounded-lg border border-border/5">
+                            <p className="text-muted-foreground/70 mb-1 uppercase tracking-wider text-[8px] font-sans font-bold">Corte</p>
+                            <p className="font-black text-foreground">{g.cut_time || '-'}</p>
+                          </div>
+                          <div className="bg-background/40 p-2 rounded-lg border border-border/5">
+                            <p className="text-muted-foreground/70 mb-1 uppercase tracking-wider text-[8px] font-sans font-bold">Mov.</p>
+                            <p className="font-black text-foreground">{g.movement_time || '-'}</p>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
