@@ -20,17 +20,37 @@ export const ALL_MODULES: ModuleDef[] = [
   {
     key: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', route: '/', routes: ['/'], group: 'Principal',
   },
+  // ── Produção (prioridade máxima) ──
   {
-    key: 'agenda', label: 'Agenda', icon: 'CalendarDays', route: '/agenda', routes: ['/agenda'], group: 'Principal',
+    key: 'checklists', label: 'Produção', icon: 'ClipboardCheck', route: '/checklists', routes: ['/checklists'], group: 'Produção',
     children: [
-      { key: 'agenda.view', label: 'Visualizar tarefas', icon: 'Eye' },
-      { key: 'agenda.create', label: 'Criar/editar tarefas', icon: 'PenSquare' },
-      { key: 'agenda.appointments', label: 'Compromissos', icon: 'Clock' },
+      { key: 'checklists.complete', label: 'Registrar produção', icon: 'CheckSquare' },
+      { key: 'checklists.manage', label: 'Gerenciar peças (admin)', icon: 'Settings' },
+      { key: 'checklists.contest', label: 'Contestar registros', icon: 'AlertTriangle' },
+      { key: 'checklists.history', label: 'Histórico de produção', icon: 'History' },
     ],
   },
   {
-    key: 'copilot', label: 'Copilot IA', icon: 'Sparkles', route: '/copilot', routes: ['/copilot'], group: 'Principal',
+    key: 'inventory', label: 'Estoque', icon: 'Package', route: '/inventory', routes: ['/inventory'], group: 'Produção',
+    children: [
+      { key: 'inventory.view', label: 'Ver itens', icon: 'Eye' },
+      { key: 'inventory.create', label: 'Criar/editar itens', icon: 'PenSquare' },
+      { key: 'inventory.delete', label: 'Excluir itens', icon: 'Trash2' },
+      { key: 'inventory.movements', label: 'Entradas e saídas', icon: 'ArrowLeftRight' },
+      { key: 'inventory.invoices', label: 'Notas fiscais', icon: 'FileText' },
+      { key: 'inventory.smart_receiving', label: 'Recebimento inteligente', icon: 'Camera' },
+    ],
   },
+  {
+    key: 'orders', label: 'Pedidos', icon: 'ShoppingCart', route: '/orders', routes: ['/orders'], group: 'Produção',
+    children: [
+      { key: 'orders.view', label: 'Ver pedidos', icon: 'Eye' },
+      { key: 'orders.create', label: 'Criar/enviar pedidos', icon: 'PenSquare' },
+      { key: 'orders.receive', label: 'Receber pedidos', icon: 'PackageCheck' },
+      { key: 'orders.quotations', label: 'Cotações', icon: 'FileSearch' },
+    ],
+  },
+  // ── Gestão ──
   {
     key: 'finance', label: 'Financeiro', icon: 'DollarSign', route: '/finance', routes: ['/finance'], group: 'Gestão',
     children: [
@@ -46,14 +66,15 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'inventory', label: 'Estoque', icon: 'Package', route: '/inventory', routes: ['/inventory'], group: 'Gestão',
+    key: 'employees', label: 'Funcionários', icon: 'Users', route: '/employees', routes: ['/employees'], group: 'Gestão',
     children: [
-      { key: 'inventory.view', label: 'Ver itens', icon: 'Eye' },
-      { key: 'inventory.create', label: 'Criar/editar itens', icon: 'PenSquare' },
-      { key: 'inventory.delete', label: 'Excluir itens', icon: 'Trash2' },
-      { key: 'inventory.movements', label: 'Entradas e saídas', icon: 'ArrowLeftRight' },
-      { key: 'inventory.invoices', label: 'Notas fiscais', icon: 'FileText' },
-      { key: 'inventory.smart_receiving', label: 'Recebimento inteligente', icon: 'Camera' },
+      { key: 'employees.view', label: 'Ver funcionários', icon: 'Eye' },
+      { key: 'employees.manage', label: 'Cadastrar/editar', icon: 'PenSquare' },
+      { key: 'employees.payments', label: 'Pagamentos/Holerites', icon: 'Banknote' },
+      { key: 'employees.schedule', label: 'Escala e folgas', icon: 'CalendarDays' },
+      { key: 'employees.time_tracking', label: 'Registro de ponto', icon: 'Clock' },
+      { key: 'employees.performance', label: 'Desempenho', icon: 'TrendingUp' },
+      { key: 'employees.bonus', label: 'Pontos bônus', icon: 'Star' },
     ],
   },
   {
@@ -66,25 +87,7 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'orders', label: 'Pedidos', icon: 'ShoppingCart', route: '/orders', routes: ['/orders'], group: 'Gestão',
-    children: [
-      { key: 'orders.view', label: 'Ver pedidos', icon: 'Eye' },
-      { key: 'orders.create', label: 'Criar/enviar pedidos', icon: 'PenSquare' },
-      { key: 'orders.receive', label: 'Receber pedidos', icon: 'PackageCheck' },
-      { key: 'orders.quotations', label: 'Cotações', icon: 'FileSearch' },
-    ],
-  },
-  {
-    key: 'checklists', label: 'Checklists', icon: 'ClipboardCheck', route: '/checklists', routes: ['/checklists'], group: 'Operação',
-    children: [
-      { key: 'checklists.complete', label: 'Completar itens', icon: 'CheckSquare' },
-      { key: 'checklists.manage', label: 'Gerenciar itens (admin)', icon: 'Settings' },
-      { key: 'checklists.contest', label: 'Contestar conclusões', icon: 'AlertTriangle' },
-      { key: 'checklists.history', label: 'Ver histórico', icon: 'History' },
-    ],
-  },
-  {
-    key: 'cash-closing', label: 'Fechamento', icon: 'Receipt', route: '/cash-closing', routes: ['/cash-closing'], group: 'Operação',
+    key: 'cash-closing', label: 'Fechamento', icon: 'Receipt', route: '/cash-closing', routes: ['/cash-closing'], group: 'Gestão',
     children: [
       { key: 'cash-closing.create', label: 'Criar fechamento', icon: 'PenSquare' },
       { key: 'cash-closing.validate', label: 'Validar fechamentos', icon: 'ShieldCheck' },
@@ -92,8 +95,32 @@ export const ALL_MODULES: ModuleDef[] = [
       { key: 'cash-closing.integrate', label: 'Integrar ao financeiro', icon: 'Link' },
     ],
   },
+  // ── Equipe ──
   {
-    key: 'recipes', label: 'Fichas Técnicas', icon: 'ChefHat', route: '/recipes', routes: ['/recipes'], group: 'Operação',
+    key: 'agenda', label: 'Agenda', icon: 'CalendarDays', route: '/agenda', routes: ['/agenda'], group: 'Equipe',
+    children: [
+      { key: 'agenda.view', label: 'Visualizar tarefas', icon: 'Eye' },
+      { key: 'agenda.create', label: 'Criar/editar tarefas', icon: 'PenSquare' },
+      { key: 'agenda.appointments', label: 'Compromissos', icon: 'Clock' },
+    ],
+  },
+  {
+    key: 'ranking', label: 'Ranking', icon: 'Trophy', route: '/ranking', routes: ['/ranking'], group: 'Equipe',
+  },
+  {
+    key: 'rewards', label: 'Recompensas', icon: 'Gift', route: '/rewards', routes: ['/rewards'], group: 'Equipe',
+    children: [
+      { key: 'rewards.shop', label: 'Loja de recompensas', icon: 'ShoppingBag' },
+      { key: 'rewards.manage', label: 'Gerenciar produtos', icon: 'Settings' },
+      { key: 'rewards.approve', label: 'Aprovar resgates', icon: 'CheckCircle' },
+    ],
+  },
+  // ── Ferramentas ──
+  {
+    key: 'copilot', label: 'Copilot IA', icon: 'Sparkles', route: '/copilot', routes: ['/copilot'], group: 'Ferramentas',
+  },
+  {
+    key: 'recipes', label: 'Fichas Técnicas', icon: 'FileSpreadsheet', route: '/recipes', routes: ['/recipes'], group: 'Ferramentas',
     children: [
       { key: 'recipes.view', label: 'Ver fichas', icon: 'Eye' },
       { key: 'recipes.create', label: 'Criar/editar fichas', icon: 'PenSquare' },
@@ -101,30 +128,7 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'employees', label: 'Funcionários', icon: 'Users', route: '/employees', routes: ['/employees'], group: 'Pessoas',
-    children: [
-      { key: 'employees.view', label: 'Ver funcionários', icon: 'Eye' },
-      { key: 'employees.manage', label: 'Cadastrar/editar', icon: 'PenSquare' },
-      { key: 'employees.payments', label: 'Pagamentos/Holerites', icon: 'Banknote' },
-      { key: 'employees.schedule', label: 'Escala e folgas', icon: 'CalendarDays' },
-      { key: 'employees.time_tracking', label: 'Registro de ponto', icon: 'Clock' },
-      { key: 'employees.performance', label: 'Desempenho', icon: 'TrendingUp' },
-      { key: 'employees.bonus', label: 'Pontos bônus', icon: 'Star' },
-    ],
-  },
-  {
-    key: 'rewards', label: 'Recompensas', icon: 'Gift', route: '/rewards', routes: ['/rewards'], group: 'Pessoas',
-    children: [
-      { key: 'rewards.shop', label: 'Loja de recompensas', icon: 'ShoppingBag' },
-      { key: 'rewards.manage', label: 'Gerenciar produtos', icon: 'Settings' },
-      { key: 'rewards.approve', label: 'Aprovar resgates', icon: 'CheckCircle' },
-    ],
-  },
-  {
-    key: 'ranking', label: 'Ranking', icon: 'Trophy', route: '/ranking', routes: ['/ranking'], group: 'Pessoas',
-  },
-  {
-    key: 'marketing', label: 'Marketing', icon: 'Megaphone', route: '/marketing', routes: ['/marketing'], group: 'Premium',
+    key: 'marketing', label: 'Marketing', icon: 'Megaphone', route: '/marketing', routes: ['/marketing'], group: 'Ferramentas',
     children: [
       { key: 'marketing.calendar', label: 'Calendário de posts', icon: 'Calendar' },
       { key: 'marketing.create', label: 'Criar/editar posts', icon: 'PenSquare' },
@@ -132,7 +136,7 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'menu-admin', label: 'Cardápio Digital', icon: 'BookOpen', route: '/cardapio', routes: ['/cardapio', '/menu-admin', '/tablet-admin', '/gamification'], group: 'Premium',
+    key: 'menu-admin', label: 'Cardápio Digital', icon: 'BookOpen', route: '/cardapio', routes: ['/cardapio', '/menu-admin', '/tablet-admin', '/gamification'], group: 'Ferramentas',
     children: [
       { key: 'menu-admin.view', label: 'Ver cardápio', icon: 'Eye' },
       { key: 'menu-admin.products', label: 'Gerenciar produtos', icon: 'PenSquare' },
@@ -145,7 +149,7 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'whatsapp', label: 'WhatsApp', icon: 'MessageSquare', route: '/whatsapp', routes: ['/whatsapp'], group: 'Premium',
+    key: 'whatsapp', label: 'WhatsApp', icon: 'MessageSquare', route: '/whatsapp', routes: ['/whatsapp'], group: 'Ferramentas',
     children: [
       { key: 'whatsapp.conversations', label: 'Conversas', icon: 'MessageCircle' },
       { key: 'whatsapp.settings', label: 'Configurações bot', icon: 'Settings' },
@@ -153,6 +157,7 @@ export const ALL_MODULES: ModuleDef[] = [
       { key: 'whatsapp.orders', label: 'Pedidos WhatsApp', icon: 'ShoppingCart' },
     ],
   },
+  // ── Sistema ──
   {
     key: 'settings', label: 'Configurações', icon: 'Settings', route: '/settings', routes: ['/settings'], group: 'Sistema',
     children: [
@@ -166,9 +171,9 @@ export const ALL_MODULES: ModuleDef[] = [
       { key: 'settings.rewards', label: 'Recompensas (config)', icon: 'Gift' },
       { key: 'settings.medals', label: 'Medalhas', icon: 'Medal' },
       { key: 'settings.notifications', label: 'Notificações', icon: 'Bell' },
-      { key: 'settings.profile', label: 'Perfil da loja', icon: 'Store' },
+      { key: 'settings.profile', label: 'Perfil da empresa', icon: 'Factory' },
       { key: 'settings.audit', label: 'Log de auditoria', icon: 'FileText' },
-      { key: 'settings.checklist_management', label: 'Gestão de checklists', icon: 'ClipboardList' },
+      { key: 'settings.checklist_management', label: 'Gestão de produção', icon: 'ClipboardList' },
     ],
   },
 ];

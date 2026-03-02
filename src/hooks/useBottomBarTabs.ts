@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { ALL_MODULES } from '@/lib/modules';
 
 const STORAGE_KEY = 'bottombar-pinned-tabs';
-const DEFAULT_KEYS = ['checklists', 'finance'];
+const DEFAULT_KEYS = ['checklists', 'inventory'];
 
 export interface BottomTabDef {
   key: string;
