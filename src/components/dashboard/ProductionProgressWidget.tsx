@@ -28,7 +28,7 @@ function statusColor(status: ProductionReportItem['status']) {
 export function ProductionProgressWidget({ variant, userId }: ProductionProgressWidgetProps) {
   const { activeUnitId } = useUnit();
   const navigate = useNavigate();
-  const { report, totals, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date(), 1, '__all__');
+  const { report, totals, isLoading } = useProductionOrders(activeUnitId, new Date(), '__all__');
 
   if (isLoading) {
     return (
@@ -39,15 +39,15 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
     );
   }
 
-  if (!hasOrder || report.length === 0) {
+  if (report.length === 0) {
     return (
       <button
         onClick={() => navigate('/production')}
         className="card-surface p-5 w-full text-center"
       >
         <AppIcon name="Factory" size={24} className="mx-auto text-muted-foreground/40 mb-2" />
-        <p className="text-sm text-muted-foreground">Nenhum plano de produção hoje</p>
-        <p className="text-[11px] text-muted-foreground/60 mt-1">Toque para criar</p>
+        <p className="text-sm text-muted-foreground">Nenhuma peça em produção</p>
+        <p className="text-[11px] text-muted-foreground/60 mt-1">Toque para cadastrar uma OS</p>
       </button>
     );
   }
@@ -95,15 +95,15 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
           {report.map(item => {
             const statusLabel = item.status === 'complete' ? 'Concluído'
               : item.status === 'in_progress' ? 'Em produção'
-              : item.status === 'partial' ? 'Parcial'
-              : 'Aguardando';
+                : item.status === 'partial' ? 'Parcial'
+                  : 'Aguardando';
             const statusBg = item.status === 'complete' ? 'bg-success/10 text-success'
               : item.status === 'in_progress' ? 'bg-blue-500/10 text-blue-500'
-              : item.status === 'partial' ? 'bg-warning/10 text-warning'
-              : 'bg-muted text-muted-foreground';
+                : item.status === 'partial' ? 'bg-warning/10 text-warning'
+                  : 'bg-muted text-muted-foreground';
             const nameClass = item.status === 'complete' ? 'text-success line-through opacity-60'
               : item.status === 'in_progress' ? 'text-warning font-semibold'
-              : 'text-foreground';
+                : 'text-foreground';
             return (
               <div key={item.checklist_item_id} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-4 py-3">
                 <div className="min-w-0">
