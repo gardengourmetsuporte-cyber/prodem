@@ -1050,21 +1050,33 @@ export function ChecklistView({
                                           <div className="border-t border-border" />
                                           {updatingQtyItemId === item.id ? (
                                             <div className="space-y-3 animate-fade-in">
-                                              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                                               <div className="flex items-center gap-2 text-sm font-medium text-primary">
                                                 <AppIcon name="Pencil" className="w-4 h-4" />
-                                                <span>Atualizar quantidade ({(completion as any).quantity_done} atual)</span>
+                                                <span>Atualizar quantidade ({(completion as any).quantity_done} atual, máx: {(item as any).target_quantity})</span>
                                               </div>
                                               <input
                                                 type="number"
                                                 inputMode="numeric"
                                                 value={updateQtyValue}
-                                                onChange={(e) => setUpdateQtyValue(e.target.value)}
-                                                placeholder={`Ex: ${(completion as any).quantity_done + 5}`}
+                                                onChange={(e) => {
+                                                  const val = e.target.value;
+                                                  const num = parseInt(val) || 0;
+                                                  const maxQty = (item as any).target_quantity || 0;
+                                                  if (maxQty > 0 && num > maxQty) {
+                                                    setUpdateQtyValue(String(maxQty));
+                                                  } else {
+                                                    setUpdateQtyValue(val);
+                                                  }
+                                                }}
+                                                max={(item as any).target_quantity || undefined}
+                                                placeholder={`Ex: ${Math.min((completion as any).quantity_done + 5, (item as any).target_quantity || 999)}`}
                                                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-lg font-bold outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40"
                                                 autoFocus
                                                 onKeyDown={(e) => {
                                                   if (e.key === 'Enter') {
-                                                    const qty = parseInt(updateQtyValue) || 0;
+                                                    let qty = parseInt(updateQtyValue) || 0;
+                                                    const maxQty = (item as any).target_quantity || 0;
+                                                    if (maxQty > 0 && qty > maxQty) qty = maxQty;
                                                     if (qty > 0) {
                                                       setUpdateQtyLoading(true);
                                                       onUpdateProductionQuantity(completion.id, qty)
@@ -1079,9 +1091,10 @@ export function ChecklistView({
                                               <div className="flex gap-2">
                                                 <button
                                                   onClick={() => {
-                                                    const qty = parseInt(updateQtyValue) || 0;
+                                                    let qty = parseInt(updateQtyValue) || 0;
                                                     if (qty <= 0) { toast.error('Informe a quantidade'); return; }
-                                                    setUpdateQtyLoading(true);
+                                                    const maxQty = (item as any).target_quantity || 0;
+                                                    if (maxQty > 0 && qty > maxQty) qty = maxQty;
                                                     onUpdateProductionQuantity(completion.id, qty)
                                                       .then(() => { setUpdatingQtyItemId(null); setUpdateQtyValue(''); toast.success('Quantidade atualizada!'); })
                                                       .catch((err: any) => toast.error(err.message))
@@ -1263,18 +1276,30 @@ export function ChecklistView({
                                           <span>Finalizar produção</span>
                                         </div>
                                         <div>
-                                          <label className="text-xs text-muted-foreground mb-1 block">Quantidade produzida</label>
+                                          <label className="text-xs text-muted-foreground mb-1 block">
+                                            Quantidade produzida {remaining > 0 && <span className="text-primary">(máx: {remaining})</span>}
+                                          </label>
                                           <input
                                             type="number"
                                             inputMode="numeric"
                                             value={finishQuantity}
-                                            onChange={(e) => setFinishQuantity(e.target.value)}
-                                            placeholder="Ex: 25"
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              const num = parseInt(val) || 0;
+                                              if (remaining > 0 && num > remaining) {
+                                                setFinishQuantity(String(remaining));
+                                              } else {
+                                                setFinishQuantity(val);
+                                              }
+                                            }}
+                                            max={remaining > 0 ? remaining : undefined}
+                                            placeholder={`Ex: ${Math.min(25, remaining > 0 ? remaining : 25)}`}
                                             className="w-full bg-background border border-border rounded-xl px-4 py-3 text-lg font-bold outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-success/40"
                                             autoFocus
                                             onKeyDown={(e) => {
                                               if (e.key === 'Enter') {
-                                                const qty = parseInt(finishQuantity) || 0;
+                                                let qty = parseInt(finishQuantity) || 0;
+                                                if (remaining > 0 && qty > remaining) qty = remaining;
                                                 if (qty > 0) {
                                                   setFinishLoading(true);
                                                   onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by)
@@ -1290,8 +1315,9 @@ export function ChecklistView({
                                         <div className="flex gap-2">
                                           <button
                                             onClick={() => {
-                                              const qty = parseInt(finishQuantity) || 0;
+                                              let qty = parseInt(finishQuantity) || 0;
                                               if (qty <= 0) { toast.error('Informe a quantidade'); return; }
+                                              if (remaining > 0 && qty > remaining) qty = remaining;
                                               setFinishLoading(true);
                                               onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by)
                                                 .then(() => { setFinishingItemId(null); setFinishQuantity(''); })
