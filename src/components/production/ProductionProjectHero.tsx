@@ -8,6 +8,7 @@ interface ProductionProjectHeroProps {
   progress: { ordered: number; done: number; pending: number; percent: number };
   isAdmin: boolean;
   onManageProjects: () => void;
+  onViewHistory?: () => void;
   activeProjects?: ProductionProject[];
   selectedProjectId?: string | null;
   onSelectProject?: (id: string) => void;
@@ -15,7 +16,7 @@ interface ProductionProjectHeroProps {
   onManageGroupings?: () => void;
 }
 
-export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects, activeProjects = [], selectedProjectId, onSelectProject, groupings = [], onManageGroupings }: ProductionProjectHeroProps) {
+export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects, onViewHistory, activeProjects = [], selectedProjectId, onSelectProject, groupings = [], onManageGroupings }: ProductionProjectHeroProps) {
   if (!project) {
     if (!isAdmin) return null;
     return (
@@ -40,7 +41,7 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
   return (
     <div className="space-y-2">
       {/* Project selector — modern segmented tabs */}
-      {activeProjects.length > 1 && onSelectProject && (
+      {onSelectProject && (
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none bg-muted/20 rounded-xl p-1 ring-1 ring-border/10">
           {activeProjects.map((p) => {
             const isActive = selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id);
@@ -70,6 +71,17 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
               </button>
             );
           })}
+          {/* History button */}
+          {onViewHistory && (
+            <button
+              onClick={onViewHistory}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold whitespace-nowrap text-muted-foreground/60 hover:text-foreground hover:bg-background/40 transition-all min-h-[42px]"
+              title="Histórico de OS"
+            >
+              <AppIcon name="History" size={14} />
+              <span className="text-[10px]">Todas</span>
+            </button>
+          )}
         </div>
       )}
 

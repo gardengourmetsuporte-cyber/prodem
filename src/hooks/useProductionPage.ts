@@ -6,7 +6,7 @@ import { useProductionOrders } from '@/hooks/useProductionOrders';
 import { useProductionProjects } from '@/hooks/useProductionProjects';
 import { useChecklists } from '@/hooks/useChecklists';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 export function useProductionPage() {
   const { isAdmin, user } = useAuth();
@@ -27,8 +27,47 @@ export function useProductionPage() {
 
   // Projects
   const {
-    projects, activeProjects, createProject, updateProject, deleteProject,
+    projects, activeProjects: allActiveProjects, createProject, updateProject, deleteProject,
   } = useProductionProjects(activeUnitId);
+
+  // Query which project IDs have production orders on the selected date
+  const { data: dateProjectIds = [] } = useQuery({
+    queryKey: ['production-date-project-ids', activeUnitId, currentDate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('production_orders')
+        .select('project_id')
+        .eq('unit_id', activeUnitId!)
+        .eq('date', currentDate)
+        .not('project_id', 'is', null);
+      if (error) throw error;
+      return [...new Set((data || []).map(d => d.project_id).filter(Boolean))] as string[];
+    },
+    enabled: !!activeUnitId,
+  });
+
+  // Filter: show projects that have orders on this date, plus active projects without ANY orders yet (new projects)
+  const { data: projectsWithOrders = [] } = useQuery({
+    queryKey: ['production-projects-with-orders', activeUnitId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('production_orders')
+        .select('project_id')
+        .eq('unit_id', activeUnitId!)
+        .not('project_id', 'is', null);
+      if (error) throw error;
+      return [...new Set((data || []).map(d => d.project_id).filter(Boolean))] as string[];
+    },
+    enabled: !!activeUnitId,
+  });
+
+  const activeProjects = useMemo(() => {
+    // Projects relevant to this date: have orders today OR are new (no orders anywhere yet)
+    return allActiveProjects.filter(p =>
+      dateProjectIds.includes(p.id) || !projectsWithOrders.includes(p.id)
+    );
+  }, [allActiveProjects, dateProjectIds, projectsWithOrders]);
+
   const activeProject = selectedProjectId
     ? activeProjects.find(p => p.id === selectedProjectId) || activeProjects[0] || null
     : activeProjects[0] || null;
@@ -111,6 +150,7 @@ export function useProductionPage() {
     // Project
     projects,
     activeProjects,
+    allActiveProjects,
     activeProject,
     selectedProjectId,
     setSelectedProjectId,

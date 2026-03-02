@@ -12,6 +12,7 @@ import { ProductionPlanSheet } from '@/components/production/ProductionPlanSheet
 import { ProductionReportSheet } from '@/components/production/ProductionReportSheet';
 import { ProjectSheet } from '@/components/production/ProjectSheet';
 import { GroupingSheet } from '@/components/production/GroupingSheet';
+import { ProductionOrdersHistory } from '@/components/production/ProductionOrdersHistory';
 import { AppIcon } from '@/components/ui/app-icon';
 import { toast } from 'sonner';
 import { useFabAction } from '@/contexts/FabActionContext';
@@ -22,7 +23,7 @@ export default function ProductionPage() {
     selectedDate, setSelectedDate, currentDate, days,
     currentShift, setCurrentShift,
     shift1, shift2, activeShift, checklistType,
-    projects, activeProjects, activeProject,
+    projects, activeProjects, allActiveProjects, activeProject,
     selectedProjectId, setSelectedProjectId,
     createProject, updateProject, deleteProject,
     projectProgress,
@@ -34,6 +35,7 @@ export default function ProductionPage() {
   const [reportSheetShift, setReportSheetShift] = useState<number | null>(null);
   const [projectSheetOpen, setProjectSheetOpen] = useState(false);
   const [groupingSheetOpen, setGroupingSheetOpen] = useState(false);
+  const [historySheetOpen, setHistorySheetOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [finishingItemId, setFinishingItemId] = useState<string | null>(null);
 
@@ -161,6 +163,7 @@ export default function ProductionPage() {
             progress={projectProgress}
             isAdmin={isAdmin}
             onManageProjects={() => setProjectSheetOpen(true)}
+            onViewHistory={() => setHistorySheetOpen(true)}
             activeProjects={activeProjects}
             selectedProjectId={selectedProjectId}
             onSelectProject={setSelectedProjectId}
@@ -304,6 +307,18 @@ export default function ProductionPage() {
         quantityOrdered={finishingItemReport?.quantity_ordered}
         quantityDone={finishingItemReport?.quantity_done}
         onFinish={handleFinishItem}
+      />
+
+      <ProductionOrdersHistory
+        open={historySheetOpen}
+        onOpenChange={setHistorySheetOpen}
+        projects={projects}
+        unitId={activeUnitId}
+        onNavigateToDate={(date, projectId) => {
+          setSelectedDate(date);
+          setSelectedProjectId(projectId);
+          setHistorySheetOpen(false);
+        }}
       />
     </AppLayout>
   );
