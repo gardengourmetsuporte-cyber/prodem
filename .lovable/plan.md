@@ -1,34 +1,32 @@
 
 
-## Plano: Registrar tempo de produção por peça
+## Análise da situação atual
 
-### Problema
-Atualmente, ao iniciar e finalizar a produção de um item, não se registra **quando** começou e terminou. O usuário quer saber o tempo gasto e, futuramente, ter o tempo médio de produção.
+O sistema **já suporta** saída de estoque da produção. O fluxo funciona assim:
 
-### Mudanças no banco de dados
+1. Na aba **Almoxarifado**, clique em qualquer item
+2. O sheet de movimentação abre com 3 opções: **Entrada**, **Saída**, **Transferência**
+3. Ao selecionar **Saída**, aparece a escolha entre **Almoxarifado** e **Produção**
+4. Basta selecionar **Produção** e confirmar a quantidade
 
-Adicionar duas colunas à tabela `checklist_completions`:
-- `started_at` (timestamptz, nullable) — preenchido ao clicar "Iniciar Produção"
-- `finished_at` (timestamptz, nullable) — preenchido ao clicar "Finalizar Produção"
+### O problema
 
-Com essas duas colunas é possível calcular duração e médias.
+A aba **Produção** mostra apenas o progresso de checklists/peças, mas **não lista os itens de estoque com `production_stock`** — então não há como fazer saída diretamente por ali.
 
-### Mudanças no código
+## Plano: Adicionar lista de estoque na aba Produção
 
-1. **`src/hooks/checklists/useChecklistCompletions.ts`**
-   - Na função `startProduction`: gravar `started_at: new Date().toISOString()`
-   - Na função `finishProduction`: gravar `finished_at: new Date().toISOString()`
+Modificar `ProductionStockView.tsx` para incluir, abaixo do progresso de produção, uma **seção de "Materiais em Produção"** que lista os itens com `production_stock > 0`, permitindo clicar para abrir o sheet de movimentação.
 
-2. **`src/components/checklists/ChecklistView.tsx`**
-   - Nos itens de produção que estão "Em Produção", exibir o tempo decorrido desde `started_at` (cronômetro ao vivo)
-   - Nos itens concluídos, exibir a duração total (ex: "⏱ 1h 23min")
+### Mudanças
 
-3. **`src/components/production/ProductionReport.tsx` / `ProductionReportSheet.tsx`**
-   - Exibir coluna de tempo gasto por peça no relatório de produção
-   - Calcular e mostrar tempo médio de produção por tipo de item
+1. **`src/components/inventory/ProductionStockView.tsx`**
+   - Receber `items` (do inventário) e callbacks `onItemClick` via props
+   - Filtrar itens com `production_stock > 0`
+   - Renderizar cards simplificados mostrando nome, estoque produção e botão de saída rápida
 
-### Detalhes técnicos
-- O cronômetro ao vivo usa um `setInterval` de 1s comparando `Date.now()` com `started_at`
-- A duração é calculada como `finished_at - started_at`
-- Para o tempo médio, uma query agrupa por `item_id` e faz `AVG(finished_at - started_at)` nos últimos 30 dias
+2. **`src/pages/Inventory.tsx`**
+   - Passar `items`, `handleItemClick` para `ProductionStockView`
+   - Ao clicar num item da lista de produção, pré-selecionar saída de produção no sheet
+
+Resultado: o usuário consegue ver e dar saída nos materiais da produção diretamente pela aba Produção, sem precisar voltar ao Almoxarifado.
 
