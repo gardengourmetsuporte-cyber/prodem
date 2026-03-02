@@ -31,11 +31,11 @@
     --prodem-orange: 25 85% 54%;
 
     /* Neon glow tokens - Enhanced for premium feel */
-    --neon-cyan: 25 85% 54%;
-    --neon-green: 25 85% 54%;
+    --neon-cyan: 190 90% 50%;
+    --neon-green: 142 71% 45%;
     --neon-red: 348 83% 53%;
-    --neon-amber: 43 96% 56%;
-    --neon-purple: 220 70% 55%;
+    --neon-amber: 25 85% 54%;
+    --neon-purple: 260 70% 60%;
 
     /* Semantic finance tokens */
     --color-income: 142 71% 45%;
@@ -165,11 +165,11 @@
     --ring: 25 85% 48%;
 
     /* Neon overrides for light — darker so they read well */
-    --neon-cyan: 25 60% 40%;
+    --neon-cyan: 190 70% 35%;
     --neon-green: 142 71% 32%;
     --neon-red: 0 72% 48%;
-    --neon-amber: 38 92% 42%;
-    --neon-purple: 25 50% 35%;
+    --neon-amber: 25 60% 40%;
+    --neon-purple: 260 50% 45%;
 
     /* Light glow & shadow tokens — minimal, no colored glow */
     --glow-primary: 0 0 0 transparent;
