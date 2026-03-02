@@ -457,6 +457,17 @@ export default function ChecklistsPage() {
               </div>
             )}
 
+            {/* Production Plan Card — visible to all, actionable by admin */}
+            {!settingsMode && checklistType !== 'bonus' && (
+              <ProductionDayCard
+                order={productionOrder}
+                totals={productionTotals}
+                isAdmin={isAdmin}
+                onCreatePlan={() => setPlanSheetOpen(true)}
+                onViewReport={() => setReportSheetOpen(true)}
+              />
+            )}
+
             {/* Checklist Type Cards — always visible */}
             <div className="grid grid-cols-2 gap-3">
               {/* Abertura Card */}
@@ -655,17 +666,6 @@ export default function ChecklistsPage() {
                 }}
               />
             </button>
-
-            {/* Production Plan Card — visible to all, actionable by admin */}
-            {!settingsMode && checklistType !== 'bonus' && (
-              <ProductionDayCard
-                order={productionOrder}
-                totals={productionTotals}
-                isAdmin={isAdmin}
-                onCreatePlan={() => setPlanSheetOpen(true)}
-                onViewReport={() => setReportSheetOpen(true)}
-              />
-            )}
 
             {/* Content area — either checklist view or settings */}
             <div className="pt-3">
