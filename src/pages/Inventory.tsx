@@ -187,58 +187,25 @@ export default function InventoryPage() {
             </div>
           )}
 
-          {/* Location Filter */}
-          <div className="flex gap-2">
-            {([
-              { key: 'almoxarifado' as LocationFilter, label: 'Almoxarifado', icon: 'Warehouse' },
-              { key: 'producao' as LocationFilter, label: 'Produção', icon: 'Factory' },
-            ] as const).map(loc => (
-              <button
-                key={loc.key}
-                onClick={() => setLocationFilter(loc.key)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all border",
-                  locationFilter === loc.key
-                    ? loc.key === 'almoxarifado'
-                      ? 'bg-primary/15 border-primary/30 text-primary'
-                      : 'bg-warning/15 border-warning/30 text-warning'
-                    : 'bg-secondary/50 border-transparent text-muted-foreground'
-                )}
-              >
-                <AppIcon name={loc.icon as any} size={14} />
-                {loc.label}
-              </button>
-            ))}
-          </div>
+          {/* Tabs & Search */}
+          <AnimatedTabs
+            tabs={[
+              { key: 'items', label: 'Itens', icon: <AppIcon name="ClipboardList" size={16} /> },
+              { key: 'history', label: 'Histórico', icon: <AppIcon name="History" size={16} /> },
+            ]}
+            activeTab={view}
+            onTabChange={(key) => { setView(key as View); if (key === 'history') setStockFilter(null); }}
+          />
 
-          {/* Tabs & Search - only for Almoxarifado */}
-          {locationFilter === 'almoxarifado' && (
-            <>
-              <AnimatedTabs
-                tabs={[
-                  { key: 'items', label: 'Itens', icon: <AppIcon name="ClipboardList" size={16} /> },
-                  { key: 'history', label: 'Histórico', icon: <AppIcon name="History" size={16} /> },
-                ]}
-                activeTab={view}
-                onTabChange={(key) => { setView(key as View); if (key === 'history') setStockFilter(null); }}
-              />
-
-              <SearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder={view === 'items' ? 'Buscar itens...' : 'Buscar movimentações...'}
-              />
-            </>
-          )}
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder={view === 'items' ? 'Buscar itens...' : 'Buscar movimentações...'}
+          />
 
           {/* Content with fade transition */}
-          <div className="animate-fade-in" key={`${view}-${locationFilter}`}>
-            {locationFilter === 'producao' ? (
-              <ProductionStockView
-                items={items}
-                onItemClick={(item) => { setSelectedItem(item); setMovementSheetOpen(true); }}
-              />
-            ) : view === 'items' ? (
+          <div className="animate-fade-in" key={view}>
+            {view === 'items' ? (
               <div className="space-y-4">
                 {filteredItems.length === 0 ? (
                   items.length === 0 ? (
