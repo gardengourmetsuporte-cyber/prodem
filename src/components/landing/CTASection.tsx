@@ -3,7 +3,7 @@ import logoImg from "@/assets/prodem-logo.png";
 
 const WHATSAPP_URL = "https://wa.me/5519997315465?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento.";
 
-export function CTASection() {
+export function CTASection({ onQuoteClick }: { onQuoteClick?: () => void }) {
   return (
     <section className="py-20 md:py-28 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
@@ -34,13 +34,13 @@ export function CTASection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="#contato"
+              <button
+                onClick={onQuoteClick}
                 className="group inline-flex items-center justify-center gap-2.5 h-14 px-10 rounded-2xl font-bold text-base bg-white text-[hsl(222,30%,15%)] shadow-xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
               >
                 Solicitar Orçamento
                 <AppIcon name="ArrowRight" size={18} className="group-hover:translate-x-1 transition-transform" />
-              </a>
+              </button>
               <a
                 href={WHATSAPP_URL}
                 target="_blank"

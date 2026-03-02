@@ -4,7 +4,7 @@ import logoImg from "@/assets/prodem-logo.png";
 
 const WHATSAPP_URL = "https://wa.me/5519997315465?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento.";
 
-export function LandingNavbar() {
+export function LandingNavbar({ onQuoteClick }: { onQuoteClick?: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -62,23 +62,23 @@ export function LandingNavbar() {
           >
             Entrar
           </a>
-          <a
-            href="#contato"
+          <button
+            onClick={onQuoteClick}
             className="group relative inline-flex items-center justify-center h-10 px-6 rounded-full text-sm font-bold bg-white text-black overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.1)]"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
             <span className="relative z-10">Solicitar Orçamento</span>
-          </a>
+          </button>
         </div>
 
         {/* Mobile Toggle */}
         <div className="flex items-center gap-3 md:hidden">
-          <a
-            href="#contato"
+          <button
+            onClick={onQuoteClick}
             className="inline-flex items-center justify-center h-8 px-4 rounded-full text-xs font-bold bg-white text-black transition-all active:scale-[0.98]"
           >
             Orçamento
-          </a>
+          </button>
           <button
             onClick={() => setOpen(!open)}
             className="p-2 text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/10 bg-white/5 border border-white/10"
@@ -113,13 +113,12 @@ export function LandingNavbar() {
             >
               WhatsApp
             </a>
-            <a
-              href="#contato"
-              onClick={() => setOpen(false)}
+            <button
+              onClick={() => { setOpen(false); onQuoteClick?.(); }}
               className="block w-full text-center py-3.5 rounded-xl text-base font-bold bg-white text-black active:scale-[0.98] transition-transform"
             >
               Solicitar Orçamento
-            </a>
+            </button>
           </div>
         </div>
       </div>
