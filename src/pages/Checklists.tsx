@@ -127,8 +127,9 @@ export default function ChecklistsPage() {
     saveOrder, closeOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate,
   } = useProductionOrders(activeUnitId, selectedDate, currentShift);
 
-  // Also fetch shift 1 data when on shift 2 to show remaining context
+  // Also fetch both shifts independently for card progress
   const shift1Hook = useProductionOrders(activeUnitId, selectedDate, 1);
+  const shift2Hook = useProductionOrders(activeUnitId, selectedDate, 2);
 
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
@@ -194,66 +195,27 @@ export default function ChecklistsPage() {
 
   useFabAction(isAdmin ? { icon: settingsMode ? 'X' : 'Settings', label: settingsMode ? 'Voltar' : 'Configurar', onClick: () => setSettingsMode(!settingsMode) } : null, [isAdmin, settingsMode]);
 
-  // Fetch completions for abertura & fechamento to show progress on cards
-  const { data: aberturaCompletions = [] } = useQuery({
-    queryKey: ['card-completions', currentDate, 'abertura', activeUnitId],
-    queryFn: async () => {
-      let q = supabase.from('checklist_completions').select('item_id').eq('date', currentDate).eq('checklist_type', 'abertura');
-      if (activeUnitId) q = q.or(`unit_id.eq.${activeUnitId},unit_id.is.null`);
-      const { data } = await q;
-      return data || [];
-    },
-    enabled: !!user && !!activeUnitId,
-    staleTime: 30_000,
-  });
+  // Card completions queries no longer needed — progress comes from shift hooks directly
 
-  const { data: fechamentoCompletions = [] } = useQuery({
-    queryKey: ['card-completions', currentDate, 'fechamento', activeUnitId],
-    queryFn: async () => {
-      let q = supabase.from('checklist_completions').select('item_id').eq('date', currentDate).eq('checklist_type', 'fechamento');
-      if (activeUnitId) q = q.or(`unit_id.eq.${activeUnitId},unit_id.is.null`);
-      const { data } = await q;
-      return data || [];
-    },
-    enabled: !!user && !!activeUnitId,
-    staleTime: 30_000,
-  });
-
-  // Compute progress per type — cross-shift: both turnos share the same items
+  // Compute progress per shift INDEPENDENTLY — each shift only counts its own items/completions
   const getTypeProgress = useMemo(() => {
-    const allCompletedIds = new Set([
-      ...aberturaCompletions.map(c => c.item_id),
-      ...fechamentoCompletions.map(c => c.item_id),
-    ]);
+    // Helper: compute progress for a specific shift's production order
+    const computeShiftProgress = (shiftHook: typeof shift1Hook) => {
+      if (!shiftHook.hasOrder || shiftHook.orderItems.length === 0) {
+        return { completed: 0, total: 0, percent: 0 };
+      }
 
-    // If there's a production order, only count items in it
-    const orderItemIds = hasProductionOrder && productionItems.length > 0
-      ? new Set(productionItems.map(pi => pi.checklist_item_id))
-      : null;
-
-    // Count all standard (non-bonus) active items 
-    let total = 0;
-    let completed = 0;
-    sectors.forEach((s: any) => {
-      s.subcategories?.forEach((sub: any) => {
-        sub.items?.forEach((item: any) => {
-          if (item.is_active && item.checklist_type !== 'bonus') {
-            // If we have a production order, only count items in it
-            if (orderItemIds && !orderItemIds.has(item.id)) return;
-            total++;
-            if (allCompletedIds.has(item.id)) completed++;
-          }
-        });
-      });
-    });
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    // Both turnos share the same progress
-    return {
-      abertura: { completed, total, percent },
-      fechamento: { completed, total, percent },
+      const total = shiftHook.orderItems.length;
+      const completed = shiftHook.report.filter(r => r.status === 'complete').length;
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return { completed, total, percent };
     };
-  }, [sectors, aberturaCompletions, fechamentoCompletions, hasProductionOrder, productionItems]);
+
+    return {
+      abertura: computeShiftProgress(shift1Hook),
+      fechamento: computeShiftProgress(shift2Hook),
+    };
+  }, [shift1Hook, shift2Hook]);
   // ── Deadline logic (centralized) ──
   const [deadlineLabel, setDeadlineLabel] = useState<Record<string, string>>({});
 
@@ -373,7 +335,8 @@ export default function ChecklistsPage() {
         return;
       }
       fetchCompletions(currentDate, checklistType);
-      queryClient.invalidateQueries({ queryKey: ['card-completions', currentDate, checklistType, activeUnitId] });
+      queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, currentDate, 1] });
+      queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, currentDate, 2] });
     })();
   }, [deadlinePassed, currentDate, checklistType, sectors, completions, completionsFetched, user?.id, isAdmin, activeUnitId, fetchCompletions, queryClient]);
 
@@ -385,8 +348,10 @@ export default function ChecklistsPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'checklist_completions' },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['card-completions', currentDate, 'abertura', activeUnitId] });
-          queryClient.invalidateQueries({ queryKey: ['card-completions', currentDate, 'fechamento', activeUnitId] });
+          // Invalidate production order caches so shift progress recalculates
+          queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, currentDate, 1] });
+          queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, currentDate, 2] });
+          queryClient.invalidateQueries({ queryKey: ['production-order-items', activeUnitId, currentDate] });
           fetchCompletions(currentDate, checklistType);
         }
       )
