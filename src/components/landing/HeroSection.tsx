@@ -3,7 +3,7 @@ import heroImg from "@/assets/hero-industrial.jpg";
 
 const WHATSAPP_URL = "https://wa.me/5519997315465?text=Olá!%20Gostaria%20de%20solicitar%20um%20orçamento.";
 
-export function HeroSection() {
+export function HeroSection({ onQuoteClick }: { onQuoteClick?: () => void }) {
   return (
     <section className="relative overflow-hidden bg-[#0a1020] min-h-[90vh] flex items-center">
       {/* Background */}
@@ -52,15 +52,15 @@ export function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <a
-                href="#contato"
+              <button
+                onClick={onQuoteClick}
                 className="group relative inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-bold text-base bg-white text-black overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 style={{ boxShadow: '0 0 40px hsl(0 0% 100% / 0.15)' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                 <span className="relative z-10">Solicitar Orçamento</span>
                 <AppIcon name="ArrowRight" size={20} className="relative z-10 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </button>
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
