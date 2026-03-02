@@ -7,7 +7,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/personal-finance': 'Finanças Pessoais',
   '/inventory': 'Estoque',
   '/orders': 'Pedidos',
-  '/recipes': 'Fichas Técnicas',
+  
   '/checklists': 'Checklists',
   '/employees': 'Equipe',
   '/cash-closing': 'Fechamento de Caixa',

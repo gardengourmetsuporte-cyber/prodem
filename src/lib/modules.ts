@@ -158,7 +158,7 @@ export const ALL_MODULES: ModuleDef[] = [
       { key: 'settings.suppliers', label: 'Fornecedores', icon: 'Truck' },
       { key: 'settings.units', label: 'Unidades de medida', icon: 'Ruler' },
       { key: 'settings.payment_methods', label: 'Métodos de pagamento', icon: 'CreditCard' },
-      { key: 'settings.recipe_costs', label: 'Custos de produção', icon: 'Calculator' },
+      
       { key: 'settings.rewards', label: 'Recompensas (config)', icon: 'Gift' },
       { key: 'settings.medals', label: 'Medalhas', icon: 'Medal' },
       { key: 'settings.notifications', label: 'Notificações', icon: 'Bell' },

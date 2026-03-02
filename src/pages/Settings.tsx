@@ -13,7 +13,7 @@ const SupplierSettings = lazy(() => import('@/components/settings/SupplierSettin
 const ChecklistSettingsManager = lazy(() => import('@/components/settings/ChecklistSettingsManager').then(m => ({ default: m.ChecklistSettingsManager })));
 const RewardSettings = lazy(() => import('@/components/settings/RewardSettings').then(m => ({ default: m.RewardSettings })));
 const PaymentMethodSettings = lazy(() => import('@/components/settings/PaymentMethodSettings').then(m => ({ default: m.PaymentMethodSettings })));
-const RecipeCostSettings = lazy(() => import('@/components/settings/RecipeCostSettings').then(m => ({ default: m.RecipeCostSettings })));
+
 const UnitManagement = lazy(() => import('@/components/settings/UnitManagement').then(m => ({ default: m.UnitManagement })));
 const TeamHub = lazy(() => import('@/components/settings/TeamHub').then(m => ({ default: m.TeamHub })));
 const MedalSettings = lazy(() => import('@/components/settings/MedalSettings').then(m => ({ default: m.MedalSettings })));
@@ -39,7 +39,7 @@ const allMenuItems: MenuItem[] = [
   { value: 'suppliers', icon: 'Truck', label: 'Fornecedores', description: 'Cadastro de fornecedores', variant: 'amber', section: 'Operação' },
   { value: 'checklists', icon: 'ClipboardCheck', label: 'Checklists', description: 'Setores, itens e pontuação', variant: 'amber', section: 'Operação' },
   { value: 'payments', icon: 'Wallet', label: 'Métodos de Pagamento', description: 'Taxas e prazos de recebimento', variant: 'amber', section: 'Operação' },
-  { value: 'costs', icon: 'Calculator', label: 'Custos de Receitas', description: 'Percentuais e markups', variant: 'amber', section: 'Operação' },
+  
   { value: 'rewards', icon: 'Gift', label: 'Loja de Recompensas', description: 'Prêmios para colaboradores', variant: 'purple', section: 'Sistema' },
   { value: 'medals', icon: 'Award', label: 'Medalhas', description: 'Conceder medalhas de prestígio', variant: 'purple', section: 'Sistema' },
   { value: 'units', icon: 'Store', label: 'Lojas', description: 'Gerenciar suas lojas', variant: 'purple', section: 'Sistema' },
@@ -111,7 +111,7 @@ export default function SettingsPage() {
       {activeSection === 'team' && <TeamHub />}
       {activeSection === 'rewards' && <RewardSettings />}
       {activeSection === 'payments' && <PaymentMethodSettings />}
-      {activeSection === 'costs' && <RecipeCostSettings />}
+      
       {activeSection === 'units' && <UnitManagement />}
       {activeSection === 'medals' && <MedalSettings />}
       {activeSection === 'notifications' && <NotificationSettings />}

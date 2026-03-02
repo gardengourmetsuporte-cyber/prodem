@@ -8,7 +8,7 @@ const routeImporters: Record<string, RouteImporter> = {
   '/orders': () => import('@/pages/Orders'),
   '/checklists': () => import('@/pages/Checklists'),
   '/cash-closing': () => import('@/pages/CashClosing'),
-  '/recipes': () => import('@/pages/Recipes'),
+  
   '/employees': () => import('@/pages/Employees'),
   '/rewards': () => import('@/pages/Rewards'),
   '/settings': () => import('@/pages/Settings'),
