@@ -599,6 +599,12 @@ export default function ChecklistsPage() {
                     toast.error('Feche o Turno 1 antes de acessar o Turno 2');
                     return;
                   }
+                  // If shift 2 is closed, open its report
+                  if (shift2Hook.order?.status === 'closed') {
+                    setReportShiftView(2);
+                    setReportSheetOpen(true);
+                    return;
+                  }
                   setChecklistType('fechamento');
                 }}
                 className={cn(
