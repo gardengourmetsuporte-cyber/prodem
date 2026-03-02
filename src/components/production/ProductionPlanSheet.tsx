@@ -38,10 +38,17 @@ interface ProductionPlanSheetProps {
   date: Date;
   onSave: (items: { checklist_item_id: string; quantity_ordered: number }[], notes?: string) => Promise<any>;
   onCopyFromDate: (sourceDate: string) => Promise<{ checklist_item_id: string; quantity_ordered: number }[] | null>;
+  /** Whether a plan already exists (editing mode) */
+  hasExistingPlan?: boolean;
+  currentShift?: number;
+  isShift1Closed?: boolean;
+  onCloseShift?: () => void;
+  onDeletePlan?: () => void;
 }
 
 export function ProductionPlanSheet({
   open, onOpenChange, sectors, existingItems, date, onSave, onCopyFromDate,
+  hasExistingPlan, currentShift, isShift1Closed, onCloseShift, onDeletePlan,
 }: ProductionPlanSheetProps) {
   const [planItems, setPlanItems] = useState<PlanItem[]>([]);
   const [notes, setNotes] = useState('');
@@ -107,7 +114,6 @@ export function ProductionPlanSheet({
   // Initialize from existing items or defaults
   useEffect(() => {
     if (!open) return;
-    // Start with all sectors collapsed
     const allSectorNames = new Set(availableItems.map(a => a.sectorName));
     setCollapsedSectors(allSectorNames);
 
@@ -210,7 +216,7 @@ export function ProductionPlanSheet({
         </SheetHeader>
 
         {/* Actions */}
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-2 mb-3 flex-wrap">
           <Button variant="outline" size="sm" onClick={handleCopyYesterday} className="text-xs">
             <AppIcon name="Copy" size={14} />
             Copiar de ontem
@@ -248,7 +254,6 @@ export function ProductionPlanSheet({
 
             return (
               <div key={group.sectorName}>
-                {/* Sector Header */}
                 <button
                   onClick={() => toggleSector(group.sectorName)}
                   className="w-full flex items-center gap-2 py-2 px-1 mb-1"
@@ -272,11 +277,9 @@ export function ProductionPlanSheet({
 
                 {!isCollapsed && group.subcategories.map(sub => (
                   <div key={sub.name} className="mb-2">
-                    {/* Subcategory label */}
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-1">
                       {sub.name}
                     </p>
-
                     <div className="space-y-1">
                       {sub.items.map(item => {
                         const isSelected = selectedIds.has(item.checklist_item_id);
@@ -299,7 +302,6 @@ export function ProductionPlanSheet({
                             >
                               {isSelected && <AppIcon name="Check" size={14} />}
                             </button>
-
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{item.name}</p>
                               {item.piece_dimensions && (
@@ -309,7 +311,6 @@ export function ProductionPlanSheet({
                                 <p className="text-[10px] text-muted-foreground">Meta padrão: {item.target_quantity}</p>
                               )}
                             </div>
-
                             {isSelected && (
                               <div className="flex items-center gap-1.5">
                                 <button
@@ -369,6 +370,41 @@ export function ProductionPlanSheet({
             {saving ? 'Salvando...' : 'Salvar Plano'}
           </Button>
         </div>
+
+        {/* Danger zone — close shift / delete plan */}
+        {hasExistingPlan && (
+          <div className="pt-3 mt-1 border-t border-border/40 space-y-2">
+            {/* Close shift */}
+            {onCloseShift && currentShift === 1 && !isShift1Closed && (
+              <button
+                onClick={() => {
+                  if (!confirm(`Fechar Turno 1 e criar Turno 2 com os itens pendentes?`)) return;
+                  onCloseShift();
+                  onOpenChange(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-card border border-border/50 hover:bg-muted/50 transition-colors text-sm font-semibold text-muted-foreground"
+              >
+                <AppIcon name="ArrowRight" size={16} />
+                Fechar Turno 1 e abrir Turno 2
+              </button>
+            )}
+
+            {/* Delete plan */}
+            {onDeletePlan && (
+              <button
+                onClick={() => {
+                  if (!confirm('Tem certeza que deseja apagar o plano e todos os registros de produção do dia? Esta ação não pode ser desfeita.')) return;
+                  onDeletePlan();
+                  onOpenChange(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-destructive/5 border border-destructive/20 hover:bg-destructive/10 transition-colors text-sm font-semibold text-destructive"
+              >
+                <AppIcon name="Trash2" size={16} />
+                Apagar plano e recomeçar
+              </button>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
