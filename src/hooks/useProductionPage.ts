@@ -78,16 +78,16 @@ export function useProductionPage() {
 
   // Overall project progress (sum across all dates for this project)
   const projectProgress = useMemo(() => {
-    // For now compute from today only — can be extended
-    const t1 = shift1.totals;
-    const t2 = shift2.totals;
+    // Shift 2 inherits pending from shift 1, so total ordered = shift1 ordered (the original plan)
+    // Total done = sum of both shifts
+    const totalOrdered = shift1.totals.ordered || shift2.totals.ordered;
+    const totalDone = shift1.totals.done + shift2.totals.done;
+    const totalPending = Math.max(0, totalOrdered - totalDone);
     return {
-      ordered: t1.ordered + t2.ordered,
-      done: t1.done + t2.done,
-      pending: t1.pending + t2.pending,
-      percent: (t1.ordered + t2.ordered) > 0
-        ? Math.round(((t1.done + t2.done) / (t1.ordered + t2.ordered)) * 100)
-        : 0,
+      ordered: totalOrdered,
+      done: totalDone,
+      pending: totalPending,
+      percent: totalOrdered > 0 ? Math.round((totalDone / totalOrdered) * 100) : 0,
     };
   }, [shift1.totals, shift2.totals]);
 
