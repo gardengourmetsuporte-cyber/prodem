@@ -1,118 +1,99 @@
 
 
-## Redesign Completo do Dashboard Administrativo
+## Redesign Landing Page: De SaaS para Site Institucional da Prodem
 
-### Conceito
+### Contexto da Empresa (pesquisa)
 
-Substituir o layout de accordion por um dashboard moderno estilo **Bento Grid** -- cards de tamanhos variados organizados em seções lógicas, sempre visíveis (sem expandir/colapsar). Layout inspirado em dashboards SaaS modernos (Linear, Vercel, Notion). O gestor vê tudo de relance.
+**Prodem Minas Sistemas Ltda** -- Empresa de engenharia fundada em 2015, localizada em São João da Boa Vista/SP. Soluções em:
+- **Sistemas de transportadores** (esteiras, conveyors industriais)
+- **Embalagens metálicas** (racks, containers)
+- **Carrinhos de movimentação** (logística interna de fábricas)
 
-### Estrutura visual
+Setor: indústria automotiva e manufatura. ~12 funcionários.
+Contato: (19) 3624-1190 | WhatsApp (19) 99731-5465
+Endereço: Rua Fernando de Souza, 1065 - Distrito Industrial, São João da Boa Vista/SP
+
+---
+
+### Arquitetura da nova Landing Page
+
+A página deixa de vender um SaaS e passa a ser um **site institucional** com foco em gerar pedidos de orçamento.
 
 ```text
 ┌─────────────────────────────────────────┐
-│  Bom dia, João 👋                       │
-│  Sexta, 28 de fevereiro                 │
+│  Navbar: Logo + Sobre | Soluções |      │
+│         Contato | "Solicitar Orçamento"  │
 ├─────────────────────────────────────────┤
 │                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  💰 SALDO          R$ 14.949   │    │  ← Hero card (full width, gradient)
-│  │  Pendências: R$ 2.300          │    │
-│  └─────────────────────────────────┘    │
+│  HERO: "Soluções em sistemas de         │
+│  transporte e movimentação industrial"  │
+│  CTA: Solicitar Orçamento               │
+│  CTA2: Fale pelo WhatsApp               │
 │                                         │
-│  ┌──────────┐ ┌──────────┐              │
-│  │ Pedidos  │ │ Contas   │              │  ← KPI cards (grid 2 cols)
-│  │    3     │ │    5     │              │
-│  └──────────┘ └──────────┘              │
-│  ┌──────────┐ ┌──────────┐              │
-│  │ Resgates │ │ Estoque  │              │
-│  │    1     │ │    4     │              │
-│  └──────────┘ └──────────┘              │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  📋 Checklists (Abertura/Fech.) │    │  ← Full width widget
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  📊 Despesas do mês (donut)    │    │  ← Full width
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  ⚠️ Contas a vencer            │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  💡 Insights da IA             │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  📅 Agenda / Calendário        │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ┌─────────────────────────────────┐    │
-│  │  🏆 Ranking                    │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│  ⚙️ Gerenciar tela inicial              │
+├─────────────────────────────────────────┤
+│  SOBRE: Quem somos + diferenciais       │
+│  (engenharia sob medida, qualidade,     │
+│   experiência no setor automotivo)      │
+├─────────────────────────────────────────┤
+│  SOLUÇÕES: 3 cards grandes              │
+│  • Transportadores industriais          │
+│  • Embalagens metálicas                 │
+│  • Carrinhos de movimentação            │
+│  (sem mockups de app/phone)             │
+├─────────────────────────────────────────┤
+│  DIFERENCIAIS: 4 ícones                 │
+│  Projetos sob medida | Engenharia       │
+│  própria | Atendimento ágil | Qualidade │
+├─────────────────────────────────────────┤
+│  CTA: Fale conosco / Solicitar          │
+│  orçamento + WhatsApp + Email           │
+├─────────────────────────────────────────┤
+│  CONTATO: Mapa, endereço, telefones     │
+├─────────────────────────────────────────┤
+│  FOOTER: © Prodem Minas Sistemas        │
 └─────────────────────────────────────────┘
 ```
 
-No desktop (lg+), os KPI cards ficam em grid de 4 colunas, e widgets maiores ficam lado a lado em 2 colunas.
-
-### Ordem lógica para o gestor
-
-1. **Saudação + data** (contexto)
-2. **Setup onboarding** (só durante configuração inicial)
-3. **Hero financeiro** -- saldo é o dado mais importante
-4. **KPI cards** -- indicadores rápidos: pedidos pendentes, contas a vencer, resgates, estoque crítico
-5. **Checklists** -- operação diária
-6. **Gráfico de despesas** -- visão financeira detalhada
-7. **Contas a vencer** -- alertas financeiros
-8. **Insights IA** -- sugestões inteligentes
-9. **Agenda/Calendário** -- próximos compromissos
-10. **Pedidos pendentes** -- detalhes dos pedidos
-11. **Sugestão de compras** -- reposição automática
-12. **Ranking/Leaderboard** -- gamificação
-13. **Fluxo de caixa projetado** -- (oculto por padrão)
-
 ### Mudanças técnicas
 
-**1. `src/components/dashboard/AdminDashboard.tsx`** -- Reescrever completamente
-- Remover import do `DashboardAccordion`
-- Renderizar widgets diretamente em seções, cada uma condicional ao `isVisible(key)` e `hasAccess(module)`
-- Hero financeiro como card gradient full-width
-- KPI grid com 4 mini-cards (pedidos, contas, resgates, estoque)
-- Widgets subsequentes como cards independentes com header compacto
-- Manter lazy loading nos widgets pesados
-- Manter botão "Gerenciar tela inicial" + DashboardWidgetManager
+**1. Remover seções SaaS** (não se aplicam mais):
+- `ProblemSection.tsx` -- reescrever como "Sobre Nós"
+- `SolutionSection.tsx` -- reescrever como "Nossas Soluções" (sem steps, sem phone mockups)
+- `PricingSection.tsx` -- deletar (não vende planos)
+- `FAQSection.tsx` -- deletar ou substituir por "Diferenciais"
+- `AnimatedMockup.tsx` -- não usar no hero (substituir por visual industrial)
+- `AnimatedPhoneMockup.tsx` -- não usar
 
-**2. `src/components/dashboard/DashboardKPIGrid.tsx`** -- Novo componente
-- Grid de 2x2 (mobile) / 4 cols (desktop) com mini-cards animados
-- Cada card: ícone colorido, label, valor numérico grande, tap navega para a seção
-- Cores: pedidos=orange, contas=amber, resgates=rose, estoque=red
+**2. Reescrever componentes**:
 
-**3. `src/components/dashboard/DashboardSection.tsx`** -- Novo componente wrapper
-- Componente reutilizável que envolve cada widget
-- Props: `title`, `icon`, `iconColor`, `children`, `onNavigate?`
-- Renderiza header compacto + conteúdo sempre visível
-- Sem accordion, sem expand/collapse
+| Componente | De | Para |
+|---|---|---|
+| `LandingNavbar.tsx` | Links SaaS (Planos, FAQ) + "Começar grátis" | Links institucionais (Sobre, Soluções, Contato) + "Solicitar Orçamento" |
+| `HeroSection.tsx` | Venda de SaaS com mockup de dashboard | Headline institucional + CTAs (Orçamento + WhatsApp) sem mockup de app |
+| `ProblemSection.tsx` | "Problemas do gestor" | Seção "Sobre a Prodem" com história, missão e números |
+| `SolutionSection.tsx` | 3 steps + phone mockups + 10 módulos | 3 cards de soluções (transportadores, embalagens, carrinhos) + grid de diferenciais |
+| `CTASection.tsx` | "Criar conta grátis" | "Solicitar Orçamento" + contato WhatsApp/telefone |
+| `FooterSection.tsx` | Links SaaS | Endereço completo, telefones, email, links institucionais |
 
-**4. `src/index.css`** -- Limpar estilos do accordion
-- Remover todas as classes `.dash-accordion-*`
-- Adicionar novas classes para o bento grid: `.dash-section`, `.dash-kpi-card`, `.dash-hero`
+**3. Criar novo componente**:
+- `ContactSection.tsx` -- Seção de contato com endereço, mapa embed, telefones, formulário simples
 
-**5. `src/hooks/useDashboardWidgets.ts`** -- Simplificar
-- Remover campo `defaultOpen` (não precisa mais)
-- Manter visibilidade e reordenação
+**4. Deletar componentes não usados**:
+- `PricingSection.tsx` (referência removida do Landing.tsx)
+- `FAQSection.tsx` (substituída pelos diferenciais dentro da SolutionSection)
+- `PlanCheckoutDialog.tsx` (não há planos)
+- `AnimatedMockup.tsx` e `AnimatedPhoneMockup.tsx` (sem mockups de app)
 
-**6. Deletar `src/components/dashboard/DashboardAccordion.tsx`**
-- Não é mais necessário
+**5. `Landing.tsx`** -- Nova estrutura:
+```
+LandingNavbar → HeroSection → AboutSection (ex-Problem) → SolutionsSection (ex-Solution) → CTASection → ContactSection (novo) → FooterSection
+```
 
-### O que permanece intacto
+**6. `useDocumentTitle.ts`** -- Atualizar APP_NAME de "Garden Gestão" para "Prodem"
 
-- Todos os widgets internos (FinanceChartWidget, ChecklistDashboardWidget, BillsDueWidget, etc.) continuam como estão
-- DashboardWidgetManager com drag-and-drop para reordenar/ocultar
-- SetupChecklistWidget
-- LazySection para lazy loading
-- useDashboardStats e useDashboardWidgets (lógica core)
-- EmployeeDashboard (não afetado)
+**7. Todo conteúdo textual** adaptado para linguagem industrial B2B (transportadores, embalagens metálicas, engenharia sob medida).
+
+### Sobre a parte interna
+
+A adaptação interna (dashboard, módulos) será feita em etapas subsequentes após a landing ficar pronta. Os módulos relevantes para a Prodem seriam: Financeiro, Estoque (materiais/peças), Equipe, Checklists de produção, Pedidos/Orçamentos. Módulos como "Fichas Técnicas de Receitas", "Cardápio Digital", "Gamificação" precisarão ser repensados ou removidos.
 
