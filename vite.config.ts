@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => ({
       selfDestroying: false,
       includeAssets: ["favicon.ico", "lovable-uploads/**/*"],
       manifest: {
-        name: "Garden Gestão",
-        short_name: "Garden",
+        name: "Prodem Gestão",
+        short_name: "Prodem",
         description: "Sistema completo de gestão empresarial",
         theme_color: "#0c1120",
         background_color: "#0c1120",
