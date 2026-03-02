@@ -56,7 +56,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
   const progressColor = totals.percent >= 100
     ? 'bg-emerald-500'
     : hasInProgress
-      ? 'bg-blue-500 animate-pulse'
+      ? 'bg-amber-500'
       : totals.percent > 0
         ? 'bg-amber-500'
         : 'bg-muted-foreground/30';
@@ -71,7 +71,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
         <div className="grid grid-cols-3 gap-3 mb-3">
           <KpiBlock label="Feitas" value={totals.done} accent="emerald" />
           <KpiBlock label="Planejadas" value={totals.ordered} />
-          <KpiBlock label="Progresso" value={`${totals.percent}%`} accent={totals.percent >= 100 ? 'emerald' : hasInProgress ? 'blue' : totals.percent > 0 ? 'amber' : undefined} />
+          <KpiBlock label="Progresso" value={`${totals.percent}%`} accent={totals.percent >= 100 ? 'emerald' : totals.percent > 0 ? 'amber' : undefined} />
         </div>
 
         {/* Global progress bar */}
@@ -86,28 +86,27 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
       {/* Item list — only in detailed variant */}
       {variant === 'detailed' && (
         <div className="space-y-1.5">
-          {report.map(item => (
-            <div key={item.checklist_item_id} className={cn("card-surface px-3.5 py-2.5 flex items-center gap-3", item.status === 'in_progress' && "ring-1 ring-blue-500/30 bg-blue-500/5")}>
-              <StatusIcon status={item.status} />
-              <div className="flex-1 min-w-0">
-                <p className={cn("text-sm font-medium truncate", item.status === 'in_progress' ? 'text-blue-500' : item.status === 'complete' ? 'text-emerald-500' : 'text-foreground')}>{item.item_name}</p>
-                {item.piece_dimensions && (
-                  <p className="text-[10px] text-muted-foreground">{item.piece_dimensions}</p>
-                )}
-              </div>
-              <div className="text-right shrink-0">
-                <p className={cn(
-                  "text-sm font-bold tabular-nums",
-                  item.status === 'complete' ? 'text-emerald-500' :
-                  item.status === 'partial' ? 'text-amber-500' :
-                  item.status === 'in_progress' ? 'text-blue-500' : 'text-muted-foreground'
-                )}>
-                  {item.quantity_done}/{item.quantity_ordered}
-                </p>
-                <p className="text-[10px] text-muted-foreground">{item.percent}%</p>
-              </div>
+          {report.map(item => {
+            const itemColor = item.status === 'complete' ? 'text-emerald-500'
+              : item.status === 'in_progress' ? 'text-amber-500'
+              : item.status === 'partial' ? 'text-amber-500'
+              : 'text-muted-foreground';
+            const dotColor = item.status === 'complete' ? 'bg-emerald-500'
+              : item.status === 'in_progress' ? 'bg-amber-500'
+              : item.status === 'partial' ? 'bg-amber-500'
+              : 'bg-muted-foreground/30';
+            return (
+            <div key={item.checklist_item_id} className="flex items-center gap-2 px-1 py-1">
+              <span className={cn("w-2 h-2 rounded-full shrink-0", dotColor)} />
+              <p className={cn("text-sm flex-1 min-w-0 truncate", item.status === 'complete' || item.status === 'in_progress' || item.status === 'partial' ? 'text-foreground' : 'text-muted-foreground')}>
+                {item.item_name}
+              </p>
+              <p className={cn("text-sm font-bold tabular-nums shrink-0", itemColor)}>
+                {item.quantity_done}/{item.quantity_ordered}
+              </p>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </button>
