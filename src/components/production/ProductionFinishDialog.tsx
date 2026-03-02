@@ -10,10 +10,12 @@ interface ProductionFinishDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   itemName: string;
+  quantityOrdered?: number;
+  quantityDone?: number;
   onFinish: (quantity: number, machineRef?: string) => Promise<void>;
 }
 
-export function ProductionFinishDialog({ open, onOpenChange, itemName, onFinish }: ProductionFinishDialogProps) {
+export function ProductionFinishDialog({ open, onOpenChange, itemName, quantityOrdered, quantityDone, onFinish }: ProductionFinishDialogProps) {
   const [quantity, setQuantity] = useState('');
   const [machineRef, setMachineRef] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,9 +51,19 @@ export function ProductionFinishDialog({ open, onOpenChange, itemName, onFinish 
         </SheetHeader>
 
         <div className="space-y-4 pt-4">
-          <p className="text-sm text-muted-foreground">
-            Peça: <span className="font-semibold text-foreground">{itemName}</span>
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Peça: <span className="font-semibold text-foreground">{itemName}</span>
+            </p>
+            {quantityOrdered != null && (
+              <p className="text-xs text-muted-foreground">
+                Pedido: <span className="font-bold text-foreground">{quantityOrdered}</span>
+                {quantityDone != null && quantityDone > 0 && (
+                  <> · Já feito: <span className="font-bold text-warning">{quantityDone}</span></>
+                )}
+              </p>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label>Quantidade produzida *</Label>

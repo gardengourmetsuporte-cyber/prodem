@@ -24,7 +24,8 @@ export function ProductionShiftPanel({
   isAdmin, onCreatePlan, onViewReport, onReopenShift,
 }: ProductionShiftPanelProps) {
   const isShift1Closed = shift1.order?.status === 'closed';
-  const isShift2Locked = !isShift1Closed && shift1.hasOrder;
+  // Shift 2 is locked only when shift 1 has an active (non-closed) order
+  const isShift2Locked = shift1.hasOrder && !isShift1Closed;
 
   return (
     <div className="space-y-2">

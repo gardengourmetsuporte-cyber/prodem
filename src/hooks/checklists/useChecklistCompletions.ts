@@ -249,22 +249,52 @@ export function useChecklistCompletions({
     completedByUserId?: string
   ) => {
     const targetUserId = completedByUserId || userId;
-      const { error } = await supabase
+    
+    // Check if there's already an in_progress completion for this item
+    const { data: existing } = await supabase
       .from('checklist_completions')
-      .upsert({
-        item_id: itemId,
-        checklist_type: checklistType,
-        completed_by: targetUserId,
-        date,
-        awarded_points: false,
-        points_awarded: 0,
-        is_skipped: false,
-        unit_id: activeUnitId,
-        status: 'in_progress',
-        quantity_done: 0,
-        started_at: new Date().toISOString(),
-      } as any, { onConflict: 'item_id,completed_by,date,checklist_type' });
-    if (error) throw error;
+      .select('id, status, finished_at')
+      .eq('item_id', itemId)
+      .eq('completed_by', targetUserId)
+      .eq('date', date)
+      .eq('checklist_type', checklistType as any)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing.status === 'in_progress') {
+        // Already in progress, just invalidate caches to refresh UI
+        invalidateProductionCaches(date);
+        return;
+      }
+      // Item was previously completed — update to restart (keep old data, reset status)
+      const { error } = await supabase
+        .from('checklist_completions')
+        .update({
+          status: 'in_progress',
+          started_at: new Date().toISOString(),
+          finished_at: null,
+        } as any)
+        .eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      // Create new completion
+      const { error } = await supabase
+        .from('checklist_completions')
+        .insert({
+          item_id: itemId,
+          checklist_type: checklistType,
+          completed_by: targetUserId,
+          date,
+          awarded_points: false,
+          points_awarded: 0,
+          is_skipped: false,
+          unit_id: activeUnitId,
+          status: 'in_progress',
+          quantity_done: 0,
+          started_at: new Date().toISOString(),
+        } as any);
+      if (error) throw error;
+    }
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
@@ -278,9 +308,18 @@ export function useChecklistCompletions({
     quantityDone: number, points: number = 1, completedByUserId?: string, machineRef?: string
   ) => {
     const targetUserId = completedByUserId || userId;
-    const existing = completions.find(
-      c => c.item_id === itemId && c.checklist_type === checklistType && c.date === date
-    );
+    
+    // Fetch from DB directly to avoid stale state
+    const { data: existing, error: fetchErr } = await supabase
+      .from('checklist_completions')
+      .select('id')
+      .eq('item_id', itemId)
+      .eq('completed_by', targetUserId)
+      .eq('date', date)
+      .eq('checklist_type', checklistType as any)
+      .eq('status', 'in_progress')
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
     if (!existing) throw new Error('Inicie a produção antes de finalizar');
 
     const updateData: any = {
@@ -304,7 +343,7 @@ export function useChecklistCompletions({
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
     invalidateGamificationCaches(queryClient);
     invalidateProductionCaches(date);
-  }, [completions, userId, queryClient, activeUnitId, invalidateProductionCaches]);
+  }, [userId, queryClient, activeUnitId, invalidateProductionCaches]);
 
   const updateProductionQuantity = useCallback(async (
     completionId: string, date: string, checklistType: ChecklistType, newQuantity: number

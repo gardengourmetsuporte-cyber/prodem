@@ -26,7 +26,7 @@ export default function ProductionPage() {
     selectedProjectId, setSelectedProjectId,
     createProject, updateProject, deleteProject,
     projectProgress,
-    sectors, completions, checklistsLoading,
+    sectors, checklistsLoading,
     startProduction, finishProduction, updateProductionQuantity,
   } = useProductionPage();
 
@@ -102,6 +102,7 @@ export default function ProductionPage() {
   }, [shift1, shift2]);
 
   const finishingItemMeta = finishingItemId ? getItemMeta(finishingItemId) : null;
+  const finishingItemReport = finishingItemId ? getItemFromReport(finishingItemId) : null;
   const selectedItemMeta = selectedItemId ? getItemMeta(selectedItemId) : null;
   const selectedItemReport = selectedItemId ? getItemFromReport(selectedItemId) : null;
 
@@ -300,6 +301,8 @@ export default function ProductionPage() {
         open={!!finishingItemId}
         onOpenChange={(v) => { if (!v) setFinishingItemId(null); }}
         itemName={finishingItemMeta?.name || ''}
+        quantityOrdered={finishingItemReport?.quantity_ordered}
+        quantityDone={finishingItemReport?.quantity_done}
         onFinish={handleFinishItem}
       />
     </AppLayout>
