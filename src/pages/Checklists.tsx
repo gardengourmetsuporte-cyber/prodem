@@ -197,18 +197,16 @@ export default function ChecklistsPage() {
 
   // Card completions queries no longer needed — progress comes from shift hooks directly
 
-  // Compute progress per shift INDEPENDENTLY — each shift only counts its own items/completions
+  // Compute progress per shift INDEPENDENTLY using quantity-based totals
   const getTypeProgress = useMemo(() => {
-    // Helper: compute progress for a specific shift's production order
     const computeShiftProgress = (shiftHook: typeof shift1Hook) => {
       if (!shiftHook.hasOrder || shiftHook.orderItems.length === 0) {
         return { completed: 0, total: 0, percent: 0 };
       }
 
-      const total = shiftHook.orderItems.length;
-      const completed = shiftHook.report.filter(r => r.status === 'complete').length;
-      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-      return { completed, total, percent };
+      // Use quantity-based progress (totals from the hook)
+      const { ordered, done, percent } = shiftHook.totals;
+      return { completed: done, total: ordered, percent };
     };
 
     return {
