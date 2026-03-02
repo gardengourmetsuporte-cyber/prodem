@@ -9,15 +9,25 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateGamificationCaches } from '@/lib/queryKeys';
 
+interface AllShiftCompletion {
+  item_id: string;
+  checklist_type: string;
+  quantity_done: number;
+  points_awarded: number;
+  is_skipped: boolean;
+  status: string;
+}
+
 interface UseChecklistCompletionsOptions {
   completions: ChecklistCompletion[];
   sectors: ChecklistSector[];
   userId: string | undefined;
   activeUnitId: string | null;
+  allShiftCompletions: AllShiftCompletion[];
 }
 
 export function useChecklistCompletions({
-  completions, sectors, userId, activeUnitId,
+  completions, sectors, userId, activeUnitId, allShiftCompletions,
 }: UseChecklistCompletionsOptions) {
   const queryClient = useQueryClient();
 
@@ -62,6 +72,7 @@ export function useChecklistCompletions({
     }
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
     invalidateGamificationCaches(queryClient);
   }, [completions, userId, queryClient, activeUnitId]);
 
@@ -106,6 +117,7 @@ export function useChecklistCompletions({
     }
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
     invalidateGamificationCaches(queryClient);
   }, [completions, sectors, queryClient, activeUnitId]);
 
@@ -148,14 +160,80 @@ export function useChecklistCompletions({
   }, [completions, userId, queryClient, activeUnitId]);
 
   const isItemCompleted = useCallback((itemId: string) => {
-    return completions.some(c => c.item_id === itemId && (c as any).status !== 'in_progress');
-  }, [completions]);
+    // Cross-shift: check if the item is completed across all shifts
+    // An item with target_quantity > 0 is complete when total quantity_done >= target
+    const itemData = sectors.flatMap(s => s.subcategories?.flatMap(sub => sub.items || []) || []).find(i => i.id === itemId);
+    const targetQty = (itemData as any)?.target_quantity || 0;
+
+    if (targetQty > 0) {
+      // Production item: sum quantity_done across all shifts
+      const totalDone = allShiftCompletions
+        .filter(c => c.item_id === itemId && !c.is_skipped && c.status === 'completed')
+        .reduce((sum, c) => sum + (c.quantity_done || 0), 0);
+      return totalDone >= targetQty;
+    }
+
+    // Non-production item: completed if any non-in_progress completion exists across all shifts
+    const hasCompletion = allShiftCompletions.some(
+      c => c.item_id === itemId && c.status !== 'in_progress'
+    );
+    return hasCompletion;
+  }, [allShiftCompletions, sectors]);
 
   const getItemStatus = useCallback((itemId: string) => {
     const completion = completions.find(c => c.item_id === itemId);
-    if (!completion) return 'pending';
+    if (!completion) {
+      // Check if completed in other shift
+      const otherShift = allShiftCompletions.find(c => c.item_id === itemId && c.status !== 'in_progress');
+      if (otherShift) return 'completed';
+      const inProgress = allShiftCompletions.find(c => c.item_id === itemId && c.status === 'in_progress');
+      if (inProgress) return 'in_progress';
+      return 'pending';
+    }
     return (completion as any).status || 'completed';
-  }, [completions]);
+  }, [completions, allShiftCompletions]);
+
+  /** Get cross-shift accumulated progress for an item (for production items with target_quantity) */
+  const getCrossShiftItemProgress = useCallback((itemId: string) => {
+    const itemData = sectors.flatMap(s => s.subcategories?.flatMap(sub => sub.items || []) || []).find(i => i.id === itemId);
+    const targetQty = (itemData as any)?.target_quantity || 0;
+
+    const allCompletions = allShiftCompletions.filter(c => c.item_id === itemId && !c.is_skipped);
+    const totalDone = allCompletions
+      .filter(c => c.status === 'completed')
+      .reduce((sum, c) => sum + (c.quantity_done || 0), 0);
+    const remaining = Math.max(0, targetQty - totalDone);
+    const isFullyComplete = targetQty > 0 ? totalDone >= targetQty : allCompletions.some(c => c.status === 'completed');
+
+    return { targetQty, totalDone, remaining, isFullyComplete };
+  }, [sectors, allShiftCompletions]);
+
+  const getCompletionProgress = useCallback((sectorId: string, filterType?: ChecklistType) => {
+    const sector = sectors.find(s => s.id === sectorId);
+    if (!sector) return { completed: 0, total: 0 };
+
+    let total = 0;
+    let completed = 0;
+    sector.subcategories?.forEach(sub => {
+      sub.items?.forEach(item => {
+        // Show ALL standard items regardless of checklist_type (cross-shift)
+        if (item.is_active && (!filterType || filterType !== 'bonus')) {
+          // For standard items, include items of any checklist_type (abertura/fechamento)
+          const itemType = (item as any).checklist_type;
+          if (filterType && filterType !== 'bonus' && itemType !== 'abertura' && itemType !== 'fechamento') return;
+          total++;
+          if (isItemCompleted(item.id)) completed++;
+        } else if (filterType === 'bonus') {
+          const itemType = (item as any).checklist_type;
+          if (itemType !== 'bonus') return;
+          if (!item.is_active) return;
+          total++;
+          if (isItemCompleted(item.id)) completed++;
+        }
+      });
+    });
+    return { completed, total };
+  }, [sectors, isItemCompleted]);
 
   const startProduction = useCallback(async (
     itemId: string, checklistType: ChecklistType, date: string,
@@ -179,6 +257,7 @@ export function useChecklistCompletions({
     if (error) throw error;
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
   }, [userId, queryClient, activeUnitId]);
 
   const finishProduction = useCallback(async (
@@ -203,26 +282,9 @@ export function useChecklistCompletions({
     if (error) throw error;
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
     invalidateGamificationCaches(queryClient);
   }, [completions, userId, queryClient, activeUnitId]);
-
-  const getCompletionProgress = useCallback((sectorId: string, filterType?: ChecklistType) => {
-    const sector = sectors.find(s => s.id === sectorId);
-    if (!sector) return { completed: 0, total: 0 };
-
-    let total = 0;
-    let completed = 0;
-    sector.subcategories?.forEach(sub => {
-      sub.items?.forEach(item => {
-        const itemType = (item as any).checklist_type;
-        if (item.is_active && (!filterType || itemType === filterType)) {
-          total++;
-          if (isItemCompleted(item.id)) completed++;
-        }
-      });
-    });
-    return { completed, total };
-  }, [sectors, isItemCompleted]);
 
   return {
     toggleCompletion,
@@ -231,6 +293,7 @@ export function useChecklistCompletions({
     isItemCompleted,
     getItemStatus,
     getCompletionProgress,
+    getCrossShiftItemProgress,
     startProduction,
     finishProduction,
   };

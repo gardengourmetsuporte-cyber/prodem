@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUnit } from '@/contexts/UnitContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChecklistType } from '@/types/database';
-import { fetchSectorsData, fetchCompletionsData } from './useChecklistFetch';
+import { fetchSectorsData, fetchCompletionsData, fetchAllShiftCompletionsData } from './useChecklistFetch';
 import { useChecklistCRUD } from './useChecklistCRUD';
 import { useChecklistCompletions } from './useChecklistCompletions';
 
@@ -17,6 +17,7 @@ export function useChecklists() {
 
   const sectorsKey = useMemo(() => ['checklist-sectors', activeUnitId], [activeUnitId]);
   const completionsKey = useMemo(() => ['checklist-completions', currentDate, currentType, activeUnitId], [currentDate, currentType, activeUnitId]);
+  const allShiftKey = useMemo(() => ['checklist-all-shift-completions', currentDate, activeUnitId], [currentDate, activeUnitId]);
 
   const { data: sectors = [], isLoading: sectorsLoading } = useQuery({
     queryKey: sectorsKey,
@@ -31,6 +32,14 @@ export function useChecklists() {
     staleTime: 30_000,
   });
 
+  // Cross-shift: all completions for the day (both abertura + fechamento)
+  const { data: allShiftCompletions = [] } = useQuery({
+    queryKey: allShiftKey,
+    queryFn: () => fetchAllShiftCompletionsData(currentDate, activeUnitId),
+    enabled: !!user && !!currentDate && !!activeUnitId,
+    staleTime: 30_000,
+  });
+
   const isLoading = unitLoading || sectorsLoading || (!activeUnitId && !!user);
 
   const invalidateSectors = useCallback(() => {
@@ -41,15 +50,16 @@ export function useChecklists() {
     setCurrentDate(date);
     setCurrentType(type);
     await queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, type, activeUnitId] });
+    await queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
   }, [queryClient, activeUnitId]);
 
   const crud = useChecklistCRUD({ sectors, sectorsKey, activeUnitId, invalidateSectors });
   const completionOps = useChecklistCompletions({
-    completions, sectors, userId: user?.id, activeUnitId,
+    completions, sectors, userId: user?.id, activeUnitId, allShiftCompletions,
   });
 
   return {
-    sectors, completions, completionsFetched, isLoading,
+    sectors, completions, completionsFetched, isLoading, allShiftCompletions,
     ...crud,
     ...completionOps,
     fetchCompletions,

@@ -83,15 +83,20 @@ export function ChecklistDashboardWidget() {
 
   const getProgress = useMemo(() => {
     return (type: ChecklistType, completions: any[]) => {
-      const completedIds = new Set(completions.map((c: any) => c.item_id));
+      // Cross-shift: merge all completions from both shifts
+      const allCompletedIds = new Set([
+        ...aberturaCompletions.map((c: any) => c.item_id),
+        ...fechamentoCompletions.map((c: any) => c.item_id),
+      ]);
       let total = 0;
       let completed = 0;
       sectors.forEach((s: any) => {
         s.subcategories?.forEach((sub: any) => {
           sub.items?.forEach((item: any) => {
-            if (item.is_active && item.checklist_type === type) {
+            // Count all standard (non-bonus) items
+            if (item.is_active && item.checklist_type !== 'bonus') {
               total++;
-              if (completedIds.has(item.id)) completed++;
+              if (allCompletedIds.has(item.id)) completed++;
             }
           });
         });
@@ -99,7 +104,7 @@ export function ChecklistDashboardWidget() {
       const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
       return { completed, total, percent };
     };
-  }, [sectors]);
+  }, [sectors, aberturaCompletions, fechamentoCompletions]);
 
   const abertura = getProgress('abertura', aberturaCompletions);
   const fechamento = getProgress('fechamento', fechamentoCompletions);
