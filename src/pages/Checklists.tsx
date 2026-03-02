@@ -133,6 +133,13 @@ export default function ChecklistsPage() {
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
+  // Auto-switch to Turno 2 if shift 1 is closed and user is viewing Turno 1
+  useEffect(() => {
+    if (isShift1Closed && checklistType === 'abertura') {
+      setChecklistType('fechamento');
+    }
+  }, [isShift1Closed, checklistType]);
+
   // Build a map of checklist_item_id -> quantity_ordered from production plan
   const productionQtyMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -516,12 +523,20 @@ export default function ChecklistsPage() {
             <div className="grid grid-cols-2 gap-3">
               {/* Abertura Card */}
               <button
-                onClick={() => setChecklistType('abertura')}
+                onClick={() => {
+                  if (isShift1Closed) {
+                    toast('Turno 1 já foi fechado e não pode ser alterado.');
+                    return;
+                  }
+                  setChecklistType('abertura');
+                }}
                 className={cn(
                   "relative overflow-hidden rounded-2xl p-4 text-left transition-all duration-300",
-                  checklistType === 'abertura'
+                  checklistType === 'abertura' && !isShift1Closed
                     ? "finance-hero-card checklist-gradient-slow ring-0 scale-[1.02]"
-                    : "ring-1 ring-border/40 hover:ring-border bg-card/60 opacity-70 hover:opacity-90"
+                    : isShift1Closed
+                      ? "ring-1 ring-border/40 bg-card/40 opacity-50 cursor-not-allowed"
+                      : "ring-1 ring-border/40 hover:ring-border bg-card/60 opacity-70 hover:opacity-90"
                 )}
               >
                 {settingsMode && isAdmin && (
@@ -534,16 +549,22 @@ export default function ChecklistsPage() {
                   />
                 )}
                 <div className="flex items-center gap-3 mb-3">
-                  <AppIcon
-                    name={getTypeProgress.abertura.percent === 100 ? 'check_circle' : 'Factory'}
-                    size={22}
-                    fill={getTypeProgress.abertura.percent === 100 ? 1 : 0}
-                    className={cn(
-                      "transition-colors",
-                      getTypeProgress.abertura.percent === 100 ? "text-success" : checklistType === 'abertura' ? "text-foreground" : "text-muted-foreground"
-                    )}
-                  />
-                  <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Turno 1</h3>
+                  {isShift1Closed ? (
+                    <AppIcon name="Lock" size={22} className="text-muted-foreground/50" />
+                  ) : (
+                    <AppIcon
+                      name={getTypeProgress.abertura.percent === 100 ? 'check_circle' : 'Factory'}
+                      size={22}
+                      fill={getTypeProgress.abertura.percent === 100 ? 1 : 0}
+                      className={cn(
+                        "transition-colors",
+                        getTypeProgress.abertura.percent === 100 ? "text-success" : checklistType === 'abertura' ? "text-foreground" : "text-muted-foreground"
+                      )}
+                    />
+                  )}
+                  <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>
+                    Turno 1 {isShift1Closed && <span className="text-xs font-normal text-muted-foreground">· Fechado</span>}
+                  </h3>
                 </div>
                 {!settingsMode && (
                   <div className="space-y-1.5">
