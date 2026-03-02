@@ -286,20 +286,6 @@ export function CashClosingForm({ onSuccess }: Props) {
         </CardContent>
       </Card>
 
-      {/* Turno / Shift info */}
-      <Card className="card-unified border-primary/20 bg-primary/5">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary/15">
-              <AppIcon name="Factory" className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">Fechamento Industrial</p>
-              <p className="text-xs text-muted-foreground">Registre os recebimentos e despesas operacionais do dia</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Payment Values */}
       {/* Initial Cash */}
