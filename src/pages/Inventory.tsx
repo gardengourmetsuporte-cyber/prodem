@@ -44,7 +44,7 @@ export default function InventoryPage() {
   const [movementSheetOpen, setMovementSheetOpen] = useState(false);
   const [itemFormOpen, setItemFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string> | null>(null);
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'zero' | null>(null);
 
   // Handle ?action=move from quick actions
@@ -63,6 +63,14 @@ export default function InventoryPage() {
     if (state?.stockFilter === 'low') { setStockFilter('low'); setView('items'); }
     if (state) window.history.replaceState({}, document.title);
   }, [location.state, isAdmin]);
+
+  // Initialize all categories as collapsed
+  useEffect(() => {
+    if (!isLoading && items.length > 0 && collapsedCategories === null) {
+      const allCats = new Set(items.map(i => i.category?.name || 'Sem Categoria'));
+      setCollapsedCategories(allCats);
+    }
+  }, [isLoading, items, collapsedCategories]);
 
   const lowStockItems = getLowStockItems();
   const outOfStockItems = getOutOfStockItems();
@@ -86,7 +94,7 @@ export default function InventoryPage() {
 
   const toggleCategory = (categoryName: string) => {
     setCollapsedCategories(prev => {
-      const newSet = new Set(prev);
+      const newSet = new Set(prev || []);
       if (newSet.has(categoryName)) newSet.delete(categoryName);
       else newSet.add(categoryName);
       return newSet;
@@ -216,7 +224,7 @@ export default function InventoryPage() {
                 ) : (
                   sortedCategories.map((categoryName, catIndex) => {
                     const categoryItems = filteredByCategory[categoryName];
-                    const isCollapsed = collapsedCategories.has(categoryName);
+                    const isCollapsed = collapsedCategories === null || collapsedCategories.has(categoryName);
                     const category = categories.find(c => c.name === categoryName);
                     const categoryColor = category?.color || '#6b7280';
 
