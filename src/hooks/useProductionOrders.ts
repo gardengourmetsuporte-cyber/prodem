@@ -151,11 +151,24 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     if (orderItems.length === 0) return [];
 
     const doneMap = new Map<string, number>();
+    const completedWithoutQtySet = new Set<string>();
     const inProgressSet = new Set<string>();
     const durationMap = new Map<string, number | null>();
+
     completions.forEach(c => {
       if (!c.is_skipped) {
-        doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + (c.quantity_done ?? 0));
+        const status = (c as any).status;
+        const qtyDone = c.quantity_done ?? 0;
+
+        if (status === 'completed' || status === 'done') {
+          if (qtyDone > 0) {
+            doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + qtyDone);
+          } else {
+            // Legacy/quick completion without quantity should count as fully completed for pending calc
+            completedWithoutQtySet.add(c.item_id);
+          }
+        }
+
         // Track items that are currently in_progress (started but not finished)
         const startedAt = (c as any).started_at;
         const finishedAt = (c as any).finished_at;
@@ -171,7 +184,10 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     });
 
     return orderItems.map(oi => {
-      const done = doneMap.get(oi.checklist_item_id) || 0;
+      const rawDone = doneMap.get(oi.checklist_item_id) || 0;
+      const done = completedWithoutQtySet.has(oi.checklist_item_id)
+        ? Math.max(rawDone, oi.quantity_ordered)
+        : rawDone;
       const pending = Math.max(0, oi.quantity_ordered - done);
       const percent = oi.quantity_ordered > 0 ? Math.round((done / oi.quantity_ordered) * 100) : 0;
       const isInProgress = inProgressSet.has(oi.checklist_item_id);
