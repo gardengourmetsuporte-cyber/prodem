@@ -27,6 +27,8 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
   const status = getStockStatus(item);
   const unitLabel = getUnitLabel(item.unit_type);
   const categoryColor = item.category?.color || '#6b7280';
+  const warehouseStock = (item as any).warehouse_stock ?? item.current_stock;
+  const productionStock = (item as any).production_stock ?? 0;
 
   return (
     <div
@@ -53,6 +55,17 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
             <p className="text-xs text-muted-foreground truncate">
               {item.category?.name || 'Sem categoria'}
             </p>
+          </div>
+          {/* Dual stock display */}
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <AppIcon name="Warehouse" size={10} className="opacity-60" />
+              {warehouseStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}
+            </span>
+            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <AppIcon name="Factory" size={10} className="opacity-60" />
+              {productionStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}
+            </span>
           </div>
         </div>
 

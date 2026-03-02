@@ -1724,6 +1724,7 @@ export type Database = {
           id: string
           min_stock: number
           name: string
+          production_stock: number | null
           recipe_unit_price: number | null
           recipe_unit_type: string | null
           supplier_id: string | null
@@ -1731,6 +1732,7 @@ export type Database = {
           unit_price: number | null
           unit_type: Database["public"]["Enums"]["unit_type"]
           updated_at: string
+          warehouse_stock: number | null
         }
         Insert: {
           category_id?: string | null
@@ -1740,6 +1742,7 @@ export type Database = {
           id?: string
           min_stock?: number
           name: string
+          production_stock?: number | null
           recipe_unit_price?: number | null
           recipe_unit_type?: string | null
           supplier_id?: string | null
@@ -1747,6 +1750,7 @@ export type Database = {
           unit_price?: number | null
           unit_type?: Database["public"]["Enums"]["unit_type"]
           updated_at?: string
+          warehouse_stock?: number | null
         }
         Update: {
           category_id?: string | null
@@ -1756,6 +1760,7 @@ export type Database = {
           id?: string
           min_stock?: number
           name?: string
+          production_stock?: number | null
           recipe_unit_price?: number | null
           recipe_unit_type?: string | null
           supplier_id?: string | null
@@ -1763,6 +1768,7 @@ export type Database = {
           unit_price?: number | null
           unit_type?: Database["public"]["Enums"]["unit_type"]
           updated_at?: string
+          warehouse_stock?: number | null
         }
         Relationships: [
           {
@@ -3395,6 +3401,7 @@ export type Database = {
           created_at: string
           id: string
           item_id: string
+          location: string | null
           notes: string | null
           quantity: number
           type: Database["public"]["Enums"]["movement_type"]
@@ -3405,6 +3412,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_id: string
+          location?: string | null
           notes?: string | null
           quantity: number
           type: Database["public"]["Enums"]["movement_type"]
@@ -3415,6 +3423,7 @@ export type Database = {
           created_at?: string
           id?: string
           item_id?: string
+          location?: string | null
           notes?: string | null
           quantity?: number
           type?: Database["public"]["Enums"]["movement_type"]
