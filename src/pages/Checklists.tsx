@@ -774,7 +774,28 @@ export default function ChecklistsPage() {
                       onStartProduction={handleStartProduction}
                       onFinishProduction={handleFinishProduction}
                       onUpdateProductionQuantity={handleUpdateProductionQuantity}
-                      getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
+                      getCompletionProgress={(sectorId) => {
+                        const base = getCompletionProgress(sectorId, checklistType);
+                        // When a production order exists, only count items in the plan
+                        if (hasProductionOrder && productionQtyMap.size > 0) {
+                          const sector = sectors.find(s => s.id === sectorId);
+                          if (!sector) return base;
+                          let total = 0;
+                          let completed = 0;
+                          sector.subcategories?.forEach(sub => {
+                            sub.items?.forEach(item => {
+                              if (item.is_active && productionQtyMap.has(item.id)) {
+                                total++;
+                                if (isItemCompleted(item.id)) completed++;
+                              }
+                            });
+                          });
+                          // If no plan items in this sector, fall back to base
+                          if (total === 0) return base;
+                          return { completed, total };
+                        }
+                        return base;
+                      }}
                       getCrossShiftItemProgress={getCrossShiftItemProgressWithPlan}
                       currentUserId={user?.id}
                       isAdmin={isAdmin}
