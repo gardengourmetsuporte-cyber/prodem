@@ -1,73 +1,52 @@
 
 
-## Sistema de Ordens de Produção Diárias
+## Ajuste do Cadastro de Produtos para Setor Industrial (Prodem)
 
-### Conceito
+### Contexto
 
-O admin cria um **Plano de Produção** para o dia, definindo quais peças e quantidades precisam ser produzidas. Esse plano alimenta o que aparece no checklist de produção dos operadores. No final do dia, o sistema gera automaticamente um **relatório comparativo**: pedido vs produzido vs pendente.
+O cadastro atual é genérico (restaurante/alimentação). A Prodem é uma indústria metalúrgica que trabalha com chapas, tubos, perfis, parafusos, tintas, gases de solda, etc. O formulário precisa de campos específicos para esse setor.
 
-### Arquitetura
+### Campos novos na tabela `inventory_items`
 
-```text
-┌─────────────────────┐
-│  production_orders   │  ← Plano do dia (admin cria)
-│  date, status, notes │
-└────────┬────────────┘
-         │ 1:N
-┌────────▼────────────┐
-│ production_order_    │  ← Itens do plano com qtd pedida
-│ items                │
-│ item_id, qty_ordered │
-│ qty_done (calculado) │
-└──────────────────────┘
-         │
-         ▼ lê de
-┌──────────────────────┐
-│ checklist_completions │  ← Registro real de produção
-│ quantity_done, status │
-└──────────────────────┘
-```
+| Campo | Tipo | Exemplo |
+|---|---|---|
+| `material_type` | text | Aço carbono, Inox 304, Alumínio |
+| `dimensions` | text | 1200x3000mm, Ø 2" |
+| `thickness` | text | 3mm, 1/4", #12 |
+| `technical_spec` | text | ASTM A36, NBR 8800 |
+| `internal_code` | text | CHP-001, TUB-045 |
+| `location` | text | Prateleira A3, Galpão 2 |
+| `weight_per_unit` | numeric | 85.2 (kg por peça/chapa) |
 
-### Banco de Dados (2 tabelas novas)
+### Unidades de controle adicionais
 
-**`production_orders`** — Cabeçalho do plano diário
-- `id`, `unit_id`, `created_by`, `date`, `status` (draft/active/closed), `notes`, `created_at`
-- RLS: acesso por `unit_id` via `user_has_unit_access`
+Além de `unidade`, `kg`, `litro`, adicionar:
+- **Metros (m)** — para tubos, barras, perfis
+- **Metros² (m²)** — para chapas
 
-**`production_order_items`** — Itens e quantidades pedidas
-- `id`, `order_id` (FK), `checklist_item_id` (FK para `checklist_items`), `quantity_ordered`, `unit_id`
-- RLS: mesma política via join com `production_orders`
+Isso requer alterar o enum `unit_type_enum` no banco e o formulário.
 
-### Fluxo
+### Seção "Ficha Técnica" no formulário
 
-1. **Admin abre tela "Plano de Produção"** — seleciona data, vê lista de peças disponíveis (itens com `target_quantity > 0`)
-2. **Define quantidades** — pode usar `target_quantity` como sugestão padrão ou ajustar
-3. **Salva o plano** — status `active`
-4. **Operadores** — o checklist mostra apenas as peças que estão no plano do dia (filtro automático)
-5. **Relatório automático** — cruza `production_order_items.quantity_ordered` com `checklist_completions.quantity_done` do dia, mostrando:
-   - Total pedido
-   - Total produzido
-   - Pendente (diferença)
-   - % de conclusão
+Substituir a seção "Configurar para Fichas Técnicas" (voltada para receitas culinárias) por uma seção **"Ficha Técnica"** industrial:
 
-### Frontend
+- **Código Interno** — código próprio da empresa
+- **Material** — tipo do material (select com opções comuns + campo livre)
+- **Espessura** — campo texto livre
+- **Dimensões** — campo texto livre (ex: 1200x3000mm)
+- **Especificação Técnica** — norma, liga, grau (ex: ASTM A36)
+- **Peso por unidade** — kg por peça/chapa
+- **Localização** — onde fica armazenado no galpão
 
-1. **Nova aba/seção na página de Checklists** (visível só para admin): "Plano de Produção"
-   - Formulário para selecionar peças e definir quantidades
-   - Botão "Gerar Plano do Dia"
-   
-2. **Filtro no ChecklistView**: quando existe um plano ativo para o dia, exibir apenas os itens incluídos no plano (com a quantidade ajustada)
+### Mudanças
 
-3. **Relatório de Produção**: card/seção que mostra a tabela comparativa pedido x produzido, com indicadores visuais (verde = completo, amarelo = parcial, vermelho = não iniciado)
+1. **Migration SQL** — adicionar 7 colunas à tabela `inventory_items` + ampliar enum com `metro` e `metro_quadrado`
+2. **`src/types/database.ts`** — atualizar interface `InventoryItem` com os novos campos
+3. **`src/components/inventory/ItemFormSheetNew.tsx`** — redesenhar formulário com os campos industriais, remover seção de fichas de receita e substituir por ficha técnica industrial
+4. **`src/hooks/useInventoryDB.ts`** — incluir novos campos no `addItem` e `updateItem`
+5. **`src/components/inventory/ItemCardNew.tsx`** — exibir código interno, material e dimensões no card do item
 
-### Hook
+### Resultado
 
-- `useProductionOrders(unitId, date)` — CRUD do plano + cálculo do relatório cruzando com completions
-
-### Detalhes Técnicos
-
-- O `target_quantity` dos `checklist_items` continua sendo a capacidade máxima/padrão da peça
-- O `quantity_ordered` do plano pode ser menor que `target_quantity` (ex: "hoje só preciso de 30 das 80 peças")
-- O relatório é calculado client-side cruzando os dados de `production_order_items` com `checklist_completions` do mesmo dia
-- Possibilidade de "copiar plano de ontem" para agilizar dias repetitivos
+O formulário de cadastro fica específico para indústria metalúrgica, com campos relevantes como material, espessura, dimensões e norma técnica, eliminando referências a fichas de receita que não fazem sentido nesse contexto.
 
