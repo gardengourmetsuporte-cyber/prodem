@@ -1,51 +1,88 @@
 
 
-## Análise dos Documentos Reais da Prodem
+## Análise: Sistema Atual vs Método Manual da Prodem
 
-Analisei as 5 fotos dos documentos reais:
+### O que a Prodem faz no papel
 
-1. **Ordem de Produção** (#1302, #1303) — Fichas individuais por peça com: projeto, cliente, código material, descrição, medida (mm), operação (METALEIRA, SERRA), campos para operador, hora, data, qtd produzida, qtd expedida
-2. **Tabela de Cortes de Barras** (Projeto #6421 RACK BOOK ALTENADOR VW) — Lista master com: código material (MP013.0004, etc.), descrição, comprimento de corte (mm), qtd/rack, qtd total, processo (SERRA, METALEIRA, METALERADORA)
-3. **Planilhas de acompanhamento** — Listas de materiais onde itens em produção são **grifados** e itens concluídos são **riscados**
+Baseado nos 5 documentos:
 
-### O que o sistema atual já faz bem
-- Setores (= processos/operações)
-- Items com dimensões e quantidades
-- Status: not_started → in_progress → partial → complete
-- Turnos 1 e 2 com fechamento
+1. **Tabela de Cortes de Barras** (documento master): Lista todos os materiais de um projeto com código, descrição, medida de corte, qtd/rack, qtd total e processo (SERRA, METALEIRA, METALERADORA)
+2. **Ordens de Produção** (fichas individuais #1302, #1303): Uma ficha por peça com campos para cada operação: hora inicial/final, data, qtd produzida, operador, qtd expedida, ref máquina
+3. **Planilhas de acompanhamento**: Itens **grifados** (marca-texto amarelo/verde) = em produção; itens **riscados** = concluídos
 
-### O que precisa adaptar
+### O que o sistema atual já suporta bem
 
-**1. Reestruturar setores para refletir os processos reais**
-- Renomear/criar setores: **SERRA**, **METALEIRA**, **METALERADORA**, **SOLDA**, **MONTAGEM**, **PINTURA**
-- Os setores atuais genéricos (Laser, Dobra, Geral) serão substituídos pelos processos reais
+| Funcionalidade | Status |
+|---|---|
+| Setores = Processos (SERRA, METALEIRA, METALERADORA, Solda, Montagem, Pintura) | ✅ Funcionando — 6 setores criados |
+| Items com material_code, piece_dimensions, target_quantity | ✅ ~30 itens reais importados |
+| Pedido de Produção (seleção de itens + quantidades por turno) | ✅ ProductionPlanSheet |
+| Turnos 1 e 2 com fechamento e herança de pendentes | ✅ useProductionOrders |
+| Acompanhamento: Iniciar produção (Play), Finalizar (qtd), status in_progress/partial/complete | ✅ ChecklistView |
+| Visual de grifo (amarelo brilhante para in_progress) | ✅ Implementado |
+| Visual de risco (line-through + opacity para complete) | ✅ Implementado |
+| Relatório por turno com totais pedido/produzido/pendente | ✅ ProductionReport |
+| Progress bar por item e por turno | ✅ Funcionando |
+| Timer ao vivo durante produção | ✅ Implementado |
 
-**2. Importar itens reais da Tabela de Cortes**
-- Cadastrar materiais reais como itens de checklist com os dados extraídos:
-  - Ex: "BARRA REDONDA MECANICA 6000 MM - 1/2 POL." → Setor METALEIRA, medida 58mm, target 54 pç
-  - Ex: "FERRO CHATO 6000 MM - 1 X 3/16 POL." → Setor METALERADORA, medida 328mm, target 54 pç
-  - Ex: "TUBO IND. QUADRADO 6000 MM - 50 X 50 X 2,65 MM" → Setor SERRA, medida 953mm, target 54 pç
+### O que falta adaptar
 
-**3. Melhorar o visual de acompanhamento (grifo/risco)**
-- Na ChecklistView, itens `in_progress` terão fundo **amarelo/âmbar** (simulando o grifo de marcador)
-- Itens `complete` terão texto com ~~tachado~~ e opacidade reduzida (simulando o risco)
-- Isso replica visualmente o que fazem no papel
+**1. Conceito de "Projeto" / Ordem de Serviço**
+O papel mostra que tudo gira em torno de um **Projeto** (ex: #6421 RACK BOOK ALTENADOR VW, Cliente: VALEO). O sistema atual não tem esse conceito — os pedidos são por data, sem vínculo a um projeto/cliente. Precisamos:
+- Nova tabela `production_projects` (numero_projeto, descricao, cliente, status)
+- Vincular `production_orders` a um projeto
+- Card no topo mostrando "Projeto #6421 — RACK BOOK ALTENADOR VW — VALEO"
 
-**4. Adicionar campos do documento real ao ProductionPlanSheet**
-- Exibir o **código do material** (novo campo) e **processo** (setor) em cada item
-- Mostrar **comprimento de corte** junto das dimensões
+**2. Múltiplas operações por peça (Ordem de Produção)**
+No papel, uma mesma peça passa por **várias operações em sequência** (ex: METALEIRA → depois outra operação). O sistema atual trata cada item como uma tarefa única num setor. Para replicar:
+- Adicionar campo `operations` ou criar registros de "etapas" por item
+- Ou manter como está (cada medida de corte já está no setor correto) — **o sistema já modela isso corretamente** pois cada registro de item é "material X na medida Y no processo Z"
 
-### Plano de execução
+**3. Campos da Ordem de Produção não capturados**
+- **Operador** por operação: O sistema já registra `completed_by` (quem finalizou)
+- **Hora Inicial/Final**: O sistema já tem `started_at` e `finished_at` ✅
+- **Ref. Máquina**: Não existe campo para isso
+- **Qtd. Expedida**: Não existe — é um conceito de logística pós-produção
+- **Roteiro**: Não existe — número sequencial da rota de fabricação
 
-**Passo 1 — Migração de banco**: Adicionar campo `material_code` à tabela `checklist_items` para armazenar códigos como MP013.0004
+**4. Duplicatas de setores**
+Há 3 setores "SERRA" duplicados no banco. Precisa limpar.
 
-**Passo 2 — Atualizar setores existentes**: Via SQL, renomear e criar setores que correspondem aos processos reais da Prodem (SERRA, METALEIRA, METALERADORA) e reorganizar subcategorias por tipo de material (Barra Redonda, Ferro Chato, Tubo Quadrado, Tubo Redondo)
+### Plano de implementação
 
-**Passo 3 — Importar itens reais**: Inserir os ~20 itens da Tabela de Cortes de Barras como checklist_items com nome, dimensões, código material e target quantity extraídos das fotos
+**Passo 1 — Limpar duplicatas de SERRA**
+Migrar itens dos setores SERRA duplicados para um único e deletar os vazios.
 
-**Passo 4 — Visual grifo/risco**: Alterar `ChecklistView.tsx` para:
-- Items `in_progress`: borda esquerda amarela + fundo âmbar claro (efeito "grifado")
-- Items `complete`: texto tachado + opacidade 50% (efeito "riscado")
+**Passo 2 — Adicionar tabela `production_projects`**
+```sql
+CREATE TABLE production_projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  unit_id UUID NOT NULL REFERENCES units(id),
+  project_number TEXT NOT NULL,
+  description TEXT NOT NULL,
+  client TEXT,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+Vincular `production_orders.project_id` a esta tabela.
 
-**Passo 5 — ProductionPlanSheet**: Exibir código do material e processo ao lado do nome do item na tela de pedido
+**Passo 3 — Criar projeto real de exemplo**
+Inserir Projeto #6421 — RACK BOOK ALTENADOR VW — VALEO como dados reais.
+
+**Passo 4 — UI do Projeto no topo da página de produção**
+Card com número do projeto, descrição e cliente acima dos cards de turno.
+
+**Passo 5 — Adicionar campo `machine_ref` na completion** (opcional)
+Para registrar a referência da máquina usada (campo "REF MÁQUINA" do papel).
+
+### Conclusão
+
+O sistema já cobre **~85% do fluxo manual**. Os gaps principais são:
+- Falta o conceito de **Projeto/OS** que agrupa tudo
+- Falta campo **Ref. Máquina** (baixa prioridade)
+- Falta **Expedição** (fase posterior, pode ser implementada depois)
+- Duplicatas de SERRA precisam ser limpas
+
+A adaptação é relativamente pequena — o modelo de dados atual (setores → subcategorias → itens com material_code, medidas e quantidades + completions com started_at/finished_at/quantity_done) já replica fielmente o que fazem no papel.
 
