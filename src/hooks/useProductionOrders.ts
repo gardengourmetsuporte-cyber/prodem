@@ -284,6 +284,45 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     let orderId = (order?.id && order.id !== '__aggregate__') ? order.id : undefined;
 
     if (!orderId) {
+      // Guard: if project already has all items completed globally, block creation
+      if (effectiveProjectId) {
+        const { data: allOI } = await supabase
+          .from('production_order_items')
+          .select('checklist_item_id, quantity_ordered, production_orders!inner(project_id)')
+          .eq('unit_id', unitId!)
+          .eq('production_orders.project_id', effectiveProjectId);
+
+        if (allOI && allOI.length > 0) {
+          const orderedMap = new Map<string, number>();
+          allOI.forEach((oi: any) => {
+            orderedMap.set(oi.checklist_item_id, Math.max(orderedMap.get(oi.checklist_item_id) || 0, oi.quantity_ordered));
+          });
+          const itemIds = [...orderedMap.keys()];
+          const { data: comps } = await supabase
+            .from('checklist_completions')
+            .select('item_id, quantity_done, is_skipped, status')
+            .eq('unit_id', unitId!)
+            .in('status', ['completed', 'done'])
+            .in('item_id', itemIds);
+
+          const doneMap = new Map<string, number>();
+          (comps || []).forEach(c => {
+            if (!c.is_skipped && c.quantity_done > 0) {
+              doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + c.quantity_done);
+            }
+          });
+
+          let allComplete = true;
+          orderedMap.forEach((ordered, itemId) => {
+            if ((doneMap.get(itemId) || 0) < ordered) allComplete = false;
+          });
+
+          if (allComplete) {
+            throw new Error('Esta OS já foi concluída. Não há pendências.');
+          }
+        }
+      }
+
       // Double-check: look for an existing order to avoid duplicate key errors
       let existingQuery = supabase
         .from('production_orders')

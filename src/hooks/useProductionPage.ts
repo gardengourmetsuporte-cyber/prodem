@@ -39,7 +39,7 @@ export function useProductionPage() {
     enabled: !!activeUnitId,
   });
 
-  // Filter: show projects that have orders on this date, plus active projects without ANY orders yet (new projects)
+  // Query which project IDs have ANY production orders (to distinguish "new" projects)
   const { data: projectsWithOrders = [] } = useQuery({
     queryKey: ['production-projects-with-orders', activeUnitId],
     queryFn: async () => {
@@ -54,11 +54,87 @@ export function useProductionPage() {
     enabled: !!activeUnitId,
   });
 
+  // Query pending status for projects that have orders but NOT on the selected date
+  // This checks if a project's total production is complete (no pending items across ALL dates)
+  const projectsToCheck = useMemo(() => {
+    return allActiveProjects
+      .filter(p => projectsWithOrders.includes(p.id) && !dateProjectIds.includes(p.id))
+      .map(p => p.id);
+  }, [allActiveProjects, projectsWithOrders, dateProjectIds]);
+
+  const { data: completedProjectIds = [] } = useQuery({
+    queryKey: ['production-completed-projects', activeUnitId, projectsToCheck],
+    queryFn: async () => {
+      if (projectsToCheck.length === 0) return [];
+
+      // For each project, get all order items and all completions, then check if fully done
+      const { data: allOrderItems, error: oiErr } = await supabase
+        .from('production_order_items')
+        .select('checklist_item_id, quantity_ordered, production_orders!inner(project_id)')
+        .eq('unit_id', activeUnitId!)
+        .in('production_orders.project_id', projectsToCheck);
+      if (oiErr) throw oiErr;
+
+      if (!allOrderItems || allOrderItems.length === 0) return [];
+
+      // Aggregate ordered quantities per project per item
+      const projectItemOrdered = new Map<string, Map<string, number>>();
+      const allItemIds = new Set<string>();
+      allOrderItems.forEach((oi: any) => {
+        const pid = oi.production_orders?.project_id;
+        if (!pid) return;
+        if (!projectItemOrdered.has(pid)) projectItemOrdered.set(pid, new Map());
+        const m = projectItemOrdered.get(pid)!;
+        m.set(oi.checklist_item_id, Math.max(m.get(oi.checklist_item_id) || 0, oi.quantity_ordered));
+        allItemIds.add(oi.checklist_item_id);
+      });
+
+      if (allItemIds.size === 0) return [];
+
+      // Fetch ALL completions for these items across ALL dates
+      const { data: completionsData, error: cErr } = await supabase
+        .from('checklist_completions')
+        .select('item_id, quantity_done, is_skipped, status')
+        .eq('unit_id', activeUnitId!)
+        .in('status', ['completed', 'done'])
+        .in('item_id', [...allItemIds]);
+      if (cErr) throw cErr;
+
+      const doneMap = new Map<string, number>();
+      (completionsData || []).forEach(c => {
+        if (!c.is_skipped && c.quantity_done > 0) {
+          doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + c.quantity_done);
+        }
+      });
+
+      // Determine which projects are fully completed
+      const completed: string[] = [];
+      projectItemOrdered.forEach((itemMap, pid) => {
+        let allDone = true;
+        itemMap.forEach((ordered, itemId) => {
+          const done = doneMap.get(itemId) || 0;
+          if (done < ordered) allDone = false;
+        });
+        if (allDone) completed.push(pid);
+      });
+
+      return completed;
+    },
+    enabled: !!activeUnitId && projectsToCheck.length > 0,
+  });
+
   const activeProjects = useMemo(() => {
-    return allActiveProjects.filter(p =>
-      dateProjectIds.includes(p.id) || !projectsWithOrders.includes(p.id)
-    );
-  }, [allActiveProjects, dateProjectIds, projectsWithOrders]);
+    return allActiveProjects.filter(p => {
+      // Already has order on selected date → always show
+      if (dateProjectIds.includes(p.id)) return true;
+      // Never had any order → show (new project)
+      if (!projectsWithOrders.includes(p.id)) return true;
+      // Had orders before but fully completed → hide
+      if (completedProjectIds.includes(p.id)) return false;
+      // Has pending items → show
+      return true;
+    });
+  }, [allActiveProjects, dateProjectIds, projectsWithOrders, completedProjectIds]);
 
   // Auto-sync selectedProjectId when activeProjects changes
   useEffect(() => {
