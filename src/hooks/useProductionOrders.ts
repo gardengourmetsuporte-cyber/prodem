@@ -107,43 +107,28 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     enabled: !!order?.id,
   });
 
-  // Fetch completions for report — ALL shifts for this date (to calculate cross-shift progress)
+  // Fetch completions for THIS shift only (shift-specific progress)
+  const shiftChecklistType = shift === 1 ? 'abertura' : 'fechamento';
   const { data: completions = [] } = useQuery({
-    queryKey: ['production-completions', unitId, dateStr],
+    queryKey: ['production-completions', unitId, dateStr, shift],
     queryFn: async () => {
-      // Get all checklist item IDs from both shifts
-      const allItemIds = new Set<string>();
+      if (!order?.id) return [];
       
-      // Fetch items for all orders on this date
-      const { data: allOrders } = await supabase
-        .from('production_orders')
-        .select('id')
-        .eq('unit_id', unitId!)
-        .eq('date', dateStr);
-      
-      if (!allOrders || allOrders.length === 0) return [];
-      
-      const orderIds = allOrders.map(o => o.id);
-      const { data: allItems } = await supabase
-        .from('production_order_items')
-        .select('checklist_item_id')
-        .in('order_id', orderIds);
-      
-      (allItems || []).forEach(i => allItemIds.add(i.checklist_item_id));
-      
-      if (allItemIds.size === 0) return [];
+      const itemIds = orderItems.map(oi => oi.checklist_item_id);
+      if (itemIds.length === 0) return [];
       
       const { data, error } = await supabase
         .from('checklist_completions')
         .select('item_id, quantity_done, is_skipped, started_at, finished_at, checklist_type')
         .eq('date', dateStr)
         .eq('unit_id', unitId!)
+        .eq('checklist_type', shiftChecklistType)
         .in('status', ['completed', 'done', 'in_progress'])
-        .in('item_id', [...allItemIds]);
+        .in('item_id', itemIds);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!unitId && !!order?.id,
+    enabled: !!unitId && !!order?.id && orderItems.length > 0,
   });
 
   // Build report for THIS shift's items
@@ -217,7 +202,9 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['production-order', unitId, dateStr] });
     queryClient.invalidateQueries({ queryKey: ['production-order-items', unitId, dateStr] });
-    queryClient.invalidateQueries({ queryKey: ['production-completions', unitId, dateStr] });
+    // Invalidate completions for both shifts
+    queryClient.invalidateQueries({ queryKey: ['production-completions', unitId, dateStr, 1] });
+    queryClient.invalidateQueries({ queryKey: ['production-completions', unitId, dateStr, 2] });
   }, [queryClient, unitId, dateStr]);
 
   // Create or update order with items

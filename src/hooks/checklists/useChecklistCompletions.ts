@@ -33,7 +33,8 @@ export function useChecklistCompletions({
 
   // Helper to also invalidate production report caches
   const invalidateProductionCaches = useCallback((date: string) => {
-    queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, date] });
+    queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, date, 1] });
+    queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, date, 2] });
   }, [queryClient, activeUnitId]);
 
   const toggleCompletion = useCallback(async (
