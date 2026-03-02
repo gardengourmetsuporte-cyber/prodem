@@ -1499,14 +1499,16 @@ export function ChecklistView({
                                       </>
                                     )}
 
-                                    {/* Quick complete — for simple tasks or admin override */}
-                                    <button onClick={(e) => handleComplete(item.id, configuredPoints, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget)}
-                                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-success/10 hover:bg-success/20 text-left transition-all duration-200 border border-success/30 active:scale-[0.97]">
-                                      <div className="w-10 h-10 bg-success rounded-xl flex items-center justify-center shadow-lg shadow-success/20"><AppIcon name="Check" className="w-5 h-5 text-success-foreground" /></div>
-                                      <div className="flex-1"><p className="font-semibold text-success">Concluir direto</p>
-                                        <p className="text-xs text-muted-foreground">Já terminei (sem iniciar)</p>
-                                      </div>
-                                    </button>
+                                    {/* Quick complete — only for non-industrial (simple) tasks */}
+                                    {!hasIndustrialData && (
+                                      <button onClick={(e) => handleComplete(item.id, configuredPoints, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget)}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-success/10 hover:bg-success/20 text-left transition-all duration-200 border border-success/30 active:scale-[0.97]">
+                                        <div className="w-10 h-10 bg-success rounded-xl flex items-center justify-center shadow-lg shadow-success/20"><AppIcon name="Check" className="w-5 h-5 text-success-foreground" /></div>
+                                        <div className="flex-1"><p className="font-semibold text-success">Concluir direto</p>
+                                          <p className="text-xs text-muted-foreground">Já terminei (sem iniciar)</p>
+                                        </div>
+                                      </button>
+                                    )}
 
                                     <div className="border-t border-border" />
                                     <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget, true)}
@@ -1515,7 +1517,8 @@ export function ChecklistView({
                                       <div><p className="font-semibold text-destructive">Não concluído</p><p className="text-xs text-muted-foreground">Sem pontos</p></div>
                                     </button>
 
-                                    {configuredPoints > 0 && (
+                                    {/* "Já estava pronto" — only for non-industrial (simple) tasks */}
+                                    {!hasIndustrialData && configuredPoints > 0 && (
                                       <>
                                         <div className="border-t border-border" />
                                         <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget)}
