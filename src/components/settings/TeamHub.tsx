@@ -442,7 +442,7 @@ function InvitesTab() {
   const pendingInvites = invites.filter((i: any) => !i.accepted_at);
 
   const copyLink = (token: string) => {
-    navigator.clipboard.writeText(`https://garden-gestao.lovable.app/invite?token=${token}`);
+    navigator.clipboard.writeText(`https://prodem.lovable.app/invite?token=${token}`);
     toast.success('Link copiado!');
   };
 
@@ -485,7 +485,7 @@ function InvitesTab() {
                   <AppIcon name="Mail" size={16} />Email
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => {
-                  const text = encodeURIComponent(`Olá! Você foi convidado para se juntar ao *${activeUnit?.name || 'nosso time'}* no Garden Gestão.\n\nCrie sua conta pelo link:\n${lastInviteLink}`);
+                  const text = encodeURIComponent(`Olá! Você foi convidado para se juntar ao *${activeUnit?.name || 'nosso time'}* no Prodem Gestão.\n\nCrie sua conta pelo link:\n${lastInviteLink}`);
                   window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
                 }}>
                   <AppIcon name="MessageCircle" size={16} />WhatsApp

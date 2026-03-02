@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const ROUTE_KEY = 'garden_last_route';
+const ROUTE_KEY = 'prodem_last_route';
 
 // Routes that should NOT be persisted
 const IGNORE_ROUTES = ['/auth', '/landing', '/invite', '/onboarding'];

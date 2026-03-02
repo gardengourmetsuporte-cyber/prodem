@@ -21,7 +21,7 @@ const SUGGESTIONS = [
   { title: 'Taxa de Entrega', category: 'entrega', content: 'Ex: Taxa fixa de R$ 5,00 para até 5km.' },
   { title: 'Política de Cancelamento', category: 'politicas', content: 'Ex: Cancelamentos aceitos em até 5 minutos após a confirmação do pedido.' },
   { title: 'Informações sobre Alérgenos', category: 'geral', content: 'Ex: Nossos produtos podem conter glúten, lactose e oleaginosas. Consulte antes de pedir.' },
-  { title: 'Contato / Redes Sociais', category: 'contato', content: 'Ex: Instagram: @restaurante\nTelefone: (11) 99999-9999' },
+  { title: 'Contato / Redes Sociais', category: 'contato', content: 'Ex: Instagram: @prodem\nTelefone: (19) 99999-9999' },
 ];
 
 export function WhatsAppKnowledge() {

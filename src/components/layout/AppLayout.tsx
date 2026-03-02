@@ -197,7 +197,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
                 <img alt="Prodem Gestão" className="w-6 h-6 object-contain" src={prodemLogo} />
               </div>
               <span className="text-sm font-bold text-white truncate max-w-[140px] font-display" style={{ letterSpacing: '-0.02em' }}>
-                {activeUnit?.name || 'Garden'}
+                {activeUnit?.name || 'Prodem'}
               </span>
             </button>
 
@@ -255,7 +255,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
               <img alt="Prodem Gestão" className="w-7 h-7 object-contain" src={prodemLogo} />
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{activeUnit?.name || 'Garden'}</p>
+              <p className="text-sm font-bold text-white truncate">{activeUnit?.name || 'Prodem'}</p>
               <p className="text-[10px] text-primary/50 font-medium tracking-wide">Gestão Industrial</p>
             </div>
           </div>

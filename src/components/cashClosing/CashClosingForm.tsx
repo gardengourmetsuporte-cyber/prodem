@@ -156,7 +156,7 @@ export function CashClosingForm({ onSuccess }: Props) {
 
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-  // Cálculos conforme regra do restaurante:
+  // Cálculos conforme regra da unidade:
   // Dinheiro vendido = Dinheiro contado + Gastos - Caixa inicial
   const cashSold = cashCounted + totalExpenses - initialCash;
   // Total esperado no caixa = Caixa inicial + Dinheiro vendido - Gastos (= cashCounted)

@@ -33,7 +33,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_CACHE_KEY = 'garden_auth_cache';
+const AUTH_CACHE_KEY = 'prodem_auth_cache';
 
 function getCachedAuth() {
   try {

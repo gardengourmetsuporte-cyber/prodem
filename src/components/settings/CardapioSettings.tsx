@@ -388,7 +388,7 @@ export function CardapioSettings({ initialTab = null }: CardapioSettingsProps) {
             </h3>
             <div>
               <Label className="text-xs">Nome exibido</Label>
-              <Input placeholder="Nome do restaurante" defaultValue={activeUnit?.name || ''} />
+              <Input placeholder="Nome da unidade" defaultValue={activeUnit?.name || ''} />
             </div>
             <div>
               <Label className="text-xs">Descrição curta</Label>
