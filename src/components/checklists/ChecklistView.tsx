@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AppIcon } from '@/components/ui/app-icon';
@@ -40,7 +40,6 @@ const isToday = (dateStr: string): boolean => {
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   if (dateStr === todayStr) return true;
-  // Between midnight and 2 AM, also allow yesterday's checklist
   if (now.getHours() < 2) {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -49,6 +48,17 @@ const isToday = (dateStr: string): boolean => {
   }
   return false;
 };
+
+/** Format elapsed milliseconds as "Xh Ymin" or "Xmin Ys" */
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}h ${minutes.toString().padStart(2, '0')}min`;
+  if (minutes > 0) return `${minutes}min ${seconds.toString().padStart(2, '0')}s`;
+  return `${seconds}s`;
+}
 
 // Fallback icon based on sector name when icon field is null
 const sectorNameIconMap: Record<string, string> = {
@@ -131,6 +141,16 @@ export function ChecklistView({
   const [updatingQtyItemId, setUpdatingQtyItemId] = useState<string | null>(null);
   const [updateQtyValue, setUpdateQtyValue] = useState('');
   const [updateQtyLoading, setUpdateQtyLoading] = useState(false);
+  // Live timer tick for in-progress production items
+  const [timerTick, setTimerTick] = useState(0);
+
+  // Tick every second for live timers
+  useEffect(() => {
+    const hasInProgress = completions.some(c => (c as any).status === 'in_progress' && (c as any).started_at);
+    if (!hasInProgress) return;
+    const interval = setInterval(() => setTimerTick(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [completions]);
 
   useEffect(() => {
     if (!activeUnitId) return;
@@ -957,11 +977,19 @@ export function ChecklistView({
                                         const cs = getCrossShiftItemProgress ? getCrossShiftItemProgress(item.id) : null;
                                         const done = cs?.totalDone || (completion as any)?.quantity_done || 0;
                                         const target = cs?.targetQty || (item as any).target_quantity;
+                                        const startedAt = (completion as any)?.started_at;
+                                        const finishedAt = (completion as any)?.finished_at;
+                                        const duration = startedAt && finishedAt ? new Date(finishedAt).getTime() - new Date(startedAt).getTime() : null;
                                         return (
-                                          <div className="flex items-center gap-2 mt-1 text-[11px]">
+                                          <div className="flex items-center gap-2 mt-1 text-[11px] flex-wrap">
                                             <span className="text-success font-semibold">
                                               ✓ {done}/{target} peças
                                             </span>
+                                            {duration && duration > 0 && (
+                                              <span className="font-mono text-muted-foreground">
+                                                ⏱ {formatDuration(duration)}
+                                              </span>
+                                            )}
                                           </div>
                                         );
                                       })()}
@@ -1239,7 +1267,7 @@ export function ChecklistView({
                                         </div>
                                         {dimensions && <p className="text-xs text-primary font-mono mt-0.5">📐 {dimensions}</p>}
                                         {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
-                                        <div className="flex items-center gap-1.5 mt-1.5">
+                                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                                           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse">
                                             ⚙️ Em Produção
                                           </span>
@@ -1248,6 +1276,17 @@ export function ChecklistView({
                                               por {profiles.find(p => p.user_id === inProgressCompletion.completed_by)?.full_name || 'Usuário'} · {format(new Date(inProgressCompletion.completed_at), 'HH:mm')}
                                             </span>
                                           )}
+                                          {/* Live timer */}
+                                          {(() => {
+                                            const startedAt = (inProgressCompletion as any)?.started_at;
+                                            if (!startedAt) return null;
+                                            const elapsed = Date.now() - new Date(startedAt).getTime();
+                                            return (
+                                              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                                ⏱ {formatDuration(elapsed)}
+                                              </span>
+                                            );
+                                          })()}
                                         </div>
                                       </div>
                                       {configuredPoints > 0 && (

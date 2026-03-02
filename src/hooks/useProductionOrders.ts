@@ -40,6 +40,7 @@ export interface ProductionReportItem {
   quantity_pending: number;
   percent: number;
   status: 'complete' | 'partial' | 'not_started';
+  duration_ms: number | null;
 }
 
 export function useProductionOrders(unitId: string | null, date: Date) {
@@ -89,7 +90,7 @@ export function useProductionOrders(unitId: string | null, date: Date) {
       if (itemIds.length === 0) return [];
       const { data, error } = await supabase
         .from('checklist_completions')
-        .select('item_id, quantity_done, is_skipped')
+        .select('item_id, quantity_done, is_skipped, started_at, finished_at')
         .eq('date', dateStr)
         .in('item_id', itemIds);
       if (error) throw error;
@@ -102,11 +103,21 @@ export function useProductionOrders(unitId: string | null, date: Date) {
   const report = useMemo((): ProductionReportItem[] => {
     if (orderItems.length === 0) return [];
 
-    // Sum quantity_done per item
+    // Sum quantity_done per item + track duration
     const doneMap = new Map<string, number>();
+    const durationMap = new Map<string, number | null>();
     completions.forEach(c => {
       if (!c.is_skipped) {
         doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + (c.quantity_done || 1));
+        // Calculate duration from started_at/finished_at
+        const startedAt = (c as any).started_at;
+        const finishedAt = (c as any).finished_at;
+        if (startedAt && finishedAt) {
+          const dur = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+          const existing = durationMap.get(c.item_id);
+          // Sum durations across shifts
+          durationMap.set(c.item_id, (existing || 0) + dur);
+        }
       }
     });
 
@@ -123,6 +134,7 @@ export function useProductionOrders(unitId: string | null, date: Date) {
         quantity_pending: pending,
         percent: Math.min(percent, 100),
         status: percent >= 100 ? 'complete' : done > 0 ? 'partial' : 'not_started',
+        duration_ms: durationMap.get(oi.checklist_item_id) ?? null,
       };
     });
   }, [orderItems, completions]);

@@ -13,8 +13,23 @@ const statusConfig = {
   not_started: { bg: 'bg-destructive/10', text: 'text-destructive', icon: 'cancel', label: 'Pendente' },
 } as const;
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes.toString().padStart(2, '0')}min`;
+  if (minutes > 0) return `${minutes}min`;
+  return `${totalSeconds}s`;
+}
+
 export function ProductionReport({ report, totals }: ProductionReportProps) {
   if (report.length === 0) return null;
+
+  // Calculate average production time for items that have duration
+  const itemsWithDuration = report.filter(r => r.duration_ms && r.duration_ms > 0);
+  const avgDuration = itemsWithDuration.length > 0
+    ? itemsWithDuration.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / itemsWithDuration.length
+    : null;
 
   return (
     <div className="space-y-4">
@@ -24,7 +39,7 @@ export function ProductionReport({ report, totals }: ProductionReportProps) {
           <AppIcon name="BarChart3" size={20} className="text-white/80" />
           <h3 className="text-base font-bold text-white">Relatório de Produção</h3>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className={cn("grid gap-3", avgDuration ? "grid-cols-4" : "grid-cols-3")}>
           <div className="text-center">
             <p className="text-2xl font-black text-white">{totals.ordered}</p>
             <p className="text-[10px] text-white/60 uppercase tracking-wider">Pedido</p>
@@ -39,6 +54,14 @@ export function ProductionReport({ report, totals }: ProductionReportProps) {
             </p>
             <p className="text-[10px] text-white/60 uppercase tracking-wider">Pendente</p>
           </div>
+          {avgDuration && (
+            <div className="text-center">
+              <p className="text-2xl font-black text-white">⏱</p>
+              <p className="text-[10px] text-white/60 uppercase tracking-wider">
+                {formatDuration(avgDuration)} avg
+              </p>
+            </div>
+          )}
         </div>
         <div className="mt-4 w-full h-2 rounded-full bg-white/15 overflow-hidden">
           <div
@@ -67,6 +90,11 @@ export function ProductionReport({ report, totals }: ProductionReportProps) {
                 <p className="text-sm font-medium truncate">{item.item_name}</p>
                 {item.piece_dimensions && (
                   <p className="text-[10px] text-muted-foreground">{item.piece_dimensions}</p>
+                )}
+                {item.duration_ms && item.duration_ms > 0 && (
+                  <p className="text-[10px] text-muted-foreground font-mono">
+                    ⏱ {formatDuration(item.duration_ms)}
+                  </p>
                 )}
               </div>
               <div className="text-right shrink-0">

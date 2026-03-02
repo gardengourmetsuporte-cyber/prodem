@@ -406,6 +406,7 @@ export type Database = {
           contested_by: string | null
           contested_reason: string | null
           date: string
+          finished_at: string | null
           id: string
           is_contested: boolean
           is_skipped: boolean
@@ -414,6 +415,7 @@ export type Database = {
           photo_url: string | null
           points_awarded: number
           quantity_done: number
+          started_at: string | null
           status: string
           unit_id: string | null
         }
@@ -426,6 +428,7 @@ export type Database = {
           contested_by?: string | null
           contested_reason?: string | null
           date?: string
+          finished_at?: string | null
           id?: string
           is_contested?: boolean
           is_skipped?: boolean
@@ -434,6 +437,7 @@ export type Database = {
           photo_url?: string | null
           points_awarded?: number
           quantity_done?: number
+          started_at?: string | null
           status?: string
           unit_id?: string | null
         }
@@ -446,6 +450,7 @@ export type Database = {
           contested_by?: string | null
           contested_reason?: string | null
           date?: string
+          finished_at?: string | null
           id?: string
           is_contested?: boolean
           is_skipped?: boolean
@@ -454,6 +459,7 @@ export type Database = {
           photo_url?: string | null
           points_awarded?: number
           quantity_done?: number
+          started_at?: string | null
           status?: string
           unit_id?: string | null
         }
