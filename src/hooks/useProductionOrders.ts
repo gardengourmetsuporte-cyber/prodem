@@ -240,15 +240,38 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     let orderId = order?.id;
 
     if (!orderId) {
-      const insertData: any = { unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes, shift };
-      if (projectId) insertData.project_id = projectId;
-      const { data, error } = await supabase
+      // Double-check: look for an existing order to avoid duplicate key errors
+      let existingQuery = supabase
         .from('production_orders')
-        .insert(insertData)
         .select('id')
-        .single();
-      if (error) throw error;
-      orderId = data.id;
+        .eq('unit_id', unitId!)
+        .eq('date', dateStr)
+        .eq('shift', shift);
+      if (projectId) {
+        existingQuery = existingQuery.eq('project_id', projectId);
+      }
+      const { data: existing } = await existingQuery.maybeSingle();
+
+      if (existing?.id) {
+        // Order already exists — reuse it
+        orderId = existing.id;
+        const updateData: any = { notes, status: 'active', updated_at: new Date().toISOString() };
+        if (projectId !== undefined) updateData.project_id = projectId || null;
+        await supabase
+          .from('production_orders')
+          .update(updateData)
+          .eq('id', orderId);
+      } else {
+        const insertData: any = { unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes, shift };
+        if (projectId) insertData.project_id = projectId;
+        const { data, error } = await supabase
+          .from('production_orders')
+          .insert(insertData)
+          .select('id')
+          .single();
+        if (error) throw error;
+        orderId = data.id;
+      }
     } else {
       const updateData: any = { notes, status: 'active', updated_at: new Date().toISOString() };
       if (projectId !== undefined) updateData.project_id = projectId || null;
