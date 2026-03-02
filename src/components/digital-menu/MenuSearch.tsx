@@ -31,7 +31,7 @@ export function MenuSearch({ products, onSelectProduct }: Props) {
       <div className="relative">
         <AppIcon name="Search" size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar no cardápio..."
+          placeholder="Buscar peça ou produto..."
           value={query}
           onChange={e => setQuery(e.target.value)}
           className="pl-10 h-12 rounded-xl text-sm"
@@ -52,7 +52,7 @@ export function MenuSearch({ products, onSelectProduct }: Props) {
         <div>
           <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
             <AppIcon name="TrendingUp" size={14} className="text-primary" />
-            Populares
+            Destaques
           </h3>
           <div className="space-y-2">
             {highlighted.map(product => (

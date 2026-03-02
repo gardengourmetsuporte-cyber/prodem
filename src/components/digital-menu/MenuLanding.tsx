@@ -57,8 +57,11 @@ export function MenuLanding({ unit, unitInitials = '?' }: Props) {
           </div>
           <div className="pb-2 min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">{unit.name}</h1>
-            {cuisineType && (
+          {cuisineType && (
               <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{cuisineType}</p>
+            )}
+          {!cuisineType && (
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Engenharia Mecânica & Metalúrgica</p>
             )}
           </div>
         </div>
@@ -71,7 +74,7 @@ export function MenuLanding({ unit, unitInitials = '?' }: Props) {
               : 'bg-destructive/10 text-destructive'
           }`}>
             <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-destructive'}`} />
-            {isOpen ? 'Aberto agora' : 'Fechado'}
+            {isOpen ? 'Atendimento Online' : 'Fora do horário'}
           </div>
 
           {currentHours && (
@@ -81,12 +84,10 @@ export function MenuLanding({ unit, unitInitials = '?' }: Props) {
             </span>
           )}
 
-          {deliveryTime && (
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-              <AppIcon name="Timer" size={12} />
-              {deliveryTime}
-            </span>
-          )}
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <AppIcon name="Timer" size={12} />
+            {deliveryTime || 'Prazo sob consulta'}
+          </span>
         </div>
 
         {/* Address */}

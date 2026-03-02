@@ -166,7 +166,7 @@ export default function CardapioHub() {
               </h1>
               {activeUnit && (
                 <a href={`/m/${activeUnit.id}`} target="_blank" rel="noopener" className="flex items-center gap-1 text-xs text-primary font-medium">
-                  <AppIcon name="ExternalLink" size={14} /> Cardápio
+                  <AppIcon name="ExternalLink" size={14} /> Catálogo
                 </a>
               )}
             </div>
@@ -241,12 +241,12 @@ export default function CardapioHub() {
         <header className="page-header-bar">
           <div className="page-header-content flex items-center justify-between">
             <h1 className="text-lg font-bold flex items-center gap-2">
-              <AppIcon name="BookOpen" size={20} className="text-primary" />
-              Cardápio Digital
+              <AppIcon name="Package" size={20} className="text-primary" />
+              Catálogo de Produtos
             </h1>
             {activeUnit && (
               <a href={`/m/${activeUnit.id}`} target="_blank" rel="noopener" className="flex items-center gap-1 text-xs text-primary font-medium">
-                <AppIcon name="ExternalLink" size={14} /> Ver público
+                <AppIcon name="ExternalLink" size={14} /> Ver catálogo
               </a>
             )}
           </div>

@@ -136,16 +136,15 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'menu-admin', label: 'Cardápio Digital', icon: 'BookOpen', route: '/cardapio', routes: ['/cardapio', '/menu-admin', '/tablet-admin', '/gamification'], group: 'Ferramentas',
+    key: 'menu-admin', label: 'Catálogo de Produtos', icon: 'Package', route: '/cardapio', routes: ['/cardapio', '/menu-admin', '/tablet-admin'], group: 'Ferramentas',
     children: [
-      { key: 'menu-admin.view', label: 'Ver cardápio', icon: 'Eye' },
+      { key: 'menu-admin.view', label: 'Ver catálogo', icon: 'Eye' },
       { key: 'menu-admin.products', label: 'Gerenciar produtos', icon: 'PenSquare' },
-      { key: 'menu-admin.categories', label: 'Categorias do cardápio', icon: 'FolderTree' },
+      { key: 'menu-admin.categories', label: 'Categorias do catálogo', icon: 'FolderTree' },
       { key: 'menu-admin.options', label: 'Grupos de opcionais', icon: 'ListPlus' },
-      { key: 'menu-admin.orders', label: 'Pedidos em tempo real', icon: 'ShoppingCart' },
-      { key: 'menu-admin.tables', label: 'Mesas e QR Codes', icon: 'QrCode' },
+      { key: 'menu-admin.orders', label: 'Cotações recebidas', icon: 'FileText' },
+      { key: 'menu-admin.tables', label: 'QR Codes', icon: 'QrCode' },
       { key: 'menu-admin.pdv', label: 'Conexão PDV (Colibri)', icon: 'Monitor' },
-      { key: 'menu-admin.game', label: 'Roleta / Gamificação', icon: 'Dices' },
     ],
   },
   {
