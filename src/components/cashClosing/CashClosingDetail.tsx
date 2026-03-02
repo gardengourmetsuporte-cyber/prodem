@@ -36,7 +36,6 @@ import { AppIcon } from '@/components/ui/app-icon';
     const [isMarkingDivergent, setIsMarkingDivergent] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDivergentDialog, setShowDivergentDialog] = useState(false);
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [divergentNotes, setDivergentNotes] = useState('');
     const [showReceipt, setShowReceipt] = useState(false);
 
@@ -130,18 +129,24 @@ import { AppIcon } from '@/components/ui/app-icon';
      if (success) onClose();
    };
  
-     const handleDelete = async () => {
-       setIsDeleting(true);
-       try {
-         const success = await deleteClosing(closing.id);
-         if (success) {
-           setShowDeleteDialog(false);
-           onClose();
-         }
-       } finally {
-         setIsDeleting(false);
-       }
-     };
+    const handleDelete = async () => {
+      setIsDeleting(true);
+      try {
+        const success = await deleteClosing(closing.id);
+        if (success) {
+          onClose();
+        }
+      } finally {
+        setIsDeleting(false);
+      }
+    };
+
+    const handleDeleteWithConfirm = async () => {
+      if (isDeleting) return;
+      const confirmed = window.confirm('Tem certeza que deseja excluir este fechamento? Esta ação não pode ser desfeita.');
+      if (!confirmed) return;
+      await handleDelete();
+    };
  
    const status = getStatusConfig(closing.status);
 
@@ -196,7 +201,8 @@ import { AppIcon } from '@/components/ui/app-icon';
                   variant="ghost"
                   size="icon"
                   className="text-destructive"
-                  onClick={() => setShowDeleteDialog(true)}
+                  onClick={handleDeleteWithConfirm}
+                  disabled={isDeleting}
                 >
                   <AppIcon name="Trash2" className="w-5 h-5" />
                 </Button>
@@ -536,31 +542,6 @@ import { AppIcon } from '@/components/ui/app-icon';
          </AlertDialogContent>
        </AlertDialog>
  
-       {/* Delete Dialog */}
-       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-         <AlertDialogContent>
-           <AlertDialogHeader>
-             <AlertDialogTitle>Excluir Fechamento</AlertDialogTitle>
-             <AlertDialogDescription>
-                Tem certeza que deseja excluir este fechamento? Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleDelete();
-                }}
-                disabled={isDeleting}
-                className="bg-destructive hover:bg-destructive/90"
-              >
-                {isDeleting && <AppIcon name="Loader2" className="w-4 h-4 mr-2 animate-spin" />}
-                {isDeleting ? 'Excluindo...' : 'Excluir'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </ScrollArea>
     );
   }
