@@ -56,6 +56,7 @@ const Finance = lazy(() => lazyRetry(() => import("./pages/Finance")));
 const Inventory = lazy(() => lazyRetry(() => import("./pages/Inventory")));
 
 const Production = lazy(() => lazyRetry(() => import("./pages/Production")));
+const ProductionAnty = lazy(() => lazyRetry(() => import("./pages/ProductionAnty")));
 const Rewards = lazy(() => lazyRetry(() => import("./pages/Rewards")));
 const Settings = lazy(() => lazyRetry(() => import("./pages/Settings")));
 const NotFound = lazy(() => lazyRetry(() => import("./pages/NotFound")));
@@ -188,6 +189,7 @@ function AppRoutes() {
           <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
+          <Route path="/production-anty" element={<ProtectedRoute><ProductionAnty /></ProtectedRoute>} />
           <Route path="/checklists" element={<Navigate to="/production" replace />} />
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

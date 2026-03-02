@@ -64,6 +64,11 @@ export function BottomTabBar() {
         resolvedTabs.push(pt);
       }
     }
+
+    // TEMPORARY: Add Anty tab for user review
+    if (hasAccess('production')) {
+      resolvedTabs.splice(2, 0, { key: 'prod-anty', icon: 'FileSpreadsheet', label: 'Pr. Anty', path: '/production-anty', moduleKey: 'production' });
+    }
   }
 
   const leftTabs = resolvedTabs.slice(0, 2);
@@ -170,13 +175,13 @@ export function BottomTabBar() {
                     setQuickOpen(true);
                   }
                 }}
-                 className={cn(
-                   "absolute -top-7 w-[60px] h-[60px] rounded-full flex items-center justify-center transition-all duration-200 fab-gradient",
-                   "hover:scale-[1.08] active:scale-[0.92]"
-                 )}
-                 style={{
-                   boxShadow: '0 4px 20px hsl(25 85% 54% / 0.35), 0 8px 32px rgba(0,0,0,0.2)',
-                 }}
+                className={cn(
+                  "absolute -top-7 w-[60px] h-[60px] rounded-full flex items-center justify-center transition-all duration-200 fab-gradient",
+                  "hover:scale-[1.08] active:scale-[0.92]"
+                )}
+                style={{
+                  boxShadow: '0 4px 20px hsl(25 85% 54% / 0.35), 0 8px 32px rgba(0,0,0,0.2)',
+                }}
               >
                 <AppIcon
                   name={fabAction?.icon || 'Plus'}
