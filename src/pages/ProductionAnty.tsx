@@ -401,9 +401,9 @@ export default function ProductionAntyPage() {
                 onOpenChange={setProjectSheetOpen}
                 projects={projects}
                 sectors={sectors}
-                onCreateProject={() => { }}
-                onUpdateProject={() => { }}
-                onDeleteProject={() => { }}
+                onCreateProject={() => Promise.resolve('')}
+                onUpdateProject={() => Promise.resolve()}
+                onDeleteProject={() => Promise.resolve()}
             />
 
             <GroupingSheet

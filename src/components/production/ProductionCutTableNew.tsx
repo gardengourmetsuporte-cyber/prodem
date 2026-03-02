@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { AppIcon } from '@/components/ui/app-icon';
 import { cn } from '@/lib/utils';
 import { ProductionPiece } from '@/hooks/useProductionPieces';
@@ -11,14 +11,38 @@ interface Props {
   progressMap: Map<string, PieceProgress>;
   shippedByPiece: Map<string, number>;
   onTapPiece: (piece: ProductionPiece) => void;
+  onStartPiece: (piece: ProductionPiece) => void;
+  onFinishPiece: (piece: ProductionPiece) => void;
   onBack: () => void;
   onManageProject: () => void;
   isAdmin: boolean;
+  activePieceId?: string | null; // currently being worked on
+  activeStartedAt?: string | null; // when work started
+}
+
+function ElapsedTimer({ startedAt }: { startedAt: string }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const start = new Date(startedAt).getTime();
+    const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [startedAt]);
+
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  return (
+    <span className="font-mono text-[10px] text-warning font-bold">
+      {m}:{s.toString().padStart(2, '0')}
+    </span>
+  );
 }
 
 export function ProductionCutTableNew({
   project, pieces, progressMap, shippedByPiece,
-  onTapPiece, onBack, onManageProject, isAdmin,
+  onTapPiece, onStartPiece, onFinishPiece, onBack, onManageProject, isAdmin,
+  activePieceId, activeStartedAt,
 }: Props) {
   const [processFilter, setProcessFilter] = useState<string | null>(null);
 
@@ -115,84 +139,124 @@ export function ProductionCutTableNew({
         </span>
       </div>
 
-      {/* Table */}
+      {/* Pieces list - card-based for mobile */}
       {filteredPieces.length === 0 ? (
         <div className="text-center py-12 space-y-3">
           <AppIcon name="Package" size={28} className="text-muted-foreground/30 mx-auto" />
           <p className="text-xs font-bold text-muted-foreground">Nenhuma peça cadastrada</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border/40 bg-card/60">
-          <table className="w-full text-left font-sans whitespace-nowrap border-collapse">
-            <thead>
-              <tr className="bg-muted/40 border-b border-border/50 text-[10px] uppercase font-black tracking-widest text-muted-foreground">
-                <th className="px-3 py-2.5 border-r border-border/20">Cód.</th>
-                <th className="px-3 py-2.5 border-r border-border/20 min-w-[160px]">Descrição</th>
-                <th className="px-3 py-2.5 border-r border-border/20 text-center">mm</th>
-                <th className="px-3 py-2.5 border-r border-border/20 text-center">Rack</th>
-                <th className="px-3 py-2.5 border-r border-border/20 text-center">Total</th>
-                <th className="px-3 py-2.5 border-r border-border/20">Proc.</th>
-                <th className="px-3 py-2.5 text-center">Feito</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/20 text-[12px]">
-              {filteredPieces.map((piece, idx) => {
-                const prog = progressMap.get(piece.id);
-                const done = prog?.total_done || 0;
-                const isComplete = done >= piece.qty_total;
-                const isInProgress = prog?.in_progress || false;
-                const shipped = shippedByPiece.get(piece.id) || 0;
+        <div className="space-y-2">
+          {filteredPieces.map((piece) => {
+            const prog = progressMap.get(piece.id);
+            const done = prog?.total_done || 0;
+            const isComplete = done >= piece.qty_total;
+            const isActive = activePieceId === piece.id;
+            const shipped = shippedByPiece.get(piece.id) || 0;
+            const percent = piece.qty_total > 0 ? Math.round((done / piece.qty_total) * 100) : 0;
 
-                return (
-                  <tr
-                    key={piece.id}
-                    onClick={() => onTapPiece(piece)}
-                    className={cn(
-                      "transition-colors hover:bg-white/[0.04] cursor-pointer",
-                      idx % 2 === 0 ? "bg-card" : "bg-card/40",
-                      isComplete && "opacity-40"
-                    )}
-                  >
-                    <td className="px-3 py-2.5 border-r border-border/10 font-mono text-muted-foreground/80 text-[11px]">
-                      {piece.material_code || '-'}
-                    </td>
-                    <td className="px-3 py-2.5 border-r border-border/10 font-bold text-foreground truncate max-w-[200px]">
-                      {piece.description}
-                    </td>
-                    <td className="px-3 py-2.5 border-r border-border/10 text-center font-mono text-foreground/80">
-                      {piece.cut_length_mm || '-'}
-                    </td>
-                    <td className="px-3 py-2.5 border-r border-border/10 text-center font-mono text-muted-foreground">
-                      {piece.qty_per_rack || '-'}
-                    </td>
-                    <td className="px-3 py-2.5 border-r border-border/10 text-center font-black text-sm text-foreground">
-                      {piece.qty_total}
-                    </td>
-                    <td className="px-3 py-2.5 border-r border-border/10 text-muted-foreground uppercase tracking-widest text-[9px] font-black">
-                      {piece.process_type}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      {isComplete ? (
-                        <span className="inline-block px-2 py-0.5 rounded bg-success/20 text-success text-[10px] font-black">
-                          {done}/{piece.qty_total}
-                        </span>
-                      ) : isInProgress ? (
-                        <span className="inline-block px-2 py-0.5 rounded bg-warning/20 text-warning text-[10px] font-black animate-pulse">
-                          {done}/{piece.qty_total}
-                        </span>
-                      ) : done > 0 ? (
-                        <span className="inline-block px-2 py-0.5 rounded bg-primary/20 text-primary text-[10px] font-black">
-                          {done}/{piece.qty_total}
+            return (
+              <div
+                key={piece.id}
+                className={cn(
+                  "p-3 rounded-xl border transition-all",
+                  isActive
+                    ? "bg-warning/5 border-warning/40 ring-1 ring-warning/20"
+                    : isComplete
+                    ? "bg-success/5 border-success/20 opacity-60"
+                    : "bg-card border-border/30 hover:border-border/60",
+                )}
+              >
+                {/* Top row: code + description + process */}
+                <div className="flex items-start gap-2 mb-2" onClick={() => onTapPiece(piece)}>
+                  <div className="flex-1 min-w-0 cursor-pointer">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      {piece.material_code && (
+                        <span className="text-[10px] font-mono text-primary/80">{piece.material_code}</span>
+                      )}
+                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        {piece.process_type}
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold text-foreground leading-tight truncate">{piece.description}</p>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground font-mono">
+                      {piece.cut_length_mm && <span>{piece.cut_length_mm}mm</span>}
+                      <span>Rack: {piece.qty_per_rack || '-'}</span>
+                      <span className="font-bold text-foreground">Total: {piece.qty_total}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress + action row */}
+                <div className="flex items-center gap-3">
+                  {/* Mini progress */}
+                  <div className="flex-1 space-y-1">
+                    <div className="h-1.5 rounded-full bg-muted/20 overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          isComplete ? "bg-success" : isActive ? "bg-warning" : "bg-primary"
+                        )}
+                        style={{ width: `${Math.min(100, percent)}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className={cn(
+                        "font-bold",
+                        isComplete ? "text-success" : isActive ? "text-warning" : "text-muted-foreground"
+                      )}>
+                        {done}/{piece.qty_total}
+                      </span>
+                      {isActive && activeStartedAt && (
+                        <ElapsedTimer startedAt={activeStartedAt} />
+                      )}
+                      {shipped > 0 && (
+                        <span className="text-muted-foreground">📦 {shipped}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action button */}
+                  {!isComplete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isActive) {
+                          onFinishPiece(piece);
+                        } else {
+                          onStartPiece(piece);
+                        }
+                      }}
+                      className={cn(
+                        "px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all",
+                        isActive
+                          ? "bg-success text-success-foreground border-success hover:bg-success/90"
+                          : "bg-card text-muted-foreground border-border/50 hover:border-primary/50 hover:text-primary"
+                      )}
+                    >
+                      {isActive ? (
+                        <span className="flex items-center gap-1">
+                          <AppIcon name="Square" size={10} />
+                          PARAR
                         </span>
                       ) : (
-                        <span className="text-muted-foreground/40 text-[10px] font-mono">0/{piece.qty_total}</span>
+                        <span className="flex items-center gap-1">
+                          <AppIcon name="Play" size={10} />
+                          INICIAR
+                        </span>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </button>
+                  )}
+
+                  {isComplete && (
+                    <span className="px-3 py-1.5 rounded-lg bg-success/20 text-success text-[10px] font-black">
+                      ✓ OK
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
