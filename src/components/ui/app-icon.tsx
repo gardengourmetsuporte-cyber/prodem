@@ -16,6 +16,8 @@ interface AppIconProps {
 export const AppIcon = forwardRef<HTMLSpanElement, AppIconProps>(
   ({ name, size = 24, className, style, fill = 1, weight = 400 }, ref) => {
     const materialName = ICON_MAP[name] || name;
+    // progress_activity looks broken with FILL 1 — force outlined
+    const effectiveFill = materialName === 'progress_activity' ? 0 : fill;
 
     return (
       <span
@@ -27,7 +29,7 @@ export const AppIcon = forwardRef<HTMLSpanElement, AppIconProps>(
           height: size,
           overflow: 'hidden',
           display: 'inline-block',
-          fontVariationSettings: `'FILL' ${fill}, 'wght' ${weight}, 'GRAD' 0, 'opsz' ${size > 32 ? 48 : 24}`,
+          fontVariationSettings: `'FILL' ${effectiveFill}, 'wght' ${weight}, 'GRAD' 0, 'opsz' ${size > 32 ? 48 : 24}`,
           ...style,
         }}
       >
