@@ -16,8 +16,8 @@ export function EloList({ earnedPoints }: EloListProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <AppIcon name="Shield" size={16} style={{ color: 'hsl(156 60% 35%)' }} />
-          <h3 className="text-sm font-semibold text-foreground">Progressão de Elo</h3>
+          <AppIcon name="Shield" size={16} className="text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Patentes Prodem</h3>
         </div>
         <span className="text-xs text-muted-foreground">
           {elos.filter(e => e.unlocked).length}/{elos.length}
@@ -70,7 +70,7 @@ export function EloList({ earnedPoints }: EloListProps) {
                     {elo.title}
                   </p>
                   {elo.isCurrent && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'hsl(156 60% 35% / 0.12)', color: 'hsl(156 60% 35%)' }}>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/12 text-primary">
                       ATUAL
                     </span>
                   )}

@@ -1,6 +1,6 @@
 /**
- * Sistema de Rankings - Títulos e Molduras por Pontos Ganhos
- * Inspirado no sistema de elos do League of Legends
+ * Sistema de Rankings Prodem — Títulos Industriais por Pontos Ganhos
+ * Progressão baseada na hierarquia de uma indústria
  */
 
 export type RankEffect = 'none' | 'glow' | 'pulse' | 'double-ring' | 'orbit' | 'fire' | 'rainbow' | 'prisma';
@@ -26,7 +26,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 1500,
     info: {
-      title: 'Imortal',
+      title: 'Presidente',
       color: 'hsl(200 80% 80%)',
       borderColor: 'linear-gradient(135deg, hsl(200 90% 75%), hsl(280 80% 75%), hsl(340 80% 75%), hsl(60 80% 75%))',
       glow: '0 0 20px hsl(200 80% 80% / 0.5), 0 0 40px hsl(280 80% 75% / 0.3), 0 0 60px hsl(340 80% 70% / 0.15)',
@@ -38,7 +38,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 750,
     info: {
-      title: 'Mítico',
+      title: 'Diretor',
       color: 'hsl(280 80% 65%)',
       borderColor: 'rainbow',
       glow: '0 0 16px hsl(280 80% 65% / 0.5), 0 0 32px hsl(190 90% 55% / 0.3)',
@@ -50,7 +50,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 300,
     info: {
-      title: 'Lenda',
+      title: 'Engenheiro',
       color: 'hsl(var(--neon-red))',
       borderColor: 'hsl(var(--neon-red))',
       glow: '0 0 14px hsl(var(--neon-red) / 0.5), 0 0 28px hsl(var(--neon-red) / 0.2)',
@@ -62,7 +62,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 100,
     info: {
-      title: 'Mestre',
+      title: 'Supervisor',
       color: 'hsl(var(--neon-amber))',
       borderColor: 'hsl(var(--neon-amber))',
       glow: '0 0 12px hsl(var(--neon-amber) / 0.4), 0 0 24px hsl(var(--neon-amber) / 0.15)',
@@ -74,7 +74,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 50,
     info: {
-      title: 'Veterano',
+      title: 'Especialista',
       color: 'hsl(var(--neon-purple))',
       borderColor: 'hsl(var(--neon-purple))',
       glow: '0 0 10px hsl(var(--neon-purple) / 0.35)',
@@ -86,7 +86,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 25,
     info: {
-      title: 'Dedicado',
+      title: 'Técnico',
       color: 'hsl(var(--neon-cyan))',
       borderColor: 'hsl(var(--neon-cyan))',
       glow: '0 0 8px hsl(var(--neon-cyan) / 0.3)',
@@ -98,7 +98,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 10,
     info: {
-      title: 'Aprendiz',
+      title: 'Operador',
       color: 'hsl(var(--neon-green))',
       borderColor: 'hsl(var(--neon-green))',
       glow: '0 0 6px hsl(var(--neon-green) / 0.25)',
@@ -110,7 +110,7 @@ const RANKS: { min: number; info: Omit<RankInfo, 'level'> }[] = [
   {
     min: 0,
     info: {
-      title: 'Iniciante',
+      title: 'Ajudante',
       color: 'hsl(var(--muted-foreground))',
       borderColor: 'hsl(var(--border))',
       glow: 'none',
@@ -131,7 +131,7 @@ export function getRank(earnedPoints: number): RankInfo {
 }
 
 /**
- * Retorna o próximo rank e pontos necessários, ou null se já é Imortal
+ * Retorna o próximo rank e pontos necessários, ou null se já é Presidente
  */
 export function getNextRank(earnedPoints: number): { title: string; pointsNeeded: number } | null {
   const idx = RANKS.findIndex(r => earnedPoints >= r.min);
