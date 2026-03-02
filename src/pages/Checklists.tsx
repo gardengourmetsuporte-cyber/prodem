@@ -505,6 +505,27 @@ export default function ChecklistsPage() {
               </button>
             )}
 
+            {/* Edit plan card — admin only, plan exists */}
+            {!settingsMode && checklistType !== 'bonus' && isAdmin && hasProductionOrder && (
+              <button
+                onClick={() => setPlanSheetOpen(true)}
+                className="w-full rounded-2xl p-3 text-left transition-all bg-card ring-1 ring-border/40 hover:ring-primary/30 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <AppIcon name="ClipboardList" size={16} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-bold text-foreground">Pedido de Produção</span>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {productionTotals.ordered} peças · Toque para editar
+                    </p>
+                  </div>
+                  <AppIcon name="ChevronRight" size={16} className="text-muted-foreground" />
+                </div>
+              </button>
+            )}
+
             {/* Checklist Type Cards — always visible */}
             <div className="grid grid-cols-2 gap-3">
               {/* Abertura / Turno 1 Card */}
