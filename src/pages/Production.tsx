@@ -129,19 +129,8 @@ export default function ProductionPage() {
   return (
     <AppLayout>
       <div className="min-h-screen production-page-bg pb-24">
-        {/* Industrial Header Bar */}
-        <div className="production-header-bar px-4 py-3 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-warning/20 flex items-center justify-center">
-            <AppIcon name="Factory" size={20} className="text-warning" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-sm font-black uppercase tracking-wider text-foreground font-display">
-              Controle de Produção
-            </h1>
-            <p className="text-[10px] text-muted-foreground/70 uppercase tracking-widest">
-              Turno {currentShift} · Painel Industrial
-            </p>
-          </div>
+        {/* Header Bar */}
+        <div className="production-header-bar px-4 py-3 flex items-center justify-end gap-3">
           {/* Live indicator */}
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 ring-1 ring-success/30">
             <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
