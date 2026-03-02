@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CartItem } from '@/hooks/useDigitalMenu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { AppIcon } from '@/components/ui/app-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,9 +20,22 @@ interface Props {
 import { formatCurrency as formatPrice } from '@/lib/format';
 
 export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRemove, onClear }: Props) {
-  const [tableNumber, setTableNumber] = useState(mesa || '');
   const [sending, setSending] = useState(false);
   const [orderSent, setOrderSent] = useState<string | null>(null);
+
+  // Client contact fields
+  const [clientName, setClientName] = useState('');
+  const [clientCompany, setClientCompany] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientNotes, setClientNotes] = useState('');
+
+  const formatPhone = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
 
   if (orderSent) {
     return (
@@ -30,17 +44,17 @@ export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRe
           <AppIcon name="CheckCircle2" size={40} className="text-[hsl(var(--neon-green))]" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Pedido enviado!</h2>
+          <h2 className="text-2xl font-bold text-foreground">Cotação enviada!</h2>
           <p className="text-muted-foreground text-sm mt-2">
-            Pedido <span className="font-mono font-bold text-foreground">#{orderSent}</span>
+            Referência <span className="font-mono font-bold text-foreground">#{orderSent}</span>
           </p>
           <p className="text-muted-foreground text-xs mt-1">
-            Mesa {tableNumber || 'Balcão'} • {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            Entraremos em contato em breve
           </p>
         </div>
         <Button variant="outline" size="lg" className="rounded-xl mt-2" onClick={() => { setOrderSent(null); onClear(); }}>
           <AppIcon name="Plus" size={18} className="mr-2" />
-          Fazer novo pedido
+          Nova cotação
         </Button>
       </div>
     );
@@ -50,28 +64,40 @@ export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRe
     return (
       <div className="flex flex-col items-center justify-center px-4 py-20 text-center gap-4">
         <div className="w-16 h-16 rounded-2xl bg-secondary/50 flex items-center justify-center">
-          <AppIcon name="ShoppingBag" size={32} className="text-muted-foreground/30" />
+          <AppIcon name="FileText" size={32} className="text-muted-foreground/30" />
         </div>
         <div>
-          <p className="text-foreground font-semibold">Seu pedido está vazio</p>
-          <p className="text-xs text-muted-foreground mt-1">Volte ao cardápio e adicione itens</p>
+          <p className="text-foreground font-semibold">Sua cotação está vazia</p>
+          <p className="text-xs text-muted-foreground mt-1">Volte ao catálogo e adicione produtos</p>
         </div>
       </div>
     );
   }
 
   const handleSend = async () => {
-    if (!tableNumber.trim()) {
-      toast.error('Informe o número da mesa');
+    if (!clientName.trim()) {
+      toast.error('Informe seu nome');
+      return;
+    }
+    if (!clientPhone.trim()) {
+      toast.error('Informe seu telefone');
       return;
     }
     setSending(true);
     try {
+      const notesConcat = [
+        `Cliente: ${clientName.trim()}`,
+        clientCompany ? `Empresa: ${clientCompany.trim()}` : '',
+        `Tel: ${clientPhone.trim()}`,
+        clientEmail ? `Email: ${clientEmail.trim()}` : '',
+        clientNotes ? `Obs: ${clientNotes.trim()}` : '',
+      ].filter(Boolean).join(' | ');
+
       const { data: order, error: orderError } = await supabase
         .from('tablet_orders')
         .insert({
           unit_id: unitId,
-          table_number: parseInt(tableNumber) || 0,
+          table_number: 0,
           status: 'awaiting_confirmation',
           total: cartTotal,
         })
@@ -84,17 +110,17 @@ export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRe
         order_id: (order as any).id,
         product_id: c.product.id,
         quantity: c.quantity,
-        notes: [c.notes, c.selectedOptions.map(o => o.name).join(', ')].filter(Boolean).join(' | ') || null,
+        notes: [notesConcat, c.notes, c.selectedOptions.map(o => o.name).join(', ')].filter(Boolean).join(' | ') || null,
         unit_price: c.product.price + c.selectedOptions.reduce((s, o) => s + o.price, 0),
       }));
 
       const { error: itemsError } = await supabase.from('tablet_order_items').insert(items);
       if (itemsError) throw new Error(itemsError.message);
 
-      toast.success('Pedido enviado com sucesso!');
+      toast.success('Cotação enviada com sucesso!');
       setOrderSent((order as any).id.slice(0, 8));
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao enviar pedido');
+      toast.error(err.message || 'Erro ao enviar cotação');
     } finally {
       setSending(false);
     }
@@ -104,7 +130,7 @@ export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRe
     <div className="px-4 pb-28 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-foreground">
-          Seu Pedido
+          Sua Cotação
           <span className="text-sm font-normal text-muted-foreground ml-2">
             ({cart.reduce((s, i) => s + i.quantity, 0)} itens)
           </span>
@@ -166,25 +192,49 @@ export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRe
         </div>
         <div className="border-t border-border/30" />
         <div className="flex items-center justify-between">
-          <span className="font-bold text-foreground">Total</span>
+          <span className="font-bold text-foreground">Total estimado</span>
           <span className="text-xl font-bold text-primary">{formatPrice(cartTotal)}</span>
         </div>
+        <p className="text-[10px] text-muted-foreground">* Valores sujeitos a confirmação na cotação final</p>
       </div>
 
-      {/* Table input */}
-      {!mesa && (
-        <div className="rounded-2xl bg-card border border-border/30 p-4">
-          <label className="text-sm font-semibold text-foreground mb-2 block">Número da mesa</label>
-          <Input
-            placeholder="Ex: 5"
-            value={tableNumber}
-            onChange={e => setTableNumber(e.target.value)}
-            className="text-center h-14 text-xl font-bold rounded-xl"
-            type="number"
-            inputMode="numeric"
-          />
-        </div>
-      )}
+      {/* Client contact fields */}
+      <div className="rounded-2xl bg-card border border-border/30 p-4 space-y-3">
+        <h3 className="text-sm font-bold text-foreground">Seus dados para contato</h3>
+        <Input
+          placeholder="Nome completo *"
+          value={clientName}
+          onChange={e => setClientName(e.target.value)}
+          className="rounded-xl"
+        />
+        <Input
+          placeholder="Empresa"
+          value={clientCompany}
+          onChange={e => setClientCompany(e.target.value)}
+          className="rounded-xl"
+        />
+        <Input
+          placeholder="Telefone / WhatsApp *"
+          value={clientPhone}
+          onChange={e => setClientPhone(formatPhone(e.target.value))}
+          className="rounded-xl"
+          inputMode="tel"
+        />
+        <Input
+          placeholder="E-mail"
+          value={clientEmail}
+          onChange={e => setClientEmail(e.target.value)}
+          className="rounded-xl"
+          type="email"
+        />
+        <Textarea
+          placeholder="Observações gerais (especificações, prazos, etc.)"
+          value={clientNotes}
+          onChange={e => setClientNotes(e.target.value)}
+          rows={3}
+          className="resize-none text-sm rounded-xl"
+        />
+      </div>
 
       <Button className="w-full h-14 text-base font-bold rounded-xl" onClick={handleSend} disabled={sending}>
         {sending ? (
@@ -192,7 +242,7 @@ export function MenuCart({ cart, cartTotal, unitId, mesa, onUpdateQuantity, onRe
         ) : (
           <AppIcon name="Send" size={20} className="mr-2" />
         )}
-        Finalizar Pedido • {formatPrice(cartTotal)}
+        Solicitar Orçamento • {formatPrice(cartTotal)}
       </Button>
     </div>
   );

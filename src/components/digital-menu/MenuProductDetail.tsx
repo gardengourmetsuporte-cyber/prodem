@@ -99,7 +99,7 @@ export function MenuProductDetail({ product, optionGroups, open, onClose, onAddT
                 <h2 className="text-xl font-bold text-foreground leading-tight">{product.name}</h2>
                 {product.is_highlighted && (
                   <span className="shrink-0 px-2 py-1 rounded-lg bg-[hsl(var(--neon-amber)/0.12)] text-[hsl(var(--neon-amber))] text-[10px] font-bold">
-                    🔥 Popular
+                    ⭐ Destaque
                   </span>
                 )}
               </div>
@@ -181,7 +181,7 @@ export function MenuProductDetail({ product, optionGroups, open, onClose, onAddT
             </button>
             {showNotes && (
               <Textarea
-                placeholder="Ex: sem cebola, bem passado..."
+                placeholder="Especificar acabamento, quantidade exata, material, etc."
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 rows={2}

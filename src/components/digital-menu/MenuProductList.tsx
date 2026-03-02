@@ -123,7 +123,7 @@ function ProductCard({ product, onSelect }: { product: DMProduct; onSelect: (p: 
           <h3 className="font-semibold text-foreground text-sm leading-tight truncate">{product.name}</h3>
           {product.is_highlighted && (
             <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-[hsl(var(--neon-amber)/0.12)] text-[hsl(var(--neon-amber))] text-[9px] font-bold uppercase tracking-wide">
-              Popular
+              Destaque
             </span>
           )}
         </div>
