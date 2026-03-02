@@ -18,14 +18,7 @@ export function useProductionPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const currentDate = format(selectedDate, 'yyyy-MM-dd');
 
-  // Production orders for both shifts
-  const shift1 = useProductionOrders(activeUnitId, selectedDate, 1);
-  const shift2 = useProductionOrders(activeUnitId, selectedDate, 2);
-
-  // Active shift data
-  const activeShift = currentShift === 1 ? shift1 : shift2;
-
-  // Projects
+  // Projects (must come before orders so we can filter by project)
   const {
     projects, activeProjects: allActiveProjects, createProject, updateProject, deleteProject,
   } = useProductionProjects(activeUnitId);
@@ -62,7 +55,6 @@ export function useProductionPage() {
   });
 
   const activeProjects = useMemo(() => {
-    // Projects relevant to this date: have orders today OR are new (no orders anywhere yet)
     return allActiveProjects.filter(p =>
       dateProjectIds.includes(p.id) || !projectsWithOrders.includes(p.id)
     );
@@ -71,6 +63,14 @@ export function useProductionPage() {
   const activeProject = selectedProjectId
     ? activeProjects.find(p => p.id === selectedProjectId) || activeProjects[0] || null
     : activeProjects[0] || null;
+
+  // Production orders for both shifts — filtered by active project
+  const currentProjectId = activeProject?.id || null;
+  const shift1 = useProductionOrders(activeUnitId, selectedDate, 1, currentProjectId);
+  const shift2 = useProductionOrders(activeUnitId, selectedDate, 2, currentProjectId);
+
+  // Active shift data
+  const activeShift = currentShift === 1 ? shift1 : shift2;
 
   // Checklists (for sectors/items data and production actions)
   const {
@@ -97,12 +97,12 @@ export function useProductionPage() {
     const channel = supabase
       .channel('production-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist_completions' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, currentDate, 1] });
-        queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, currentDate, 2] });
+        queryClient.invalidateQueries({ queryKey: ['production-completions'] });
         fetchCompletions(currentDate, checklistType);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'production_orders' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['production-order', activeUnitId, currentDate] });
+        queryClient.invalidateQueries({ queryKey: ['production-order'] });
+        queryClient.invalidateQueries({ queryKey: ['production-date-project-ids'] });
       })
       .subscribe();
 
@@ -117,8 +117,6 @@ export function useProductionPage() {
 
   // Overall project progress (sum across all dates for this project)
   const projectProgress = useMemo(() => {
-    // Shift 2 inherits pending from shift 1, so total ordered = shift1 ordered (the original plan)
-    // Total done = sum of both shifts
     const totalOrdered = shift1.totals.ordered || shift2.totals.ordered;
     const totalDone = shift1.totals.done + shift2.totals.done;
     const totalPending = Math.max(0, totalOrdered - totalDone);
