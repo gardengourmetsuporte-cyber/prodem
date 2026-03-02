@@ -124,7 +124,7 @@ export default function ChecklistsPage() {
     order: productionOrder, orderItems: productionItems, report: productionReport,
     totals: productionTotals, hasOrder: hasProductionOrder,
     isShift1Closed,
-    saveOrder, closeOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate,
+    saveOrder, closeOrder, deleteOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate,
   } = useProductionOrders(activeUnitId, selectedDate, currentShift);
 
   // Also fetch both shifts independently for card progress
@@ -503,6 +503,15 @@ export default function ChecklistsPage() {
                 onReopenShift={async () => {
                   await reopenOrder();
                   toast.success('Turno reaberto com sucesso!');
+                }}
+                onDeletePlan={async () => {
+                  if (!confirm('Tem certeza que deseja apagar o plano e todos os registros de produção do dia? Esta ação não pode ser desfeita.')) return;
+                  try {
+                    await deleteOrder();
+                    toast.success('Plano apagado! Você pode criar um novo.');
+                  } catch (err) {
+                    toast.error('Erro ao apagar plano');
+                  }
                 }}
               />
             )}

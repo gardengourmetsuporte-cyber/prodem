@@ -12,11 +12,12 @@ interface ProductionDayCardProps {
   onViewReport: () => void;
   onCloseShift: () => void;
   onReopenShift?: () => void;
+  onDeletePlan?: () => void;
 }
 
 export function ProductionDayCard({
   order, totals, isAdmin, currentShift, isShift1Closed,
-  onCreatePlan, onViewReport, onCloseShift, onReopenShift,
+  onCreatePlan, onViewReport, onCloseShift, onReopenShift, onDeletePlan,
 }: ProductionDayCardProps) {
   if (!order) {
     if (!isAdmin) return null;
@@ -118,6 +119,17 @@ export function ProductionDayCard({
         >
           <AppIcon name="RotateCcw" size={16} />
           Reabrir Turno 2
+        </button>
+      )}
+
+      {/* Delete plan button — admin only, any shift */}
+      {isAdmin && onDeletePlan && (
+        <button
+          onClick={onDeletePlan}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-card border border-destructive/30 hover:bg-destructive/5 transition-colors text-sm font-semibold text-destructive"
+        >
+          <AppIcon name="Trash2" size={16} />
+          Apagar plano e recomeçar
         </button>
       )}
     </div>

@@ -256,6 +256,29 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     invalidate();
   }, [order?.id, invalidate]);
 
+  // Delete order and all its items + completions
+  const deleteOrder = useCallback(async () => {
+    if (!order?.id) return;
+    // Delete completions for today's items
+    const itemIds = orderItems.map(i => i.checklist_item_id);
+    if (itemIds.length > 0) {
+      await supabase
+        .from('checklist_completions')
+        .delete()
+        .in('item_id', itemIds)
+        .eq('date', dateStr)
+        .eq('unit_id', unitId!);
+    }
+    // Delete order items then order
+    await supabase.from('production_order_items').delete().eq('order_id', order.id);
+    await supabase.from('production_orders').delete().eq('id', order.id);
+    invalidate();
+    // Also invalidate checklist caches
+    queryClient.invalidateQueries({ queryKey: ['checklist-completions'] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-checklist-completions'] });
+  }, [order?.id, orderItems, dateStr, unitId, invalidate, queryClient]);
+
   // Reopen a closed shift
   const reopenOrder = useCallback(async () => {
     if (!order?.id) return;
@@ -342,6 +365,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     shift2Order,
     saveOrder,
     closeOrder,
+    deleteOrder,
     reopenOrder,
     closeShiftAndCreateNext,
     copyFromDate,
