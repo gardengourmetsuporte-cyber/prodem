@@ -129,11 +129,13 @@ import { AppIcon } from '@/components/ui/app-icon';
      if (success) onClose();
    };
  
-   const handleDelete = async () => {
-     const success = await deleteClosing(closing.id);
-     setShowDeleteDialog(false);
-     if (success) onClose();
-   };
+    const handleDelete = async () => {
+      const success = await deleteClosing(closing.id);
+      if (success) {
+        onClose();
+      }
+      setShowDeleteDialog(false);
+    };
  
    const status = getStatusConfig(closing.status);
 
