@@ -500,6 +500,8 @@ export default function ChecklistsPage() {
                   await reopenOrder();
                   toast.success('Turno reaberto com sucesso!');
                 }}
+                shift1={{ order: shift1Hook.order, totals: shift1Hook.totals }}
+                shift2={shift2Hook.hasOrder ? { order: shift2Hook.order, totals: shift2Hook.totals } : undefined}
               />
             )}
 
