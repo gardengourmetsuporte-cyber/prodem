@@ -27,11 +27,6 @@ export default function ProductionPage() {
   const [selectedPiece, setSelectedPiece] = useState<ProductionPiece | null>(null);
   const [projectSheetOpen, setProjectSheetOpen] = useState(false);
 
-  // Active task tracking
-  const [activePieceId, setActivePieceId] = useState<string | null>(null);
-  const [activeStartedAt, setActiveStartedAt] = useState<string | null>(null);
-  const [activeLogId, setActiveLogId] = useState<string | null>(null);
-
   // PIN dialog
   const [pinOpen, setPinOpen] = useState(false);
   const [pinPiece, setPinPiece] = useState<ProductionPiece | null>(null);
@@ -43,6 +38,30 @@ export default function ProductionPage() {
   const [finishOpen, setFinishOpen] = useState(false);
   const [finishPiece, setFinishPiece] = useState<ProductionPiece | null>(null);
   const [finishElapsed, setFinishElapsed] = useState(0);
+
+  // Detect active (open) log from DB instead of local state
+  const { data: activeLog = null, refetch: refetchActiveLog } = useQuery<{ id: string; piece_id: string; started_at: string } | null>({
+    queryKey: ['active-production-log', selectedProjectId],
+    queryFn: async () => {
+      if (!selectedProjectId || !activeUnitId) return null;
+      const { data, error } = await (supabase.from('production_logs') as any)
+        .select('id, piece_id, started_at')
+        .eq('project_id', selectedProjectId)
+        .eq('unit_id', activeUnitId)
+        .not('started_at', 'is', null)
+        .is('finished_at', null)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data || null;
+    },
+    enabled: !!selectedProjectId && !!activeUnitId,
+    refetchInterval: 5_000,
+  });
+
+  const activePieceId = activeLog?.piece_id || null;
+  const activeStartedAt = activeLog?.started_at || null;
+  const activeLogId = activeLog?.id || null;
 
   // Projects
   const { projects, createProject, updateProject, deleteProject, isLoading: projectsLoading } = useProductionProjects(activeUnitId);
@@ -121,9 +140,6 @@ export default function ProductionPage() {
 
   const handleBack = useCallback(() => {
     setSelectedProjectId(null);
-    setActivePieceId(null);
-    setActiveStartedAt(null);
-    setActiveLogId(null);
   }, []);
 
   // Validate PIN against employees table
@@ -152,18 +168,14 @@ export default function ProductionPage() {
     setPinOpen(true);
   }, [activePieceId]);
 
-  // Handle FINISH piece
+  // Handle FINISH piece — ask for PIN first (to identify who is finishing)
   const handleFinishPiece = useCallback((piece: ProductionPiece) => {
     if (activePieceId !== piece.id) return;
-
-    const elapsed = activeStartedAt
-      ? Math.floor((Date.now() - new Date(activeStartedAt).getTime()) / 1000)
-      : 0;
-
-    setFinishPiece(piece);
-    setFinishElapsed(elapsed);
-    setFinishOpen(true);
-  }, [activePieceId, activeStartedAt]);
+    setPinPiece(piece);
+    setPinAction('finish');
+    setPinError('');
+    setPinOpen(true);
+  }, [activePieceId]);
 
   // PIN confirmed
   const handlePinConfirm = useCallback(async (pin: string) => {
@@ -181,7 +193,6 @@ export default function ProductionPage() {
     setPinOpen(false);
 
     if (pinAction === 'start' && pinPiece) {
-      // Create log entry with started_at, no finished_at
       const now = new Date().toISOString();
       try {
         const logEntry = {
@@ -196,19 +207,26 @@ export default function ProductionPage() {
           machine_ref: null,
           date: format(new Date(), 'yyyy-MM-dd'),
         };
-        const { data, error } = await (supabase.from('production_logs') as any).insert(logEntry).select('id').single();
-
+        const { error } = await (supabase.from('production_logs') as any).insert(logEntry).select('id').single();
         if (error) throw error;
 
-        setActivePieceId(pinPiece.id);
-        setActiveStartedAt(now);
-        setActiveLogId(data?.id || null);
+        await refetchActiveLog();
         toast.success(`Tarefa iniciada: ${pinPiece.description}`);
       } catch (err: any) {
         toast.error(err.message || 'Erro ao iniciar');
       }
     }
-  }, [pinAction, pinPiece, activeUnitId, user, validatePin]);
+
+    if (pinAction === 'finish' && pinPiece) {
+      // Open the finish dialog with elapsed time
+      const elapsed = activeStartedAt
+        ? Math.floor((Date.now() - new Date(activeStartedAt).getTime()) / 1000)
+        : 0;
+      setFinishPiece(pinPiece);
+      setFinishElapsed(elapsed);
+      setFinishOpen(true);
+    }
+  }, [pinAction, pinPiece, activeUnitId, user, validatePin, activeStartedAt, refetchActiveLog]);
 
   // Finish confirmed with quantity
   const handleFinishConfirm = useCallback(async (quantity: number, machineRef?: string) => {
@@ -218,20 +236,19 @@ export default function ProductionPage() {
     try {
       await updateLog(activeLogId, {
         finished_at: now,
+        finished_by: user?.id || null,
         quantity_done: quantity,
         machine_ref: machineRef || null,
       } as any);
 
       toast.success(`${quantity} unidades registradas!`);
-      setActivePieceId(null);
-      setActiveStartedAt(null);
-      setActiveLogId(null);
       setFinishPiece(null);
+      await refetchActiveLog();
     } catch (err: any) {
       toast.error(err.message || 'Erro ao finalizar');
       throw err;
     }
-  }, [activeLogId, finishPiece, updateLog]);
+  }, [activeLogId, finishPiece, updateLog, user, refetchActiveLog]);
 
   if (projectsLoading) {
     return (
