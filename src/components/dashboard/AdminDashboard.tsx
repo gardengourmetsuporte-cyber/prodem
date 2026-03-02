@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUnit } from '@/contexts/UnitContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUserModules } from '@/hooks/useAccessLevels';
-import type { ProductionReportItem } from '@/hooks/useProductionOrders';
+
 import { AppIcon } from '@/components/ui/app-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
@@ -29,75 +29,72 @@ export function AdminDashboard() {
   const { data: productionRealtime, isLoading: prodLoading } = useQuery({
     queryKey: ['dashboard-production-realtime', activeUnitId],
     queryFn: async () => {
-      const empty = { report: [] as ProductionReportItem[], totals: { done: 0, ordered: 0, percent: 0 } };
+      type PieceReport = { id: string; name: string; qty_ordered: number; qty_done: number; status: 'complete' | 'partial' | 'in_progress' | 'not_started' };
+      type OSReport = { id: string; project_number: string; description: string; client: string | null; pieces: PieceReport[]; done: number; ordered: number; percent: number };
+      const empty = { osList: [] as OSReport[], totals: { done: 0, ordered: 0, percent: 0 } };
       if (!activeUnitId) return empty;
 
       const { data: activeProjects, error: projectsError } = await supabase
         .from('production_projects')
-        .select('id')
+        .select('id, project_number, description, client')
         .eq('unit_id', activeUnitId)
         .eq('status', 'active');
       if (projectsError) throw projectsError;
+      if (!activeProjects || activeProjects.length === 0) return empty;
 
-      const projectIds = (activeProjects || []).map((p: any) => p.id);
-      if (projectIds.length === 0) return empty;
+      const projectIds = activeProjects.map((p: any) => p.id);
 
       const { data: pieces, error: piecesError } = await supabase
         .from('production_pieces')
-        .select('id, description, cut_length_mm, qty_total')
+        .select('id, project_id, description, qty_total')
         .in('project_id', projectIds);
       if (piecesError) throw piecesError;
-      if (!pieces || pieces.length === 0) return empty;
 
-      const pieceIds = pieces.map((p: any) => p.id);
-      const { data: logs, error: logsError } = await (supabase.from('production_logs') as any)
-        .select('piece_id, quantity_done, started_at, finished_at')
-        .in('piece_id', pieceIds);
-      if (logsError) throw logsError;
+      const pieceIds = (pieces || []).map((p: any) => p.id);
+      let doneMap = new Map<string, number>();
+      let inProgressMap = new Map<string, boolean>();
 
-      const doneMap = new Map<string, number>();
-      const inProgressMap = new Map<string, boolean>();
-      (logs || []).forEach((log: any) => {
-        doneMap.set(log.piece_id, (doneMap.get(log.piece_id) || 0) + Number(log.quantity_done || 0));
-        if (log.started_at && !log.finished_at) inProgressMap.set(log.piece_id, true);
+      if (pieceIds.length > 0) {
+        const { data: logs } = await (supabase.from('production_logs') as any)
+          .select('piece_id, quantity_done, started_at, finished_at')
+          .in('piece_id', pieceIds);
+        (logs || []).forEach((log: any) => {
+          doneMap.set(log.piece_id, (doneMap.get(log.piece_id) || 0) + Number(log.quantity_done || 0));
+          if (log.started_at && !log.finished_at) inProgressMap.set(log.piece_id, true);
+        });
+      }
+
+      const osList: OSReport[] = activeProjects.map((proj: any) => {
+        const projPieces = (pieces || []).filter((p: any) => p.project_id === proj.id);
+        const piecesReport: PieceReport[] = projPieces.map((piece: any) => {
+          const done = doneMap.get(piece.id) || 0;
+          const ordered = Number(piece.qty_total || 0);
+          const pct = ordered > 0 ? Math.round((done / ordered) * 100) : 0;
+          const status: PieceReport['status'] =
+            pct >= 100 ? 'complete' :
+            done > 0 ? 'partial' :
+            inProgressMap.get(piece.id) ? 'in_progress' : 'not_started';
+          return { id: piece.id, name: piece.description || 'Peça', qty_ordered: ordered, qty_done: done, status };
+        });
+        const done = piecesReport.reduce((s, p) => s + p.qty_done, 0);
+        const ordered = piecesReport.reduce((s, p) => s + p.qty_ordered, 0);
+        const percent = ordered > 0 ? Math.round((done / ordered) * 100) : 0;
+        return { id: proj.id, project_number: proj.project_number, description: proj.description, client: proj.client, pieces: piecesReport, done, ordered, percent };
       });
 
-      const report: ProductionReportItem[] = (pieces || []).map((piece: any) => {
-        const quantity_done = doneMap.get(piece.id) || 0;
-        const quantity_ordered = Number(piece.qty_total || 0);
-        const quantity_pending = Math.max(0, quantity_ordered - quantity_done);
-        const percent = quantity_ordered > 0 ? Math.min(100, Math.round((quantity_done / quantity_ordered) * 100)) : 0;
-        const status: ProductionReportItem['status'] =
-          percent >= 100 ? 'complete' :
-          quantity_done > 0 ? 'partial' :
-          inProgressMap.get(piece.id) ? 'in_progress' : 'not_started';
+      const totalDone = osList.reduce((s, os) => s + os.done, 0);
+      const totalOrdered = osList.reduce((s, os) => s + os.ordered, 0);
+      const totalPercent = totalOrdered > 0 ? Math.round((totalDone / totalOrdered) * 100) : 0;
 
-        return {
-          checklist_item_id: piece.id,
-          item_name: piece.description || 'Peça',
-          piece_dimensions: piece.cut_length_mm ? `${piece.cut_length_mm}mm` : null,
-          quantity_ordered,
-          quantity_done,
-          quantity_pending,
-          percent,
-          status,
-          duration_ms: null,
-        };
-      });
-
-      const ordered = report.reduce((sum, item) => sum + item.quantity_ordered, 0);
-      const done = report.reduce((sum, item) => sum + item.quantity_done, 0);
-      const percent = ordered > 0 ? Math.round((done / ordered) * 100) : 0;
-
-      return { report, totals: { done, ordered, percent } };
+      return { osList, totals: { done: totalDone, ordered: totalOrdered, percent: totalPercent } };
     },
     enabled: !!activeUnitId,
     refetchInterval: 10_000,
   });
 
-  const report = productionRealtime?.report || [];
+  const osList = productionRealtime?.osList || [];
   const totals = productionRealtime?.totals || { done: 0, ordered: 0, percent: 0 };
-  const hasOrder = report.length > 0;
+  const hasOrder = osList.length > 0;
 
   const isReady = !statsLoading && !modulesLoading && !!profile;
 
@@ -141,7 +138,7 @@ export function AdminDashboard() {
       {hasAccess('checklists') && (
         <div className="animate-spring-in spring-stagger-1">
           <ProductionFlightBoard
-            report={report}
+            osList={osList}
             totals={totals}
             hasOrder={hasOrder}
             isLoading={prodLoading}
@@ -254,17 +251,20 @@ export function AdminDashboard() {
 }
 
 /* ════════════════════════════════════════════
-   PRODUCTION FLIGHT BOARD — Airport-style
+   PRODUCTION FLIGHT BOARD — Per-OS breakdown
    ════════════════════════════════════════════ */
 
+type PieceReport = { id: string; name: string; qty_ordered: number; qty_done: number; status: 'complete' | 'partial' | 'in_progress' | 'not_started' };
+type OSReport = { id: string; project_number: string; description: string; client: string | null; pieces: PieceReport[]; done: number; ordered: number; percent: number };
+
 function ProductionFlightBoard({
-  report,
+  osList,
   totals,
   hasOrder,
   isLoading,
   onNavigate,
 }: {
-  report: ProductionReportItem[];
+  osList: OSReport[];
   totals: { done: number; ordered: number; percent: number };
   hasOrder: boolean;
   isLoading: boolean;
@@ -300,35 +300,72 @@ function ProductionFlightBoard({
           </div>
         </div>
 
-        {!hasOrder || report.length === 0 ? (
+        {!hasOrder ? (
           <div className="text-center py-8 px-4">
             <AppIcon name="Factory" size={32} className="text-muted-foreground/20 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Nenhum plano de produção hoje</p>
+            <p className="text-sm text-muted-foreground">Nenhum plano de produção ativo</p>
           </div>
         ) : (
           <>
-            {/* KPI Strip */}
+            {/* Global KPI Strip */}
             <div className="grid grid-cols-3 gap-0 border-b border-white/[0.06]">
               <FlightKpi label="FEITAS" value={totals.done} accent={totals.done > 0 ? 'success' : undefined} />
               <FlightKpi label="PLANEJADAS" value={totals.ordered} border />
               <FlightKpi label="PROGRESSO" value={`${totals.percent}%`} accent={totals.percent >= 100 ? 'success' : totals.percent > 0 ? 'warning' : undefined} />
             </div>
 
-            {/* Table header */}
-            <div className="grid grid-cols-[1fr_80px_72px] gap-0 px-4 py-2 border-b border-white/[0.04] bg-white/[0.01]">
-              <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-muted-foreground/50">PEÇA</span>
-              <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-muted-foreground/50 text-center">QTD</span>
-              <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-muted-foreground/50 text-right">STATUS</span>
-            </div>
+            {/* Per-OS sections */}
+            <div className="divide-y divide-white/[0.06]">
+              {osList.map(os => (
+                <div key={os.id}>
+                  {/* OS header */}
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.02]">
+                    <span className="text-xs font-bold text-primary">OS {os.project_number}</span>
+                    {os.client && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary/60 text-muted-foreground font-medium truncate max-w-[120px]">
+                        {os.client}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-muted-foreground truncate flex-1">{os.description}</span>
+                    <span className={cn(
+                      "text-[10px] font-bold tabular-nums",
+                      os.percent >= 100 ? 'text-success' : os.percent > 0 ? 'text-warning' : 'text-muted-foreground'
+                    )}>
+                      {os.percent}%
+                    </span>
+                  </div>
 
-            {/* Rows */}
-            <div className="divide-y divide-white/[0.04]">
-              {report.map((item, idx) => (
-                <FlightRow key={item.checklist_item_id} item={item} index={idx} />
+                  {/* Pieces table header */}
+                  <div className="grid grid-cols-[1fr_80px_72px] gap-0 px-4 py-1.5 border-b border-white/[0.04] bg-white/[0.01]">
+                    <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-muted-foreground/50">PEÇA</span>
+                    <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-muted-foreground/50 text-center">QTD</span>
+                    <span className="text-[9px] font-bold tracking-[0.15em] uppercase text-muted-foreground/50 text-right">STATUS</span>
+                  </div>
+
+                  {/* Piece rows */}
+                  <div className="divide-y divide-white/[0.04]">
+                    {os.pieces.map((piece, idx) => (
+                      <FlightRow key={piece.id} piece={piece} index={idx} />
+                    ))}
+                  </div>
+
+                  {/* OS progress bar */}
+                  <div className="px-4 py-2 bg-white/[0.02]">
+                    <div className="relative h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-1000",
+                          os.percent >= 100 ? 'bg-success' : os.percent > 0 ? 'bg-primary' : 'bg-muted-foreground/20'
+                        )}
+                        style={{ width: `${Math.min(os.percent, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
 
-            {/* Progress bar at bottom */}
+            {/* Global progress bar at bottom */}
             <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.06]">
               <div className="relative h-2 rounded-full bg-secondary overflow-hidden">
                 <div
@@ -360,7 +397,7 @@ function FlightKpi({ label, value, accent, border }: { label: string; value: num
   );
 }
 
-function FlightRow({ item, index }: { item: ProductionReportItem; index: number }) {
+function FlightRow({ piece, index }: { piece: PieceReport; index: number }) {
   const statusConfig = {
     complete: { label: 'CONCLUÍDO', bg: 'bg-success/15', text: 'text-success', dot: 'bg-success' },
     partial: { label: 'PARCIAL', bg: 'bg-warning/15', text: 'text-warning', dot: 'bg-warning' },
@@ -368,40 +405,34 @@ function FlightRow({ item, index }: { item: ProductionReportItem; index: number 
     not_started: { label: 'AGUARDANDO', bg: 'bg-muted/50', text: 'text-muted-foreground', dot: 'bg-muted-foreground/40' },
   };
 
-  const s = statusConfig[item.status];
+  const s = statusConfig[piece.status];
 
   return (
     <div
       className={cn(
         "grid grid-cols-[1fr_80px_72px] gap-0 items-center px-4 py-2.5 transition-colors hover:bg-white/[0.02]",
-        item.status === 'in_progress' && 'bg-primary/[0.03]'
+        piece.status === 'in_progress' && 'bg-primary/[0.03]'
       )}
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      {/* Name */}
       <div className="min-w-0">
         <p className={cn(
           "text-sm font-semibold truncate",
-          item.status === 'complete' ? 'text-success' : item.status === 'in_progress' || item.status === 'partial' ? 'text-foreground' : 'text-muted-foreground'
+          piece.status === 'complete' ? 'text-success' : piece.status === 'in_progress' || piece.status === 'partial' ? 'text-foreground' : 'text-muted-foreground'
         )}>
-          {item.item_name}
+          {piece.name}
         </p>
-        {item.piece_dimensions && (
-          <p className="text-[10px] text-muted-foreground/50 truncate">{item.piece_dimensions}</p>
-        )}
       </div>
 
-      {/* Quantity */}
       <div className="text-center">
         <span className={cn(
           "text-sm font-bold tabular-nums",
-          item.status === 'complete' ? 'text-success' : item.status === 'in_progress' || item.status === 'partial' ? 'text-warning' : 'text-muted-foreground'
+          piece.status === 'complete' ? 'text-success' : piece.status === 'in_progress' || piece.status === 'partial' ? 'text-warning' : 'text-muted-foreground'
         )}>
-          {item.quantity_done}<span className="text-muted-foreground/40">/{item.quantity_ordered}</span>
+          {piece.qty_done}<span className="text-muted-foreground/40">/{piece.qty_ordered}</span>
         </span>
       </div>
 
-      {/* Status badge */}
       <div className="flex justify-end">
         <div className={cn("flex items-center gap-1.5 px-2 py-1 rounded-md", s.bg)}>
           <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", s.dot)} />
