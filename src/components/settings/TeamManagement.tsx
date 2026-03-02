@@ -106,7 +106,7 @@ export function TeamManagement() {
 
   const getInviteLink = (token: string) => {
     // Always use published URL so invite links work when shared
-    return `https://garden-gestao.lovable.app/invite?token=${token}`;
+    return `https://prodem.lovable.app/invite?token=${token}`;
   };
 
   const copyLink = (token: string) => {
@@ -190,7 +190,7 @@ export function TeamManagement() {
                   size="sm"
                   className="flex-1 gap-2"
                   onClick={() => {
-                    const text = encodeURIComponent(`Olá! Você foi convidado para se juntar ao *${activeUnit?.name || 'nosso time'}* no Garden Gestão.\n\nCrie sua conta pelo link:\n${lastInviteLink}`);
+                    const text = encodeURIComponent(`Olá! Você foi convidado para se juntar ao *${activeUnit?.name || 'nosso time'}* no Prodem Gestão.\n\nCrie sua conta pelo link:\n${lastInviteLink}`);
                     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
                   }}
                 >

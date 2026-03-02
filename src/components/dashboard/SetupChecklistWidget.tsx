@@ -52,7 +52,7 @@ export function SetupChecklistWidget() {
           </div>
           <div>
             <h3 className="text-sm font-bold text-foreground font-display" style={{ letterSpacing: '-0.02em' }}>
-              Configure seu restaurante
+              Configure sua unidade
             </h3>
             <p className="text-[11px] text-muted-foreground">
               {completedCount}/{totalCount} concluídos

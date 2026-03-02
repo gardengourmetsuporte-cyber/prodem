@@ -556,7 +556,7 @@ export default function Auth() {
 
         {/* Footer */}
         <div className="p-4 text-center text-xs text-muted-foreground/40">
-          © {new Date().getFullYear()} Garden — Gestão Inteligente
+          © {new Date().getFullYear()} Prodem — Gestão Industrial
         </div>
       </div>
     </div>

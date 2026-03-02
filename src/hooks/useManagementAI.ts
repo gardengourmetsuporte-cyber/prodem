@@ -12,9 +12,9 @@ interface AIMessage {
   imageUrl?: string;
 }
 
-const OLD_HISTORY_KEY = 'garden_copilot_history';
+const OLD_HISTORY_KEY = 'prodem_copilot_history';
 const MAX_HISTORY = 20;
-const CONVERSATION_KEY = 'garden_copilot_conversation_id';
+const CONVERSATION_KEY = 'prodem_copilot_conversation_id';
 
 export interface CopilotContextStats {
   pendingExpensesCount: number;
