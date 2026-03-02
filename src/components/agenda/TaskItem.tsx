@@ -82,24 +82,27 @@ export function TaskItem({ task, onToggle, onDelete, onClick, onInlineUpdate, on
     >
       <div
         className={cn(
-          'rounded-xl overflow-hidden transition-all duration-300 border bg-card',
-          task.is_completed ? 'opacity-50 border-border/30' : 'border-border/50 shadow-sm',
+          'rounded-xl transition-all duration-300 bg-card/80',
+          task.is_completed ? 'opacity-40' : '',
           isDragging && 'shadow-glow-primary ring-1 ring-primary/40 scale-[1.02]',
         )}
       >
-        {/* Category color accent bar */}
-        {categoryColor && !task.is_completed && (
-          <div className="h-[3px] w-full" style={{ backgroundColor: categoryColor }} />
-        )}
-
         {/* Parent task row */}
-        <div className="flex items-start gap-3 p-3.5">
+        <div className="flex items-center gap-3 px-3.5 py-3">
+          {/* Left color indicator */}
+          {categoryColor && !task.is_completed && (
+            <div
+              className="w-[3px] self-stretch rounded-full shrink-0"
+              style={{ backgroundColor: categoryColor }}
+            />
+          )}
+
           <Checkbox
             checked={task.is_completed}
             onCheckedChange={handleToggle}
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              "w-5 h-5 rounded-full border-2 mt-0.5 shrink-0 transition-all duration-300",
+              "w-[18px] h-[18px] rounded-full border-2 shrink-0 transition-all duration-300",
               "data-[state=checked]:bg-success data-[state=checked]:border-success",
               !task.is_completed && "border-muted-foreground/30",
               completing && "animate-check-pop"
@@ -110,62 +113,51 @@ export function TaskItem({ task, onToggle, onDelete, onClick, onInlineUpdate, on
             className="flex-1 min-w-0 text-left"
             onClick={() => hasSubtasks ? setExpanded(!expanded) : onClick?.()}
           >
-            <div className="flex items-center gap-2">
-              <p className={cn(
-                'font-semibold text-sm leading-snug text-foreground flex-1',
-                task.is_completed && 'line-through text-muted-foreground font-medium'
-              )}>
-                {task.title}
-              </p>
-              {hasSubtasks && (
-                <AppIcon name="ChevronRight" size={14} className={cn(
-                  'text-muted-foreground/40 transition-transform duration-200 shrink-0',
-                  expanded && 'rotate-90'
-                )} />
-              )}
-            </div>
+            <p className={cn(
+              'text-sm leading-snug text-foreground',
+              task.is_completed && 'line-through text-muted-foreground'
+            )}>
+              {task.title}
+            </p>
 
-            {task.notes && !task.is_completed && (
-              <p className="text-xs text-muted-foreground/60 mt-1 line-clamp-1">
-                {task.notes}
-              </p>
+            {(dueLabel || (hasSubtasks && !expanded)) && (
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {hasSubtasks && !expanded && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {completedSubtasks}/{subtasks.length} subtarefas
+                  </span>
+                )}
+                {dueLabel && (
+                  <span className={cn(
+                    'text-[10px] flex items-center gap-1',
+                    overdue ? 'text-destructive' : 'text-muted-foreground'
+                  )}>
+                    <AppIcon name="Clock" size={9} className={cn(clockUrgency.colorClass, clockUrgency.pulse && 'animate-pulse')} />
+                    {dueLabel}
+                  </span>
+                )}
+              </div>
             )}
-
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              {hasSubtasks && !expanded && (
-                <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-md font-medium">
-                  {completedSubtasks}/{subtasks.length} subtarefas
-                </span>
-              )}
-              {dueLabel && (
-                <span className={cn(
-                  'text-[10px] px-2 py-0.5 rounded-md font-bold flex items-center gap-1 border tracking-wide uppercase',
-                  overdue
-                    ? 'bg-destructive/10 text-destructive border-destructive/20'
-                    : dueLabel.includes('Hoje')
-                      ? 'bg-warning/10 text-warning border-warning/20'
-                      : dueLabel.includes('Amanhã')
-                        ? 'bg-success/10 text-success border-success/20'
-                        : 'bg-secondary text-muted-foreground border-border/50'
-                )}>
-                  <AppIcon name="Clock" size={9} className={cn(clockUrgency.colorClass, clockUrgency.pulse && 'animate-pulse')} />
-                  {dueLabel}
-                </span>
-              )}
-            </div>
           </button>
 
-          {/* Inline actions */}
-          <div className="flex items-center gap-0.5 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {hasSubtasks && (
+            <AppIcon name="ChevronRight" size={14} className={cn(
+              'text-muted-foreground/30 transition-transform duration-200 shrink-0',
+              expanded && 'rotate-90'
+            )} />
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-              className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-primary transition-colors"
             >
               <AppIcon name="Edit" size={14} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-              className="p-1.5 rounded-lg text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-destructive transition-colors"
             >
               <AppIcon name="Trash2" size={14} />
             </button>
