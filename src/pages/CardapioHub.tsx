@@ -191,7 +191,7 @@ export default function CardapioHub() {
             )}
 
             {orders.length === 0 ? (
-              <EmptyState icon="QrCode" title="Nenhum pedido ainda" subtitle="Os pedidos feitos no cardápio digital aparecerão aqui" />
+              <EmptyState icon="QrCode" title="Nenhum pedido ainda" subtitle="Os pedidos feitos no catálogo digital aparecerão aqui" />
             ) : (
               orders.map(order => (
                 <div key={order.id} className="card-base p-3 space-y-2">

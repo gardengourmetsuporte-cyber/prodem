@@ -131,10 +131,10 @@ export function MenuCategoryTree({
       <div className="card-base p-5">
         <div className="empty-state py-6">
           <div className="icon-glow icon-glow-lg icon-glow-muted mx-auto mb-3">
-            <AppIcon name="BookOpen" size={24} />
+            <AppIcon name="Package" size={24} />
           </div>
           <p className="empty-state-title">Nenhuma categoria</p>
-          <p className="empty-state-text mb-4">Comece criando sua primeira categoria de cardápio</p>
+          <p className="empty-state-text mb-4">Comece criando sua primeira categoria de produtos</p>
           <Button size="sm" onClick={openNewCategory}>
             <AppIcon name="Plus" size={16} className="mr-1.5" /> Nova Categoria
           </Button>

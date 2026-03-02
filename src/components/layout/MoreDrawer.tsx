@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
   { icon: 'Gift', label: 'Recompensas', href: '/rewards', group: 'equipe', groupLabel: 'Equipe' },
   // Ferramentas
   { icon: 'Megaphone', label: 'Marketing', href: '/marketing', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
-  { icon: 'BookOpen', label: 'Cardápio Digital', href: '/cardapio', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
+  { icon: 'Package', label: 'Catálogo', href: '/cardapio', adminOnly: true, group: 'ferramentas', groupLabel: 'Ferramentas' },
 ];
 
 interface MoreDrawerProps {
