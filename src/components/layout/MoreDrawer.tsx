@@ -210,27 +210,7 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
               </div>
             )}
 
-            {/* Plans button */}
-            {(plan === 'free') && (
-              <button
-                onClick={() => { navigate('/plans'); onOpenChange(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-all"
-              >
-                <AppIcon name="Crown" size={20} style={{ color: 'hsl(45 90% 55%)', filter: 'drop-shadow(0 0 6px hsl(45 90% 55% / 0.4))' }} />
-                <span className="text-sm font-semibold text-white">Upgrade de Plano</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider ml-auto" style={{ color: 'hsl(45 90% 55%)' }}>FREE</span>
-              </button>
-            )}
-            {(plan !== 'free' && isAdmin) && (
-              <button
-                onClick={() => { navigate('/plans'); onOpenChange(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 transition-all"
-              >
-                <AppIcon name="Crown" size={20} style={{ color: 'hsl(45 90% 55%)', filter: 'drop-shadow(0 0 6px hsl(45 90% 55% / 0.4))' }} />
-                <span className="text-sm font-semibold text-white">Planos</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider ml-auto" style={{ color: 'hsl(45 90% 55%)' }}>{plan?.toUpperCase()}</span>
-              </button>
-            )}
+            {/* Plans button removed — sold directly to company */}
           </div>
 
           {/* Module grid — adaptive cards */}
