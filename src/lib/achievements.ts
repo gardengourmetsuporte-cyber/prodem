@@ -1,9 +1,8 @@
 /**
- * Sistema de Elos - Lista de progressão baseada em pontos ganhos
- * Reutiliza os ranks de ranks.ts para exibir a progressão completa
+ * Sistema de Elos Prodem — Progressão industrial baseada em pontos ganhos
  */
 
-import { getRank, getNextRank } from './ranks';
+import { getRank } from './ranks';
 
 export interface EloTier {
   title: string;
@@ -14,34 +13,33 @@ export interface EloTier {
   progress: number; // 0-100
 }
 
-// Definição dos 8 elos em ordem crescente
+// Definição dos 8 elos industriais em ordem crescente
 const ELO_TIERS: { title: string; min: number }[] = [
-  { title: 'Iniciante', min: 0 },
-  { title: 'Aprendiz', min: 10 },
-  { title: 'Dedicado', min: 25 },
-  { title: 'Veterano', min: 50 },
-  { title: 'Mestre', min: 100 },
-  { title: 'Lenda', min: 300 },
-  { title: 'Mítico', min: 750 },
-  { title: 'Imortal', min: 1500 },
+  { title: 'Ajudante', min: 0 },
+  { title: 'Operador', min: 10 },
+  { title: 'Técnico', min: 25 },
+  { title: 'Especialista', min: 50 },
+  { title: 'Supervisor', min: 100 },
+  { title: 'Engenheiro', min: 300 },
+  { title: 'Diretor', min: 750 },
+  { title: 'Presidente', min: 1500 },
 ];
 
 const ELO_COLORS: Record<string, string> = {
-  'Iniciante': 'hsl(var(--muted-foreground))',
-  'Aprendiz': 'hsl(var(--neon-green))',
-  'Dedicado': 'hsl(var(--neon-cyan))',
-  'Veterano': 'hsl(var(--neon-purple))',
-  'Mestre': 'hsl(var(--neon-amber))',
-  'Lenda': 'hsl(var(--neon-red))',
-  'Mítico': 'hsl(280 80% 65%)',
-  'Imortal': 'hsl(200 80% 80%)',
+  'Ajudante': 'hsl(var(--muted-foreground))',
+  'Operador': 'hsl(var(--neon-green))',
+  'Técnico': 'hsl(var(--neon-cyan))',
+  'Especialista': 'hsl(var(--neon-purple))',
+  'Supervisor': 'hsl(var(--neon-amber))',
+  'Engenheiro': 'hsl(var(--neon-red))',
+  'Diretor': 'hsl(280 80% 65%)',
+  'Presidente': 'hsl(200 80% 80%)',
 };
 
 export function getEloList(earnedPoints: number): EloTier[] {
   const currentRank = getRank(earnedPoints);
 
   return ELO_TIERS.map((tier, i) => {
-    const nextMin = i < ELO_TIERS.length - 1 ? ELO_TIERS[i + 1].min : tier.min;
     const unlocked = earnedPoints >= tier.min;
     const isCurrent = currentRank.title === tier.title;
 
@@ -49,7 +47,6 @@ export function getEloList(earnedPoints: number): EloTier[] {
     if (unlocked) {
       progress = 100;
     } else {
-      // Progress towards this tier from previous tier
       const prevMin = i > 0 ? ELO_TIERS[i - 1].min : 0;
       const range = tier.min - prevMin;
       progress = range > 0 ? Math.round(((earnedPoints - prevMin) / range) * 100) : 0;
@@ -67,7 +64,7 @@ export function getEloList(earnedPoints: number): EloTier[] {
   });
 }
 
-// Keep backward-compatible exports for any remaining references
+// Keep backward-compatible exports
 export type AchievementData = { totalCompletions: number; earnedPoints: number; totalRedemptions: number };
 export type Achievement = EloTier;
 export function calculateAchievements(data: AchievementData): EloTier[] {

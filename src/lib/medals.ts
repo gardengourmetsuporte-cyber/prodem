@@ -1,5 +1,5 @@
 /**
- * Sistema de Medalhas - Honrarias de prestígio
+ * Sistema de Medalhas Prodem — Honrarias Industriais
  */
 
 import { differenceInMonths } from 'date-fns';
@@ -29,32 +29,32 @@ export function calculateMedals(data: MedalData): Medal[] {
   return [
     {
       id: 'employee_of_month',
-      title: 'Funcionário do Mês',
-      description: 'Reconhecido como o melhor do mês pelo gestor',
+      title: 'Operador Destaque',
+      description: 'Reconhecido como o melhor operador do mês pela liderança',
       tier: 'platinum',
       unlocked: data.hasEmployeeOfMonth ?? false,
       bonusPoints: 50,
     },
     {
       id: 'six_months',
-      title: '6 Meses de Casa',
-      description: 'Completou 6 meses na empresa',
+      title: 'Veterano de Linha',
+      description: 'Completou 6 meses trabalhando na linha de produção',
       tier: 'gold',
       unlocked: !!data.admissionDate && monthsSinceAdmission >= 6,
       bonusPoints: 30,
     },
     {
       id: 'one_year',
-      title: '1 Ano de Casa',
-      description: 'Completou 1 ano na empresa',
+      title: 'Pilar da Fábrica',
+      description: 'Completou 1 ano na Prodem — base sólida da operação',
       tier: 'platinum',
       unlocked: !!data.admissionDate && monthsSinceAdmission >= 12,
       bonusPoints: 75,
     },
     {
       id: 'inventor',
-      title: 'Inventor',
-      description: 'Criou uma receita oficial para o Prodem',
+      title: 'Inovador Industrial',
+      description: 'Criou um processo ou solução técnica para a produção',
       tier: 'gold',
       unlocked: data.hasInventedRecipe ?? false,
       bonusPoints: 40,

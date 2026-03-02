@@ -90,7 +90,7 @@ export default function Ranking() {
           <AnimatedTabs
             tabs={[
               { key: 'ranking', label: 'Ranking', icon: <AppIcon name="Trophy" size={14} /> },
-              { key: 'elos', label: 'Elos', icon: <AppIcon name="Shield" size={14} /> },
+              { key: 'elos', label: 'Patentes', icon: <AppIcon name="Shield" size={14} /> },
               { key: 'medalhas', label: 'Medalhas', icon: <AppIcon name="Medal" size={14} /> },
             ]}
             activeTab={activeTab}
@@ -110,7 +110,7 @@ export default function Ranking() {
                         ? "text-white shadow-sm"
                         : "bg-secondary text-muted-foreground hover:bg-secondary/80"
                     )}
-                    style={rankingScope === 'unit' ? { background: 'linear-gradient(135deg, hsl(156 40% 12%), hsl(156 60% 22%), hsl(156 40% 14%))' } : undefined}
+                    style={rankingScope === 'unit' ? { background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.25), hsl(var(--primary) / 0.15))' } : undefined}
                   >
                     <AppIcon name="Home" size={12} />
                     {activeUnit?.name || 'Minha Unidade'}
@@ -123,7 +123,7 @@ export default function Ranking() {
                         ? "text-white shadow-sm"
                         : "bg-secondary text-muted-foreground hover:bg-secondary/80"
                     )}
-                    style={rankingScope === 'global' ? { background: 'linear-gradient(135deg, hsl(156 40% 12%), hsl(156 60% 22%), hsl(156 40% 14%))' } : undefined}
+                    style={rankingScope === 'global' ? { background: 'linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.25), hsl(var(--primary) / 0.15))' } : undefined}
                   >
                     <AppIcon name="Globe" size={12} />
                     Global

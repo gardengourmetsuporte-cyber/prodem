@@ -7,15 +7,16 @@ import { LendaFrame } from './LendaFrame';
 import { MiticoFrame } from './MiticoFrame';
 import { ImortalFrame } from './ImortalFrame';
 
+// Mapeamento dos títulos industriais Prodem para os frames visuais
 export const RANK_FRAMES: Record<string, React.ComponentType<{ size: number; children: React.ReactNode }>> = {
-  'Iniciante': InicianteFrame,
-  'Aprendiz': AprendizFrame,
-  'Dedicado': DedicadoFrame,
-  'Veterano': VeteranoFrame,
-  'Mestre': MestreFrame,
-  'Lenda': LendaFrame,
-  'Mítico': MiticoFrame,
-  'Imortal': ImortalFrame,
+  'Ajudante': InicianteFrame,
+  'Operador': AprendizFrame,
+  'Técnico': DedicadoFrame,
+  'Especialista': VeteranoFrame,
+  'Supervisor': MestreFrame,
+  'Engenheiro': LendaFrame,
+  'Diretor': MiticoFrame,
+  'Presidente': ImortalFrame,
 };
 
 export {
