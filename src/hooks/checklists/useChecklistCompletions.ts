@@ -275,7 +275,7 @@ export function useChecklistCompletions({
 
   const finishProduction = useCallback(async (
     itemId: string, checklistType: ChecklistType, date: string,
-    quantityDone: number, points: number = 1, completedByUserId?: string
+    quantityDone: number, points: number = 1, completedByUserId?: string, machineRef?: string
   ) => {
     const targetUserId = completedByUserId || userId;
     const existing = completions.find(
@@ -283,15 +283,18 @@ export function useChecklistCompletions({
     );
     if (!existing) throw new Error('Inicie a produção antes de finalizar');
 
+    const updateData: any = {
+      status: 'completed',
+      quantity_done: quantityDone,
+      awarded_points: points > 0,
+      points_awarded: points,
+      finished_at: new Date().toISOString(),
+    };
+    if (machineRef) updateData.machine_ref = machineRef;
+
     const { error } = await supabase
       .from('checklist_completions')
-      .update({
-        status: 'completed',
-        quantity_done: quantityDone,
-        awarded_points: points > 0,
-        points_awarded: points,
-        finished_at: new Date().toISOString(),
-      } as any)
+      .update(updateData)
       .eq('id', existing.id);
     if (error) throw error;
 

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProductionOrderItem } from '@/hooks/useProductionOrders';
+import { ProductionProject } from '@/hooks/useProductionProjects';
 
 interface PlanItem {
   checklist_item_id: string;
@@ -37,25 +38,28 @@ interface ProductionPlanSheetProps {
   sectors: ChecklistSector[];
   existingItems: ProductionOrderItem[];
   date: Date;
-  onSave: (items: { checklist_item_id: string; quantity_ordered: number }[], notes?: string) => Promise<any>;
+  onSave: (items: { checklist_item_id: string; quantity_ordered: number }[], notes?: string, projectId?: string) => Promise<any>;
   onPullPendingFromYesterday: () => Promise<{ checklist_item_id: string; quantity_ordered: number }[] | null>;
   hasExistingPlan?: boolean;
   currentShift?: number;
   isShift1Closed?: boolean;
   onCloseShift?: () => void;
   onDeletePlan?: () => void;
+  activeProjects?: ProductionProject[];
+  selectedProjectId?: string | null;
 }
 
 export function ProductionPlanSheet({
   open, onOpenChange, sectors, existingItems, date, onSave, onPullPendingFromYesterday,
   hasExistingPlan, currentShift, isShift1Closed, onCloseShift, onDeletePlan,
+  activeProjects = [], selectedProjectId,
 }: ProductionPlanSheetProps) {
   const [planItems, setPlanItems] = useState<PlanItem[]>([]);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set(['__init__']));
-  
+  const [projectId, setProjectId] = useState<string | undefined>(selectedProjectId || undefined);
 
   // Build available items from sectors
   const availableItems = useMemo(() => {
@@ -200,6 +204,7 @@ export function ProductionPlanSheet({
       await onSave(
         activeItems.map(i => ({ checklist_item_id: i.checklist_item_id, quantity_ordered: i.quantity_ordered })),
         notes || undefined,
+        projectId,
       );
       toast.success('Plano salvo!');
       onOpenChange(false);
@@ -268,6 +273,23 @@ export function ProductionPlanSheet({
               </div>
             </SheetTitle>
           </SheetHeader>
+
+          {/* Project selector */}
+          {activeProjects.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Projeto / OS</label>
+              <select
+                value={projectId || ''}
+                onChange={e => setProjectId(e.target.value || undefined)}
+                className="w-full h-9 rounded-lg bg-secondary/60 border border-border px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="">Sem projeto vinculado</option>
+                {activeProjects.map(p => (
+                  <option key={p.id} value={p.id}>#{p.project_number} — {p.description}{p.client ? ` (${p.client})` : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Search + quick actions */}
           <div className="space-y-2">

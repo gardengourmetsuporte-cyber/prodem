@@ -12,6 +12,7 @@ export interface ProductionOrder {
   status: 'draft' | 'active' | 'closed';
   shift: number;
   notes: string | null;
+  project_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -220,24 +221,29 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   // Create or update order with items
   const saveOrder = useCallback(async (
     items: { checklist_item_id: string; quantity_ordered: number }[],
-    notes?: string
+    notes?: string,
+    projectId?: string
   ) => {
     if (!user || !unitId) throw new Error('Not authenticated');
 
     let orderId = order?.id;
 
     if (!orderId) {
+      const insertData: any = { unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes, shift };
+      if (projectId) insertData.project_id = projectId;
       const { data, error } = await supabase
         .from('production_orders')
-        .insert({ unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes, shift })
+        .insert(insertData)
         .select('id')
         .single();
       if (error) throw error;
       orderId = data.id;
     } else {
+      const updateData: any = { notes, status: 'active', updated_at: new Date().toISOString() };
+      if (projectId !== undefined) updateData.project_id = projectId || null;
       await supabase
         .from('production_orders')
-        .update({ notes, status: 'active', updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq('id', orderId);
     }
 
