@@ -62,10 +62,21 @@ function BrandPanel() {
           </p>
         </div>
 
-        {/* Tagline */}
-        <p className="text-sm text-white/30 leading-relaxed max-w-xs text-center">
-          Sistema interno de gestão
-        </p>
+        {/* Tagline card */}
+        <div
+          className="px-5 py-3 rounded-2xl text-center max-w-xs"
+          style={{
+            background: 'hsl(25 85% 54% / 0.08)',
+            border: '1px solid hsl(25 85% 54% / 0.15)',
+          }}
+        >
+          <p className="text-sm font-medium" style={{ color: 'hsl(25 85% 60%)' }}>
+            Sua operação sob controle.
+          </p>
+          <p className="text-[11px] text-white/30 mt-1">
+            Acesse o painel interno da Prodem Minas
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -127,10 +138,21 @@ function MobileBrandHeader() {
           <p className="text-[10px] text-white/35 tracking-[0.25em] uppercase font-semibold">Gestão Industrial</p>
         </div>
 
-        {/* Tagline */}
-        <p className="text-xs text-white/30 mt-2 animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_0.4s_both]">
-          Sistema interno de gestão
-        </p>
+        {/* Tagline card */}
+        <div
+          className="px-4 py-2.5 rounded-xl text-center mt-2 animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_0.4s_both]"
+          style={{
+            background: 'hsl(25 85% 54% / 0.08)',
+            border: '1px solid hsl(25 85% 54% / 0.15)',
+          }}
+        >
+          <p className="text-xs font-medium" style={{ color: 'hsl(25 85% 60%)' }}>
+            Sua operação sob controle.
+          </p>
+          <p className="text-[10px] text-white/30 mt-0.5">
+            Painel interno Prodem Minas
+          </p>
+        </div>
       </div>
 
       {/* Bottom overlay blending mask into page content */}
