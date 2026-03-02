@@ -224,8 +224,8 @@ export function ProductionPlanSheet({
         {/* Actions */}
         <div className="flex gap-2 mb-3 flex-wrap">
           <Button variant="outline" size="sm" onClick={handlePullPending} className="text-xs">
-            <AppIcon name="ArrowDownToLine" size={14} />
-            Puxar pendentes de ontem
+            <AppIcon name="History" size={14} />
+            Puxar do último turno
           </Button>
           <Button
             variant="outline"
