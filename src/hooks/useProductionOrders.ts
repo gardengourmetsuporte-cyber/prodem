@@ -296,13 +296,73 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     invalidate();
   }, [order?.id, invalidate]);
 
-  // Close shift 1 and auto-create shift 2 with remaining items
+  // Reset all production data for the selected day (both shifts) — useful for test reruns
+  const resetDayOrders = useCallback(async () => {
+    if (!unitId) return;
+
+    const { data: dayOrders, error: dayOrdersError } = await supabase
+      .from('production_orders')
+      .select('id')
+      .eq('unit_id', unitId)
+      .eq('date', dateStr);
+
+    if (dayOrdersError) throw dayOrdersError;
+    if (!dayOrders || dayOrders.length === 0) return;
+
+    const orderIds = dayOrders.map(o => o.id);
+
+    const { data: dayItems, error: dayItemsError } = await supabase
+      .from('production_order_items')
+      .select('checklist_item_id')
+      .in('order_id', orderIds);
+
+    if (dayItemsError) throw dayItemsError;
+
+    const itemIds = Array.from(new Set((dayItems || []).map(i => i.checklist_item_id)));
+
+    const { error: deleteItemsError } = await supabase
+      .from('production_order_items')
+      .delete()
+      .in('order_id', orderIds);
+
+    if (deleteItemsError) throw deleteItemsError;
+
+    const { error: deleteOrdersError } = await supabase
+      .from('production_orders')
+      .delete()
+      .in('id', orderIds);
+
+    if (deleteOrdersError) throw deleteOrdersError;
+
+    if (itemIds.length > 0) {
+      const { error: deleteCompletionsError } = await supabase
+        .from('checklist_completions')
+        .delete()
+        .eq('date', dateStr)
+        .eq('unit_id', unitId)
+        .in('item_id', itemIds)
+        .in('checklist_type', ['abertura', 'fechamento']);
+
+      if (deleteCompletionsError) throw deleteCompletionsError;
+    }
+
+    invalidate();
+    queryClient.invalidateQueries({ queryKey: ['checklist-completions'] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-checklist-completions'] });
+  }, [unitId, dateStr, invalidate, queryClient]);
+
+  // Close shift 1 and auto-create/update shift 2 with remaining items
   const closeShiftAndCreateNext = useCallback(async () => {
     if (!order?.id || !user || !unitId) return;
     if (shift !== 1) return; // Only shift 1 can trigger this
 
-    // Close shift 1
-    await supabase.from('production_orders').update({ status: 'closed' }).eq('id', order.id);
+    const { error: closeError } = await supabase
+      .from('production_orders')
+      .update({ status: 'closed' })
+      .eq('id', order.id);
+
+    if (closeError) throw closeError;
 
     // Calculate remaining items
     const remaining = report
@@ -312,7 +372,42 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         quantity_ordered: r.quantity_pending,
       }));
 
-    if (remaining.length > 0) {
+    // Check if shift 2 already exists for this day
+    const { data: existingShift2, error: existingShift2Error } = await supabase
+      .from('production_orders')
+      .select('id')
+      .eq('unit_id', unitId)
+      .eq('date', dateStr)
+      .eq('shift', 2)
+      .maybeSingle();
+
+    if (existingShift2Error) throw existingShift2Error;
+
+    // If nothing is pending, remove stale shift 2 if it exists
+    if (remaining.length === 0) {
+      if (existingShift2?.id) {
+        const { error: deleteShift2ItemsError } = await supabase
+          .from('production_order_items')
+          .delete()
+          .eq('order_id', existingShift2.id);
+
+        if (deleteShift2ItemsError) throw deleteShift2ItemsError;
+
+        const { error: deleteShift2OrderError } = await supabase
+          .from('production_orders')
+          .delete()
+          .eq('id', existingShift2.id);
+
+        if (deleteShift2OrderError) throw deleteShift2OrderError;
+      }
+
+      invalidate();
+      return;
+    }
+
+    let shift2OrderId = existingShift2?.id;
+
+    if (!shift2OrderId) {
       // Create shift 2 order
       const { data: newOrder, error: orderError } = await supabase
         .from('production_orders')
@@ -328,16 +423,37 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .single();
 
       if (orderError) throw orderError;
+      shift2OrderId = newOrder.id;
+    } else {
+      // Reuse existing shift 2 and refresh its status/metadata
+      const { error: updateShift2Error } = await supabase
+        .from('production_orders')
+        .update({ status: 'active', notes: 'Continuação do Turno 1', updated_at: new Date().toISOString() })
+        .eq('id', shift2OrderId);
 
-      // Insert remaining items
-      const rows = remaining.map(r => ({
-        order_id: newOrder.id,
-        checklist_item_id: r.checklist_item_id,
-        quantity_ordered: r.quantity_ordered,
-        unit_id: unitId,
-      }));
-      await supabase.from('production_order_items').insert(rows);
+      if (updateShift2Error) throw updateShift2Error;
     }
+
+    // Replace shift 2 items with fresh pending snapshot
+    const { error: deleteOldShift2ItemsError } = await supabase
+      .from('production_order_items')
+      .delete()
+      .eq('order_id', shift2OrderId);
+
+    if (deleteOldShift2ItemsError) throw deleteOldShift2ItemsError;
+
+    const rows = remaining.map(r => ({
+      order_id: shift2OrderId,
+      checklist_item_id: r.checklist_item_id,
+      quantity_ordered: r.quantity_ordered,
+      unit_id: unitId,
+    }));
+
+    const { error: insertShift2ItemsError } = await supabase
+      .from('production_order_items')
+      .insert(rows);
+
+    if (insertShift2ItemsError) throw insertShift2ItemsError;
 
     invalidate();
   }, [order?.id, user, unitId, shift, dateStr, report, invalidate]);
@@ -437,6 +553,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     closeShiftAndCreateNext,
     copyFromDate,
     getPendingFromDate,
+    resetDayOrders,
     invalidate,
   };
 }

@@ -124,7 +124,7 @@ export default function ChecklistsPage() {
     order: productionOrder, orderItems: productionItems, report: productionReport,
     totals: productionTotals, hasOrder: hasProductionOrder,
     isShift1Closed,
-    saveOrder, closeOrder, deleteOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate, getPendingFromDate,
+    saveOrder, closeOrder, deleteOrder, closeShiftAndCreateNext, copyFromDate, getPendingFromDate, resetDayOrders,
   } = useProductionOrders(activeUnitId, selectedDate, currentShift);
 
   // Also fetch both shifts independently for card progress
@@ -854,16 +854,13 @@ export default function ChecklistsPage() {
         isShift1Closed={isShift1Closed}
         onCloseShift={async () => {
           await closeShiftAndCreateNext();
-          toast.success('Turno 1 fechado! Turno 2 criado com itens pendentes.');
+          toast.success('Turno 1 fechado! Turno 2 pronto para continuar.');
           setChecklistType('fechamento');
         }}
         onDeletePlan={async () => {
-          try {
-            await deleteOrder();
-            toast.success('Plano apagado! Você pode criar um novo.');
-          } catch (err) {
-            toast.error('Erro ao apagar plano');
-          }
+          await resetDayOrders();
+          toast.success('Dia zerado! Pode testar novamente.');
+          setChecklistType('abertura');
         }}
       />
       <ProductionReportSheet
@@ -881,10 +878,6 @@ export default function ChecklistsPage() {
         shift2Totals={shift2Hook.totals}
         hasShift2={shift2Hook.hasOrder}
         onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
-        onReopenShift={async () => {
-          const hook = reportShiftView === 1 ? shift1Hook : shift2Hook;
-          await hook.reopenOrder();
-        }}
       />
     </AppLayout>
   );
