@@ -912,6 +912,14 @@ export function ChecklistView({
                                   <button
                                     onClick={() => {
                                       if (isContested) return;
+                                      // Allow ANY user to interact with partial production items
+                                      if (isPartialProduction) {
+                                        setOpenPopover(openPopover === item.id ? null : item.id);
+                                        setContestingItemId(null);
+                                        setContestReason('');
+                                        setSplittingItemId(null);
+                                        return;
+                                      }
                                       const isOwnCompletion = completion?.completed_by === currentUserId;
                                       if (isAdmin || isOwnCompletion) {
                                         setOpenPopover(openPopover === item.id ? null : item.id);
@@ -924,7 +932,7 @@ export function ChecklistView({
                                       setOptimisticToggles(prev => { const next = new Set(prev); next.add(item.id); return next; });
                                       onToggleItem(item.id, 0);
                                     }}
-                                    disabled={isContested ? true : (isAdmin || completion?.completed_by === currentUserId) ? false : !canToggle}
+                                    disabled={isContested ? true : isPartialProduction ? false : (isAdmin || completion?.completed_by === currentUserId) ? false : !canToggle}
                                     className={cn(
                                       "w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-300",
                                       isContested
@@ -1052,8 +1060,41 @@ export function ChecklistView({
                                     </div>
                                   </button>
                                   {/* Inline panel for completed items (admin or own completion) */}
-                                  {(isAdmin || completion?.completed_by === currentUserId) && openPopover === item.id && !isContested && completion && (
+                                  {((isAdmin || completion?.completed_by === currentUserId || isPartialProduction) && openPopover === item.id && !isContested && completion) && (
                                     <div className="mt-2 rounded-xl border bg-card p-4 shadow-lg animate-fade-in space-y-3">
+                                      {/* Continue production — available to ANY user for partial items */}
+                                      {isPartialProduction && isTodayDate && (
+                                        <>
+                                          <button
+                                            onClick={async () => {
+                                              setStartingItemId(item.id);
+                                              try {
+                                                await onStartProduction(item.id, currentUserId);
+                                                setOpenPopover(null);
+                                              } catch (err: any) {
+                                                toast.error(err.message || 'Erro ao iniciar');
+                                              } finally {
+                                                setStartingItemId(null);
+                                              }
+                                            }}
+                                            disabled={startingItemId === item.id}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-left transition-all duration-200 border-2 border-orange-500/30 active:scale-[0.97]"
+                                          >
+                                            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                              <AppIcon name="Play" className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold text-orange-500 dark:text-orange-400">
+                                                {startingItemId === item.id ? 'Iniciando...' : 'Continuar produção'}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground">
+                                                Faltam {prodTarget - prodDone} peças
+                                              </p>
+                                            </div>
+                                          </button>
+                                          <div className="border-t border-border" />
+                                        </>
+                                      )}
                                       {canToggle && (
                                         <button
                                           onClick={() => {
