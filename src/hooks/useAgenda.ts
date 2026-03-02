@@ -19,6 +19,20 @@ export function useAgenda() {
 
   const queryKey = ['manager-tasks', user?.id, activeUnitId];
 
+  // Default task categories for new users
+  const DEFAULT_TASK_CATEGORIES = useMemo(() => [
+    { name: 'Produção', color: '#ef4444', icon: 'factory' },
+    { name: 'Compras', color: '#f59e0b', icon: 'shopping_cart' },
+    { name: 'Financeiro', color: '#22c55e', icon: 'payments' },
+    { name: 'Manutenção', color: '#3b82f6', icon: 'build' },
+    { name: 'RH / Equipe', color: '#8b5cf6', icon: 'groups' },
+    { name: 'Qualidade', color: '#14b8a6', icon: 'verified' },
+    { name: 'Clientes', color: '#ec4899', icon: 'person' },
+    { name: 'Pessoal', color: '#64748b', icon: 'star' },
+  ], []);
+
+  const defaultsInitRef = useRef(false);
+
   // Fetch task categories
   const { data: categories = [] } = useQuery({
     queryKey: ['task-categories', user?.id],
@@ -35,6 +49,25 @@ export function useAgenda() {
     },
     enabled: !!user?.id,
   });
+
+  // Auto-create default categories for new users
+  useEffect(() => {
+    if (!user?.id || defaultsInitRef.current || categories.length > 0) return;
+    defaultsInitRef.current = true;
+    
+    const init = async () => {
+      const rows = DEFAULT_TASK_CATEGORIES.map((cat, i) => ({
+        user_id: user.id,
+        name: cat.name,
+        color: cat.color,
+        icon: cat.icon,
+        sort_order: i,
+      }));
+      await supabase.from('task_categories' as any).insert(rows as any);
+      queryClient.invalidateQueries({ queryKey: ['task-categories'] });
+    };
+    init();
+  }, [user?.id, categories.length, DEFAULT_TASK_CATEGORIES, queryClient]);
 
   // Fetch all tasks for user
   const { data: allTasks = [], isLoading: tasksLoading } = useQuery({
