@@ -54,7 +54,7 @@ const DashboardNew = lazy(() => lazyRetry(() => import("./pages/DashboardNew")))
 const Agenda = lazy(() => lazyRetry(() => import("./pages/Agenda")));
 const Finance = lazy(() => lazyRetry(() => import("./pages/Finance")));
 const Inventory = lazy(() => lazyRetry(() => import("./pages/Inventory")));
-const Checklists = lazy(() => lazyRetry(() => import("./pages/Checklists")));
+
 const Production = lazy(() => lazyRetry(() => import("./pages/Production")));
 const Rewards = lazy(() => lazyRetry(() => import("./pages/Rewards")));
 const Settings = lazy(() => lazyRetry(() => import("./pages/Settings")));
@@ -187,7 +187,7 @@ function AppRoutes() {
           <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
-          <Route path="/checklists" element={<ProtectedRoute><Checklists /></ProtectedRoute>} />
+          <Route path="/checklists" element={<Navigate to="/production" replace />} />
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/cash-closing" element={<ProtectedRoute><CashClosing /></ProtectedRoute>} />
