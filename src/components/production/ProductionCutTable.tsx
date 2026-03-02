@@ -29,17 +29,15 @@ export function ProductionCutTable({
   onStartItem, onFinishItem, onQuickComplete, onTapItem,
   isAdmin, isClosed, itemGroupingMap,
 }: ProductionCutTableProps) {
-  const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
 
   const itemMeta = useMemo(() => {
-    const meta = new Map<string, { sectorName: string; sectorColor: string; materialCode?: string; dimensions?: string }>();
+    const meta = new Map<string, { sectorName: string; materialCode?: string; dimensions?: string }>();
     sectors.forEach((sector: any) => {
       if (sector.scope === 'bonus') return;
       sector.subcategories?.forEach((sub: any) => {
         sub.items?.forEach((item: any) => {
           meta.set(item.id, {
             sectorName: sector.name,
-            sectorColor: sector.color || '#64748b',
             materialCode: item.material_code || undefined,
             dimensions: item.piece_dimensions || undefined,
           });
@@ -59,212 +57,125 @@ export function ProductionCutTable({
     return ids;
   }, [report]);
 
-  const grouped = useMemo(() => {
-    const groups: GroupedRow[] = [];
-    const sectorMap = new Map<string, GroupedRow>();
-
-    report.forEach(item => {
+  const tableData = useMemo(() => {
+    return report.map(item => {
       const m = itemMeta.get(item.checklist_item_id);
-      const sectorName = m?.sectorName || 'Sem setor';
-      const sectorColor = m?.sectorColor || '#64748b';
-
-      let group = sectorMap.get(sectorName);
-      if (!group) {
-        group = { sectorName, sectorColor, items: [] };
-        sectorMap.set(sectorName, group);
-        groups.push(group);
-      }
-      group.items.push({
+      return {
         ...item,
-        materialCode: m?.materialCode,
-        dimensions: m?.dimensions,
-      });
+        sectorName: m?.sectorName || 'Sem setor',
+        materialCode: m?.materialCode || '-',
+        dimensions: m?.dimensions || '-',
+      };
     });
-
-    return groups;
   }, [report, itemMeta]);
 
-  const toggleSector = (name: string) => {
-    setCollapsedSectors(prev => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
-  };
-
-  if (report.length === 0) {
+  if (tableData.length === 0) {
     return (
       <div className="text-center py-12 space-y-3">
         <div className="w-14 h-14 rounded-xl bg-muted/10 flex items-center justify-center mx-auto industrial-border">
           <AppIcon name="Factory" size={28} className="text-muted-foreground/30" />
         </div>
         <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Nenhuma peça no plano</p>
-        <p className="text-[10px] text-muted-foreground/60">Crie um plano de produção para este turno</p>
+        <p className="text-[10px] text-muted-foreground/60">Crie a receita com itens para esta OS</p>
       </div>
     );
   }
 
   // Totals
-  const totalOrdered = report.reduce((s, i) => s + i.quantity_ordered, 0);
-  const totalDone = report.reduce((s, i) => s + i.quantity_done, 0);
-  const totalInProgress = inProgressIds.size;
+  const totalOrdered = tableData.reduce((s, i) => s + i.quantity_ordered, 0);
+  const totalDone = tableData.reduce((s, i) => s + i.quantity_done, 0);
 
   return (
-    <div className="space-y-3">
-      {/* Table header — industrial style */}
-      <div className="flex items-center justify-between px-1">
+    <div className="space-y-4">
+      {/* Header — mimic the paper header text */}
+      <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <AppIcon name="ClipboardList" size={12} className="text-muted-foreground/50" />
-          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
-            Tabela de Cortes
+          <AppIcon name="TableProperties" size={16} className="text-muted-foreground/50" />
+          <span className="text-sm font-black uppercase tracking-[0.2em] text-foreground">
+            TABELA DE CORTES DE BARRAS
           </span>
         </div>
-        <div className="flex items-center gap-3 text-[9px] font-mono">
-          <span className="text-muted-foreground">{report.length} itens</span>
-          {totalInProgress > 0 && (
-            <span className="text-warning font-bold">{totalInProgress} produzindo</span>
-          )}
+        <div className="flex items-center gap-3 text-[10px] font-mono">
           <span className={cn(
-            "font-bold",
-            totalDone >= totalOrdered ? "text-success" : "text-foreground"
+            "font-bold px-2 py-0.5 rounded-sm",
+            totalDone >= totalOrdered ? "bg-success/20 text-success" : "bg-white/5 text-foreground/80"
           )}>
-            {totalDone}/{totalOrdered}
+            {totalDone}/{totalOrdered} PCS
           </span>
         </div>
       </div>
 
-      {grouped.map((group, groupIndex) => {
-        const isCollapsed = collapsedSectors.has(group.sectorName);
-        const groupDone = group.items.reduce((s, i) => s + i.quantity_done, 0);
-        const groupTotal = group.items.reduce((s, i) => s + i.quantity_ordered, 0);
-        const groupInProg = group.items.filter(i => inProgressIds.has(i.checklist_item_id)).length;
+      <div className="w-full overflow-x-auto rounded-[12px] border border-border/40 bg-card/60 shadow-sm relative">
+        <table className="w-full text-left font-sans whitespace-nowrap border-collapse">
+          <thead>
+            <tr className="bg-muted/40 border-b border-border/50 text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+              <th className="px-4 py-3 border-r border-border/20">Cód. Do Material</th>
+              <th className="px-4 py-3 border-r border-border/20 w-full min-w-[200px]">Descrição do Material</th>
+              <th className="px-4 py-3 border-r border-border/20">Comp. (mm)</th>
+              <th className="px-4 py-3 border-r border-border/20 text-center">Qtd Total</th>
+              <th className="px-4 py-3 border-r border-border/20">Processo</th>
+              <th className="px-4 py-3 text-center min-w-[80px]">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/20 text-[12px]">
+            {tableData.map((row, idx) => {
+              const isInProgress = inProgressIds.has(row.checklist_item_id);
+              const isComplete = row.status === 'complete';
 
-        return (
-          <div key={group.sectorName} className={cn("industrial-card rounded-[20px] overflow-hidden bg-card border-none", groupIndex > 0 && "mt-3")}>
-            {/* Sector header — process/machine group */}
-            <button
-              onClick={() => toggleSector(group.sectorName)}
-              className="w-full flex items-center gap-4 px-4 py-4 hover:bg-white/[0.02] transition-colors"
-            >
-              <div
-                className="w-3.5 h-12 rounded-full shrink-0 shadow-sm"
-                style={{ backgroundColor: group.sectorColor }}
-              />
-              <span className="text-sm font-black text-foreground uppercase tracking-widest flex-1 text-left">
-                {group.sectorName}
-              </span>
-              {groupInProg > 0 && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning/10">
-                  <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
-                  <span className="text-[10px] font-bold text-warning">{groupInProg}</span>
-                </div>
-              )}
-              <span className="text-[13px] font-mono font-bold text-muted-foreground mr-2">
-                {groupDone}/{groupTotal}
-              </span>
-              <AppIcon
-                name="ChevronRight"
-                size={16}
-                className={cn("text-muted-foreground transition-transform duration-200", !isCollapsed && "rotate-90")}
-              />
-            </button>
-
-            {/* Items — industrial row format */}
-            {!isCollapsed && (
-              <div className="border-t border-border/10 bg-background/20">
-                {/* Column headers */}
-                <div className="grid grid-cols-[80px_1fr_80px_100px] px-4 py-3 text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/40 bg-card">
-                  <span className="col-span-2 text-left">MINIATURA NOME DA PEÇA</span>
-                  <span className="text-right pr-2">TAMANHO</span>
-                  <span className="text-right">CONTAGEM</span>
-                </div>
-
-                {group.items.map((item, idx) => {
-                  const isInProgress = inProgressIds.has(item.checklist_item_id);
-                  const isComplete = item.status === 'complete';
-
-                  return (
-                    <div
-                      key={item.checklist_item_id}
-                      className={cn(
-                        "grid grid-cols-[70px_1fr_80px_100px] items-center px-4 py-3 transition-all min-h-[70px]",
-                        idx < group.items.length - 1 && "border-b border-border/5",
-                        isInProgress && "bg-warning/[0.04]",
-                        isComplete && "opacity-50",
-                      )}
-                    >
-                      {/* Miniatura */}
-                      <button onClick={() => onTapItem(item.checklist_item_id)} className="flex items-center">
-                        <div className="w-14 h-11 border border-border/40 rounded-lg flex items-center justify-center bg-card/50 text-muted-foreground/20 hover:border-border transition-colors">
-                          <AppIcon name="Minus" size={12} className="opacity-40" />
-                        </div>
-                      </button>
-
-                      {/* Item info */}
-                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left flex flex-col justify-center py-2 h-full">
-                        <p className={cn(
-                          "text-sm font-bold truncate pr-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]",
-                          isComplete ? "text-muted-foreground/50 line-through" : "text-foreground",
-                          isInProgress && "text-warning",
-                        )}>
-                          {item.item_name}
-                        </p>
-                      </button>
-
-                      {/* Tamanho */}
-                      <div className="text-right pr-4 flex flex-col justify-center h-full border-r border-border/10">
-                        {item.dimensions ? (
-                          <span className="text-xs font-mono text-muted-foreground/70">{item.dimensions}</span>
-                        ) : item.materialCode ? (
-                          <span className="text-xs font-mono text-muted-foreground/70">{item.materialCode}</span>
-                        ) : (
-                          <span className="text-xs font-mono text-muted-foreground/40">-</span>
-                        )}
+              return (
+                <tr
+                  key={row.checklist_item_id}
+                  className={cn(
+                    "transition-colors hover:bg-white/[0.04]",
+                    idx % 2 === 0 ? "bg-card" : "bg-card/40",
+                    isComplete && "opacity-40"
+                  )}
+                  onClick={() => onTapItem(row.checklist_item_id)}
+                >
+                  <td className="px-4 py-3 border-r border-border/10 font-mono text-muted-foreground/80">{row.materialCode}</td>
+                  <td className="px-4 py-3 border-r border-border/10 font-bold text-foreground truncate max-w-[250px]">{row.item_name}</td>
+                  <td className="px-4 py-3 border-r border-border/10 font-mono text-foreground/80">{row.dimensions}</td>
+                  <td className="px-4 py-3 border-r border-border/10 text-center font-black text-sm text-foreground">
+                    {row.quantity_ordered}
+                  </td>
+                  <td className="px-4 py-3 border-r border-border/10 text-muted-foreground uppercase tracking-widest text-[9px] font-black">
+                    {row.sectorName}
+                  </td>
+                  <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    {isClosed ? (
+                      <AppIcon name="Lock" size={14} className="mx-auto text-muted-foreground/30" />
+                    ) : isComplete ? (
+                      <div className="mx-auto w-16 py-1 rounded bg-success/20 text-success text-[10px] font-black uppercase tracking-widest text-center border border-success/30">
+                        OK
                       </div>
-
-                      {/* Contagem / Action */}
-                      <div className="flex justify-end items-center gap-4 pl-3">
-                        <span className="text-[17px] font-black text-foreground">
-                          {item.quantity_ordered}
-                        </span>
-
-                        {isClosed ? (
-                          <AppIcon name="Lock" size={18} className="text-muted-foreground/30" />
-                        ) : isComplete ? (
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center mr-1">
-                            <span className="text-[12px] font-black italic text-success font-display">OK</span>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isInProgress) {
-                                if (onQuickComplete) onQuickComplete(item.checklist_item_id, item.quantity_ordered);
-                                else onFinishItem(item.checklist_item_id);
-                              } else {
-                                onStartItem(item.checklist_item_id);
-                              }
-                            }}
-                            className={cn(
-                              "w-10 h-10 shrink-0 rounded-full border-[2.5px] flex items-center justify-center transition-all mr-1",
-                              isInProgress
-                                ? "border-warning/50 bg-warning/10"
-                                : "border-border/30 bg-card hover:bg-success/5 hover:border-success/30"
-                            )}
-                          >
-                            {isInProgress && <div className="w-3.5 h-3.5 rounded-full bg-warning animate-pulse" />}
-                          </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isInProgress) {
+                            if (onQuickComplete) onQuickComplete(row.checklist_item_id, row.quantity_ordered);
+                            else onFinishItem(row.checklist_item_id);
+                          } else {
+                            onStartItem(row.checklist_item_id);
+                          }
+                        }}
+                        className={cn(
+                          "mx-auto w-16 py-1 rounded text-[10px] font-black uppercase tracking-widest text-center border transition-all cursor-pointer",
+                          isInProgress
+                            ? "bg-warning/20 text-warning border-warning/30 hover:bg-warning/30"
+                            : "bg-background hover:bg-success/10 text-muted-foreground hover:text-success border-border/50 hover:border-success/30"
                         )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                      >
+                        {isInProgress ? 'FECHAR' : 'INICIAR'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
