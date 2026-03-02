@@ -89,8 +89,8 @@ export function LandingNavbar() {
       </div>
 
       {/* Mobile Menu */}
-      <div className={`md:hidden absolute top-full left-0 right-0 overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-[400px] border-b border-white/10 shadow-2xl" : "max-h-0"}`}>
-        <div className="bg-[#0f1729]/98 backdrop-blur-3xl px-4 pt-4 pb-6 space-y-2">
+      <div className={`md:hidden absolute top-full left-0 right-0 z-[60] overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-[400px] border-b border-white/10 shadow-2xl" : "max-h-0"}`}>
+        <div className="bg-[#0f1729] backdrop-blur-3xl px-4 pt-4 pb-6 space-y-2">
           {links.map((l) => (
             <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="block py-3.5 px-4 rounded-xl text-base font-medium text-white/70 hover:text-white hover:bg-white/10 transition-colors">
               {l.label}
