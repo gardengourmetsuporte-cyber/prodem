@@ -40,7 +40,7 @@ export interface ProductionReportItem {
   quantity_done: number;
   quantity_pending: number;
   percent: number;
-  status: 'complete' | 'partial' | 'not_started';
+  status: 'complete' | 'partial' | 'in_progress' | 'not_started';
   duration_ms: number | null;
 }
 
@@ -151,12 +151,17 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     if (orderItems.length === 0) return [];
 
     const doneMap = new Map<string, number>();
+    const inProgressSet = new Set<string>();
     const durationMap = new Map<string, number | null>();
     completions.forEach(c => {
       if (!c.is_skipped) {
         doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + (c.quantity_done ?? 0));
+        // Track items that are currently in_progress (started but not finished)
         const startedAt = (c as any).started_at;
         const finishedAt = (c as any).finished_at;
+        if (startedAt && !finishedAt) {
+          inProgressSet.add(c.item_id);
+        }
         if (startedAt && finishedAt) {
           const dur = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
           const existing = durationMap.get(c.item_id);
@@ -169,6 +174,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       const done = doneMap.get(oi.checklist_item_id) || 0;
       const pending = Math.max(0, oi.quantity_ordered - done);
       const percent = oi.quantity_ordered > 0 ? Math.round((done / oi.quantity_ordered) * 100) : 0;
+      const isInProgress = inProgressSet.has(oi.checklist_item_id);
       return {
         checklist_item_id: oi.checklist_item_id,
         item_name: oi.checklist_item?.name || 'Item',
@@ -177,7 +183,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         quantity_done: done,
         quantity_pending: pending,
         percent: Math.min(percent, 100),
-        status: percent >= 100 ? 'complete' : done > 0 ? 'partial' : 'not_started',
+        status: percent >= 100 ? 'complete' : done > 0 ? 'partial' : isInProgress ? 'in_progress' : 'not_started',
         duration_ms: durationMap.get(oi.checklist_item_id) ?? null,
       };
     });

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export function ChecklistDashboardWidget() {
   const navigate = useNavigate();
   const { activeUnitId } = useUnit();
-  const { totals, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
+  const { totals, report, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
 
   if (isLoading) {
     return (
@@ -35,6 +35,8 @@ export function ChecklistDashboardWidget() {
   }
 
   const isComplete = totals.percent >= 100;
+  const hasInProgress = report.some(r => r.status === 'in_progress');
+  const statusLabel = isComplete ? "✓ Concluído" : hasInProgress ? "⚙ Em Produção" : totals.percent > 0 ? "Em andamento" : "Não iniciado";
 
   return (
     <button
@@ -44,9 +46,9 @@ export function ChecklistDashboardWidget() {
       <div className="flex items-center gap-3 mb-3">
         <div className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center",
-          isComplete ? "bg-success/20" : "bg-warning/20"
+          isComplete ? "bg-success/20" : hasInProgress ? "bg-blue-500/20" : "bg-warning/20"
         )}>
-          <AppIcon name="ClipboardCheck" size={20} className={cn(isComplete ? "text-success" : "text-warning")} />
+          <AppIcon name="ClipboardCheck" size={20} className={cn(isComplete ? "text-success" : hasInProgress ? "text-blue-500" : "text-warning")} />
         </div>
         <div className="flex-1">
           <span className={cn(
@@ -57,9 +59,9 @@ export function ChecklistDashboardWidget() {
           </span>
           <span className={cn(
             "text-[11px] font-medium",
-            isComplete ? "text-success" : totals.percent > 0 ? "text-warning" : "text-muted-foreground"
+            isComplete ? "text-success" : hasInProgress ? "text-blue-500" : totals.percent > 0 ? "text-warning" : "text-muted-foreground"
           )}>
-            {isComplete ? "✓ Concluído" : totals.percent > 0 ? "Em andamento" : "Pendente"}
+            {statusLabel}
           </span>
         </div>
         <span className={cn(

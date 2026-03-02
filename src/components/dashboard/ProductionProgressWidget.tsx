@@ -15,6 +15,7 @@ interface ProductionProgressWidgetProps {
 function StatusIcon({ status }: { status: ProductionReportItem['status'] }) {
   if (status === 'complete') return <AppIcon name="CheckCircle2" size={14} className="text-emerald-500" />;
   if (status === 'partial') return <AppIcon name="Clock" size={14} className="text-amber-500" />;
+  if (status === 'in_progress') return <AppIcon name="Play" size={14} className="text-blue-500" />;
   return <span className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/30 inline-block" />;
 }
 
@@ -95,7 +96,8 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
                 <p className={cn(
                   "text-sm font-bold tabular-nums",
                   item.status === 'complete' ? 'text-emerald-500' :
-                  item.status === 'partial' ? 'text-amber-500' : 'text-muted-foreground'
+                  item.status === 'partial' ? 'text-amber-500' :
+                  item.status === 'in_progress' ? 'text-blue-500' : 'text-muted-foreground'
                 )}>
                   {item.quantity_done}/{item.quantity_ordered}
                 </p>
