@@ -54,7 +54,7 @@ export function calculateMedals(data: MedalData): Medal[] {
     {
       id: 'inventor',
       title: 'Inventor',
-      description: 'Criou uma receita oficial para o Garden',
+      description: 'Criou uma receita oficial para o Prodem',
       tier: 'gold',
       unlocked: data.hasInventedRecipe ?? false,
       bonusPoints: 40,

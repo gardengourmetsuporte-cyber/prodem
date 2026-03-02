@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { lovable } from '@/integrations/lovable/index';
-import gardenLogo from '@/assets/logo.png';
+import prodemLogo from '@/assets/prodem-logo.png';
 
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z.string().min(6, 'Senha deve ter no mínimo 6 caracteres');
@@ -20,7 +20,7 @@ const nameSchema = z.string().min(2, 'Nome deve ter no mínimo 2 caracteres');
 // ── Brand Panel (left half on desktop) ─────────────────────────────
 function BrandPanel() {
   return (
-    <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center overflow-hidden bg-[#000000]">
+    <div className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center overflow-hidden bg-[#0a1020]">
       {/* Subtle grid pattern overlay */}
       <div
         className="absolute inset-0 opacity-[0.05]"
@@ -33,11 +33,11 @@ function BrandPanel() {
       {/* Glow orbs - Emerald theme */}
       <div
         className="absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full blur-[150px] opacity-20 pointer-events-none"
-        style={{ background: 'hsl(142 71% 45%)' }}
+        style={{ background: 'hsl(25 85% 54%)' }}
       />
       <div
         className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] rounded-full blur-[120px] opacity-15 pointer-events-none"
-        style={{ background: 'hsl(142 76% 36%)' }}
+        style={{ background: 'hsl(220 70% 50%)' }}
       />
 
       <div className="relative z-10 flex flex-col items-center gap-8 px-12 max-w-lg">
@@ -46,19 +46,19 @@ function BrandPanel() {
           className="relative w-36 h-36 rounded-[2rem] overflow-hidden flex items-center justify-center"
           style={{
             background: 'white',
-            boxShadow: '0 0 100px hsl(142 71% 45% / 0.2), 0 25px 70px rgba(0,0,0,0.8)',
+            boxShadow: '0 0 100px hsl(25 85% 54% / 0.2), 0 25px 70px rgba(0,0,0,0.8)',
           }}
         >
-          <img alt="Garden Gestão" className="w-[85%] h-[85%] object-contain" src={gardenLogo} />
+          <img alt="Prodem Gestão" className="w-[85%] h-[85%] object-contain" src={prodemLogo} />
         </div>
 
         {/* Headline */}
         <div className="text-center space-y-2">
           <h1 className="text-5xl font-extrabold tracking-tight text-white font-display">
-            Garden
+            Prodem
           </h1>
           <p className="text-[11px] text-white/35 tracking-[0.3em] uppercase font-semibold">
-            Gestão Inteligente
+            Gestão Industrial
           </p>
         </div>
 
@@ -75,9 +75,9 @@ function BrandPanel() {
               key={label}
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium"
               style={{
-                background: 'hsl(142 71% 45% / 0.1)',
-                color: 'hsl(142 76% 60%)',
-                border: '1px solid hsl(142 71% 45% / 0.15)',
+                background: 'hsl(25 85% 54% / 0.1)',
+                color: 'hsl(25 85% 60%)',
+                border: '1px solid hsl(25 85% 54% / 0.15)',
               }}
             >
               <AppIcon name={icon} size={14} />
@@ -89,7 +89,7 @@ function BrandPanel() {
         {/* Social proof */}
         <div className="text-center space-y-4 mt-4">
           <p className="text-sm text-white/40 leading-relaxed max-w-xs mx-auto">
-            Simplifique a gestão do seu negócio com a plataforma mais veloz do mercado.
+            Simplifique a gestão da sua operação com a plataforma mais veloz do mercado.
           </p>
           <div className="flex items-center justify-center gap-6 text-white/20 text-xs">
             <div className="flex items-center gap-1.5">
@@ -112,7 +112,7 @@ function BrandPanel() {
 function MobileBrandHeader() {
   return (
     <div
-      className="relative flex lg:hidden flex-col items-center justify-center min-h-[52vh] px-6 overflow-hidden w-full bg-[#000000]"
+      className="relative flex lg:hidden flex-col items-center justify-center min-h-[52vh] px-6 overflow-hidden w-full bg-[#0a1020]"
       style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)',
       }}
@@ -124,14 +124,14 @@ function MobileBrandHeader() {
       <div
         className="absolute top-[15%] left-[20%] w-[250px] h-[250px] rounded-full blur-[100px] opacity-20 pointer-events-none"
         style={{
-          background: 'hsl(142 71% 45%)',
+          background: 'hsl(25 85% 54%)',
           animation: 'float-orb-1 8s ease-in-out infinite',
         }}
       />
       <div
         className="absolute bottom-[20%] right-[15%] w-[200px] h-[200px] rounded-full blur-[80px] opacity-15 pointer-events-none"
         style={{
-          background: 'hsl(142 76% 36%)',
+          background: 'hsl(220 70% 50%)',
           animation: 'float-orb-2 10s ease-in-out infinite',
         }}
       />
@@ -152,16 +152,16 @@ function MobileBrandHeader() {
           className="w-24 h-24 rounded-[1.25rem] overflow-hidden flex items-center justify-center animate-[scale-in_0.6s_cubic-bezier(0.16,1,0.3,1)_0.1s_both]"
           style={{
             background: 'white',
-            boxShadow: '0 0 80px hsl(142 71% 45% / 0.15), 0 16px 50px rgba(0,0,0,0.8)',
+            boxShadow: '0 0 80px hsl(25 85% 54% / 0.15), 0 16px 50px rgba(0,0,0,0.8)',
           }}
         >
-          <img alt="Garden Gestão" className="w-[85%] h-[85%] object-contain" src={gardenLogo} />
+          <img alt="Prodem Gestão" className="w-[85%] h-[85%] object-contain" src={prodemLogo} />
         </div>
 
         {/* Title with staggered entrance */}
         <div className="text-center space-y-1.5 animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_0.25s_both]">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight font-display">Garden</h1>
-          <p className="text-[10px] text-white/35 tracking-[0.25em] uppercase font-semibold">Gestão Inteligente</p>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight font-display">Prodem</h1>
+          <p className="text-[10px] text-white/35 tracking-[0.25em] uppercase font-semibold">Gestão Industrial</p>
         </div>
 
         {/* Feature pills with stagger */}
@@ -177,9 +177,9 @@ function MobileBrandHeader() {
               key={label}
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium"
               style={{
-                background: 'hsl(142 71% 45% / 0.1)',
-                color: 'hsl(142 76% 60%)',
-                border: '1px solid hsl(142 71% 45% / 0.15)',
+                background: 'hsl(25 85% 54% / 0.1)',
+                color: 'hsl(25 85% 60%)',
+                border: '1px solid hsl(25 85% 54% / 0.15)',
               }}
             >
               <AppIcon name={icon} size={12} />
@@ -364,7 +364,7 @@ export default function Auth() {
           : 'Preencha os dados para começar';
 
   return (
-    <div className="dark min-h-[100dvh] flex flex-row bg-[#000000] text-foreground">
+    <div className="dark min-h-[100dvh] flex flex-row bg-[#0a1020] text-foreground">
       {/* ── LEFT: Brand Panel (desktop) ── */}
       <BrandPanel />
 

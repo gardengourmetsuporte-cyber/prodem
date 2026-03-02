@@ -10,8 +10,8 @@ const problems = [
   },
   {
     icon: "AlertTriangle",
-    title: '"Faltou ingrediente de novo"',
-    desc: "Estoque zerado no meio do serviço. Sem controle, você descobre na hora errada e perde venda.",
+    title: '"Faltou material de novo"',
+    desc: "Estoque zerado no meio da produção. Sem controle, você descobre na hora errada e para a linha.",
     glow: "from-amber-500/20 via-amber-500/5 to-transparent",
     iconColor: "text-amber-400",
   },
@@ -19,17 +19,16 @@ const problems = [
     icon: "Users",
     title: '"A equipe não se engaja"',
     desc: "Funcionário sem feedback, sem meta, sem motivação. Alta rotatividade e baixa produtividade.",
-    glow: "from-emerald-500/20 via-emerald-500/5 to-transparent",
-    iconColor: "text-emerald-400",
+    glow: "from-orange-500/20 via-orange-500/5 to-transparent",
+    iconColor: "text-orange-400",
   },
 ];
 
 export function ProblemSection() {
   return (
-    <section className="py-24 md:py-32 relative bg-[#000000] overflow-hidden">
-      {/* Background flares */}
+    <section className="py-24 md:py-32 relative bg-[#0a1020] overflow-hidden">
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      <div className="absolute top-1/2 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-0 w-64 h-64 bg-orange-500/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,11 +51,10 @@ export function ProblemSection() {
               className="group relative rounded-3xl p-[1px] overflow-hidden transition-all duration-500 hover:-translate-y-2"
               style={{ animationDelay: `${i * 100}ms` }}
             >
-              {/* Animated Border Gradient on Hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-100 group-hover:opacity-0 transition-opacity duration-500" />
               <div className={`absolute inset-0 bg-gradient-to-br ${p.glow} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
-              <div className="relative h-full rounded-[23px] bg-[#0a0a0a] border border-white/5 flex flex-col p-8 z-10">
+              <div className="relative h-full rounded-[23px] bg-[#0d1525] border border-white/5 flex flex-col p-8 z-10">
                 <div className="mb-6 relative">
                   <div className={`absolute inset-0 bg-gradient-to-br ${p.glow} blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                   <div className="relative w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">

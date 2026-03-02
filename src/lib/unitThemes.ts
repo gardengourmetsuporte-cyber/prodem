@@ -8,27 +8,27 @@ export interface UnitTheme {
 }
 
 const STANDARD_THEME_COLORS: Omit<UnitTheme, 'label'> = {
-  primary: '156 72% 40%',
-  neonCyan: '156 72% 40%',
-  ring: '156 72% 40%',
-  glowPrimary: '0 0 24px hsl(156 72% 40% / 0.25), 0 0 48px hsl(156 72% 40% / 0.12)',
-  glowCyan: '0 0 24px hsl(156 72% 40% / 0.25), 0 0 48px hsl(156 72% 40% / 0.12)',
+  primary: '25 85% 54%',
+  neonCyan: '25 85% 54%',
+  ring: '25 85% 54%',
+  glowPrimary: '0 0 24px hsl(25 85% 54% / 0.25), 0 0 48px hsl(25 85% 54% / 0.12)',
+  glowCyan: '0 0 24px hsl(25 85% 54% / 0.25), 0 0 48px hsl(25 85% 54% / 0.12)',
 };
 
 const UNIT_THEMES: Record<string, UnitTheme> = {
   'sao-joao-da-boa-vista': {
     ...STANDARD_THEME_COLORS,
-    label: 'Garden',
+    label: 'Prodem',
   },
   'porto-ferreira': {
     ...STANDARD_THEME_COLORS,
-    label: 'Garden',
+    label: 'Prodem',
   },
 };
 
 const DEFAULT_THEME: UnitTheme = {
   ...STANDARD_THEME_COLORS,
-  label: 'Garden',
+  label: 'Prodem',
 };
 
 export function getUnitTheme(slug: string): UnitTheme {

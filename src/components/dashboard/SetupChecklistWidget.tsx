@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { useSetupProgress, SetupStep } from '@/hooks/useSetupProgress';
 import { cn } from '@/lib/utils';
 
-const DISMISS_KEY = 'garden-setup-dismissed';
+const DISMISS_KEY = 'prodem-setup-dismissed';
 
 export function SetupChecklistWidget() {
   const navigate = useNavigate();

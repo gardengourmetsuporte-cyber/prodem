@@ -59,7 +59,7 @@ function openPrintWindow(title: string, bodyHtml: string) {
     </head>
     <body>
       ${bodyHtml}
-      <div class="footer">Gerado por Garden Gestão em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+      <div class="footer">Gerado por Prodem Gestão em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
     </body>
     </html>
   `);

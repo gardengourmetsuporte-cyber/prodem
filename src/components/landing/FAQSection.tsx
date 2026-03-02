@@ -6,12 +6,12 @@ import {
 } from "@/components/ui/accordion";
 
 const faqs = [
-  { q: "Preciso instalar alguma coisa?", a: "Não. O Garden funciona no navegador e no celular como um app (PWA). Basta acessar e adicionar à tela inicial — funciona offline e parece um app nativo." },
+  { q: "Preciso instalar alguma coisa?", a: "Não. O Prodem funciona no navegador e no celular como um app (PWA). Basta acessar e adicionar à tela inicial — funciona offline e parece um app nativo." },
   { q: "Quantos usuários posso ter?", a: "Pro: até 15 usuários. Business: ilimitado. Cada membro da equipe tem seu login, permissões personalizadas e dashboard próprio." },
   { q: "Tem suporte se eu precisar de ajuda?", a: "Sim! Oferecemos suporte por WhatsApp e email. No plano Business, o atendimento é prioritário com tempo de resposta reduzido." },
   { q: "Meus dados ficam seguros?", a: "Sim. Infraestrutura em nuvem com criptografia ponta-a-ponta e backup diário automático. Seus dados são 100% seus." },
   { q: "Posso cancelar quando quiser?", a: "Sim, sem fidelidade. Cancele a qualquer momento sem taxas. Seus dados permanecem acessíveis por 30 dias após o cancelamento." },
-  { q: "Funciona para qualquer tipo de restaurante?", a: "Sim! Hamburgueria, pizzaria, padaria, café, bistrô — qualquer food service. O sistema é flexível e adaptável à sua operação." },
+  { q: "Funciona para qualquer tipo de indústria?", a: "Sim! Metalúrgica, alimentícia, têxtil, automotiva — qualquer operação industrial. O sistema é flexível e adaptável à sua operação." },
 ];
 
 export function FAQSection() {

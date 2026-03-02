@@ -325,7 +325,7 @@ function MembersTab() {
                   <AppIcon name={showPassword ? 'EyeOff' : 'Eye'} size={18} />
                 </button>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">Use letras maiúsculas, minúsculas, números e caracteres especiais (ex: Garden@2026)</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Use letras maiúsculas, minúsculas, números e caracteres especiais (ex: Prodem@2026)</p>
             </div>
           </div>
           <DialogFooter>
@@ -420,7 +420,7 @@ function InvitesTab() {
       return data.token;
     },
     onSuccess: (token: string) => {
-      const link = `https://garden-gestao.lovable.app/invite?token=${token}`;
+      const link = `${window.location.origin}/invite?token=${token}`;
       setLastInviteLink(link);
       setLastInviteEmail(email.trim().toLowerCase());
       navigator.clipboard.writeText(link);

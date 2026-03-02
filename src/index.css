@@ -19,7 +19,7 @@
 }
 
 /* =========================================================
-   DESIGN SYSTEM - Garden Gestão (Premium SaaS)
+   DESIGN SYSTEM - Prodem Gestão (Premium SaaS)
    ========================================================= */
 
 @layer base {
@@ -28,17 +28,17 @@
     --radius: 1rem;
 
     /* Brand base */
-    --garden-green: 156 72% 38%;
+    --prodem-orange: 25 85% 54%;
 
     /* Neon glow tokens - Enhanced for premium feel */
-    --neon-cyan: 160 70% 48%;
-    --neon-green: 156 72% 45%;
+    --neon-cyan: 25 85% 54%;
+    --neon-green: 25 85% 54%;
     --neon-red: 348 83% 53%;
     --neon-amber: 43 96% 56%;
-    --neon-purple: 156 50% 55%;
+    --neon-purple: 220 70% 55%;
 
     /* Semantic finance tokens */
-    --color-income: 156 72% 45%;
+    --color-income: 142 71% 45%;
     --color-expense: 348 83% 53%;
     --color-transfer: 220 80% 65%;
     --color-pending: 43 96% 56%;
@@ -59,65 +59,65 @@
     --coin-4-glow: 262 92% 70% / 0.9;
   }
 
-  /* ===== DARK THEME (Premium Slate/Zinc) ===== */
+  /* ===== DARK THEME (Premium Navy/Industrial) ===== */
   .dark {
-    --background: 240 6% 3.5%;
+    --background: 222 30% 6%;
     --foreground: 0 0% 98%;
 
     /* Soft elevated cards */
-    --card: 160 6% 8%;
+    --card: 222 20% 10%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 160 6% 8%;
+    --popover: 222 20% 10%;
     --popover-foreground: 0 0% 98%;
 
-    /* Sapphire/Emerald primary */
-    --primary: 156 72% 40%;
+    /* Orange primary (Prodem brand) */
+    --primary: 25 85% 54%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 12%;
-    --secondary-foreground: 240 5% 85%;
+    --secondary: 222 15% 13%;
+    --secondary-foreground: 220 10% 85%;
 
-    --muted: 240 5% 14%;
-    --muted-foreground: 240 4% 55%;
+    --muted: 222 15% 15%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 240 5% 18%;
+    --accent: 222 15% 18%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 348 83% 53%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 156 72% 45%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
     --warning: 43 96% 56%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 240 5% 14%;
-    --input: 240 5% 12%;
-    --ring: 156 72% 40%;
+    --border: 222 15% 15%;
+    --input: 222 15% 13%;
+    --ring: 25 85% 54%;
 
-    /* Ultra-refined Glows (Apple/Vercel style) */
-    --glow-primary: 0 0 40px hsl(156 72% 40% / 0.15), 0 0 20px hsl(156 72% 40% / 0.1);
-    --glow-accent: 0 0 30px hsl(250 89% 65% / 0.1), 0 0 15px hsl(250 89% 65% / 0.05);
-    --glow-success: 0 0 40px hsl(156 72% 45% / 0.15), 0 0 20px hsl(156 72% 45% / 0.1);
+    /* Ultra-refined Glows */
+    --glow-primary: 0 0 40px hsl(25 85% 54% / 0.15), 0 0 20px hsl(25 85% 54% / 0.1);
+    --glow-accent: 0 0 30px hsl(220 70% 55% / 0.1), 0 0 15px hsl(220 70% 55% / 0.05);
+    --glow-success: 0 0 40px hsl(142 71% 45% / 0.15), 0 0 20px hsl(142 71% 45% / 0.1);
     --glow-destructive: 0 0 40px hsl(348 83% 53% / 0.15), 0 0 20px hsl(348 83% 53% / 0.1);
     --glow-warning: 0 0 40px hsl(43 96% 56% / 0.15), 0 0 20px hsl(43 96% 56% / 0.1);
-    --glow-cyan: 0 0 40px hsl(190 90% 50% / 0.15), 0 0 20px hsl(190 90% 50% / 0.1);
+    --glow-cyan: 0 0 40px hsl(25 85% 54% / 0.15), 0 0 20px hsl(25 85% 54% / 0.1);
 
     /* Subtle Gradients */
-    --gradient-brand: linear-gradient(135deg, hsl(156 72% 35%), hsl(160 80% 45%));
-    --gradient-brand-subtle: linear-gradient(135deg, hsl(156 72% 40% / 0.15), hsl(160 80% 45% / 0.05));
-    --gradient-surface: linear-gradient(180deg, hsl(240 5% 10%), hsl(240 6% 5%));
+    --gradient-brand: linear-gradient(135deg, hsl(25 85% 48%), hsl(30 90% 58%));
+    --gradient-brand-subtle: linear-gradient(135deg, hsl(25 85% 54% / 0.15), hsl(30 90% 58% / 0.05));
+    --gradient-surface: linear-gradient(180deg, hsl(222 15% 12%), hsl(222 30% 6%));
     --gradient-gold: linear-gradient(135deg, hsl(43 90% 45%), hsl(45 95% 55%), hsl(40 85% 40%));
     --gradient-gold-subtle: linear-gradient(135deg, hsl(43 90% 45% / 0.15), hsl(45 95% 55% / 0.05));
 
     /* Shadows */
-    --shadow-card: 0 2px 10px hsl(240 20% 0% / 0.4), 0 8px 30px hsl(240 20% 0% / 0.3), inset 0 1px 1px hsl(0 0% 100% / 0.05);
-    --shadow-card-hover: 0 4px 20px hsl(240 20% 0% / 0.6), 0 12px 40px hsl(240 20% 0% / 0.4), inset 0 1px 1px hsl(0 0% 100% / 0.08);
-    --shadow-elevated: 0 10px 40px hsl(240 20% 0% / 0.8), 0 20px 60px hsl(240 20% 0% / 0.5), inset 0 1px 1px hsl(0 0% 100% / 0.1);
-    --shadow-floating: 0 10px 40px hsl(240 20% 0% / 0.5), inset 0 1px 1px hsl(0 0% 100% / 0.08);
-    --shadow-glow: 0 0 30px hsl(156 72% 40% / 0.2), inset 0 1px 1px hsl(0 0% 100% / 0.1);
+    --shadow-card: 0 2px 10px hsl(222 30% 0% / 0.4), 0 8px 30px hsl(222 30% 0% / 0.3), inset 0 1px 1px hsl(0 0% 100% / 0.05);
+    --shadow-card-hover: 0 4px 20px hsl(222 30% 0% / 0.6), 0 12px 40px hsl(222 30% 0% / 0.4), inset 0 1px 1px hsl(0 0% 100% / 0.08);
+    --shadow-elevated: 0 10px 40px hsl(222 30% 0% / 0.8), 0 20px 60px hsl(222 30% 0% / 0.5), inset 0 1px 1px hsl(0 0% 100% / 0.1);
+    --shadow-floating: 0 10px 40px hsl(222 30% 0% / 0.5), inset 0 1px 1px hsl(0 0% 100% / 0.08);
+    --shadow-glow: 0 0 30px hsl(25 85% 54% / 0.2), inset 0 1px 1px hsl(0 0% 100% / 0.1);
   }
 
   /* ===== LIGHT THEME ===== */
