@@ -45,25 +45,30 @@ export interface ProductionReportItem {
   duration_ms: number | null;
 }
 
-export function useProductionOrders(unitId: string | null, date: Date, shift: number = 1) {
+export function useProductionOrders(unitId: string | null, date: Date, shift: number = 1, projectId?: string | null) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const dateStr = format(date, 'yyyy-MM-dd');
 
-  const orderKey = ['production-order', unitId, dateStr, shift];
-  const itemsKey = ['production-order-items', unitId, dateStr, shift];
+  const orderKey = ['production-order', unitId, dateStr, shift, projectId ?? '__all__'];
+  const itemsKey = ['production-order-items', unitId, dateStr, shift, projectId ?? '__all__'];
 
-  // Fetch current day's order for this shift
+  // Fetch current day's order for this shift (filtered by project when provided)
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: orderKey,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('production_orders')
         .select('*')
         .eq('unit_id', unitId!)
         .eq('date', dateStr)
-        .eq('shift', shift)
-        .maybeSingle();
+        .eq('shift', shift);
+      
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+      
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data as ProductionOrder | null;
     },
@@ -73,15 +78,20 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   // Also fetch the other shift's order (to know if shift 1 is closed)
   const otherShift = shift === 1 ? 2 : 1;
   const { data: otherShiftOrder } = useQuery({
-    queryKey: ['production-order', unitId, dateStr, otherShift],
+    queryKey: ['production-order', unitId, dateStr, otherShift, projectId ?? '__all__'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('production_orders')
         .select('*')
         .eq('unit_id', unitId!)
         .eq('date', dateStr)
-        .eq('shift', otherShift)
-        .maybeSingle();
+        .eq('shift', otherShift);
+      
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+      
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       return data as ProductionOrder | null;
     },
@@ -307,11 +317,17 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   const resetDayOrders = useCallback(async () => {
     if (!unitId) return;
 
-    const { data: dayOrders, error: dayOrdersError } = await supabase
+    let dayQuery = supabase
       .from('production_orders')
       .select('id')
       .eq('unit_id', unitId)
       .eq('date', dateStr);
+    
+    if (projectId) {
+      dayQuery = dayQuery.eq('project_id', projectId);
+    }
+    
+    const { data: dayOrders, error: dayOrdersError } = await dayQuery;
 
     if (dayOrdersError) throw dayOrdersError;
     if (!dayOrders || dayOrders.length === 0) return;
@@ -357,7 +373,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     queryClient.invalidateQueries({ queryKey: ['checklist-completions'] });
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard-checklist-completions'] });
-  }, [unitId, dateStr, invalidate, queryClient]);
+  }, [unitId, dateStr, invalidate, queryClient, projectId]);
 
   // Close shift 1 and auto-create/update shift 2 with remaining items
   const closeShiftAndCreateNext = useCallback(async () => {
@@ -379,14 +395,19 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         quantity_ordered: r.quantity_pending,
       }));
 
-    // Check if shift 2 already exists for this day
-    const { data: existingShift2, error: existingShift2Error } = await supabase
+    // Check if shift 2 already exists for this day and project
+    let shift2Query = supabase
       .from('production_orders')
       .select('id')
       .eq('unit_id', unitId)
       .eq('date', dateStr)
-      .eq('shift', 2)
-      .maybeSingle();
+      .eq('shift', 2);
+    
+    if (projectId) {
+      shift2Query = shift2Query.eq('project_id', projectId);
+    }
+    
+    const { data: existingShift2, error: existingShift2Error } = await shift2Query.maybeSingle();
 
     if (existingShift2Error) throw existingShift2Error;
 
@@ -416,16 +437,18 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
 
     if (!shift2OrderId) {
       // Create shift 2 order
-      const { data: newOrder, error: orderError } = await supabase
-        .from('production_orders')
-        .insert({
+      const insertData: any = {
           unit_id: unitId,
           created_by: user.id,
           date: dateStr,
           status: 'active',
           shift: 2,
           notes: 'Continuação do Turno 1',
-        })
+        };
+      if (projectId) insertData.project_id = projectId;
+      const { data: newOrder, error: orderError } = await supabase
+        .from('production_orders')
+        .insert(insertData)
         .select('id')
         .single();
 
@@ -463,7 +486,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     if (insertShift2ItemsError) throw insertShift2ItemsError;
 
     invalidate();
-  }, [order?.id, user, unitId, shift, dateStr, report, invalidate]);
+  }, [order?.id, user, unitId, shift, dateStr, report, invalidate, projectId]);
 
   // Copy from another date
   const copyFromDate = useCallback(async (sourceDate: string) => {
