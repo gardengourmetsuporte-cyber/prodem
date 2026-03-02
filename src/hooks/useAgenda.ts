@@ -50,12 +50,21 @@ export function useAgenda() {
     enabled: !!user?.id,
   });
 
-  // Auto-create default categories for new users
+  // Auto-create default categories for new users (check DB to avoid race conditions)
   useEffect(() => {
-    if (!user?.id || !activeUnitId || defaultsInitRef.current || categories.length > 0) return;
+    if (!user?.id || !activeUnitId || defaultsInitRef.current) return;
     defaultsInitRef.current = true;
-    
+
     const init = async () => {
+      // Double-check DB to prevent duplicates from concurrent renders
+      const { data: existing } = await supabase
+        .from('task_categories' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (existing && existing.length > 0) return;
+
       const rows = DEFAULT_TASK_CATEGORIES.map((cat, i) => ({
         user_id: user.id,
         name: cat.name,
@@ -96,7 +105,7 @@ export function useAgenda() {
       }
     };
     init();
-  }, [user?.id, activeUnitId, categories.length, DEFAULT_TASK_CATEGORIES, queryClient, queryKey]);
+  }, [user?.id, activeUnitId, DEFAULT_TASK_CATEGORIES, queryClient, queryKey]);
 
   // Fetch all tasks for user
   const { data: allTasks = [], isLoading: tasksLoading } = useQuery({
