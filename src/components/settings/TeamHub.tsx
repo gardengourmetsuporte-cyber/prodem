@@ -76,17 +76,18 @@ export function TeamHub() {
 // TAB: MEMBROS
 // ═══════════════════════════════════════════════════════════════
 function MembersTab() {
-  const { users, isLoading, updateUserRole, refetch } = useUsers();
-  const { accessLevels, isLoading: levelsLoading, assignToUser } = useAccessLevels();
+  const { users, pendingUsers, isLoading, approveUser, suspendUser, refetch } = useUsers();
+  const { accessLevels, assignToUser } = useAccessLevels();
   const { user } = useAuth();
   const { activeUnit, activeUnitId, units } = useUnit();
   const queryClient = useQueryClient();
 
-  const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [passwordDialogUser, setPasswordDialogUser] = useState<UserWithRole | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+  const [rejectingUserId, setRejectingUserId] = useState<string | null>(null);
 
   // Action menu
   const [actionUser, setActionUser] = useState<UserWithRole | null>(null);
@@ -131,6 +132,32 @@ function MembersTab() {
       queryClient.invalidateQueries({ queryKey: ['user-unit-assignments', activeUnitId] });
     } catch {
       toast.error('Erro ao atribuir nível');
+    }
+  };
+
+  const handleApprovePending = async (pendingUser: UserWithRole) => {
+    setApprovingUserId(pendingUser.user_id);
+    try {
+      await approveUser(pendingUser.user_id, 'funcionario');
+      toast.success(`${pendingUser.full_name} aprovado com sucesso`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao aprovar usuário');
+    } finally {
+      setApprovingUserId(null);
+    }
+  };
+
+  const handleRejectPending = async (pendingUser: UserWithRole) => {
+    setRejectingUserId(pendingUser.user_id);
+    try {
+      await suspendUser(pendingUser.user_id);
+      toast.success(`${pendingUser.full_name} rejeitado`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao rejeitar usuário');
+    } finally {
+      setRejectingUserId(null);
     }
   };
 
@@ -202,6 +229,48 @@ function MembersTab() {
 
   return (
     <div className="space-y-2">
+      {pendingUsers.length > 0 && (
+        <div className="space-y-2 pb-2">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+            <p className="text-xs font-semibold text-warning">Aguardando aprovação ({pendingUsers.length})</p>
+          </div>
+
+          {pendingUsers.map((pendingUser) => (
+            <div key={`pending-${pendingUser.user_id}`} className="flex items-center gap-3 p-3 rounded-xl bg-warning/5 border border-warning/20">
+              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center shrink-0">
+                <AppIcon name="UserPlus" size={18} className="text-warning" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <span className="font-medium block truncate text-sm">{pendingUser.full_name}</span>
+                <span className="text-[11px] text-muted-foreground">Cadastro aguardando aprovação</span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs"
+                  disabled={approvingUserId === pendingUser.user_id || rejectingUserId === pendingUser.user_id}
+                  onClick={() => handleRejectPending(pendingUser)}
+                >
+                  {rejectingUserId === pendingUser.user_id ? 'Rejeitando...' : 'Rejeitar'}
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                  disabled={approvingUserId === pendingUser.user_id || rejectingUserId === pendingUser.user_id}
+                  onClick={() => handleApprovePending(pendingUser)}
+                >
+                  {approvingUserId === pendingUser.user_id ? 'Aprovando...' : 'Aprovar'}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {users.map((u) => {
         const isSelf = u.user_id === user?.id;
         const unitRole = u.unitRole || 'member';
