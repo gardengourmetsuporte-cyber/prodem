@@ -218,7 +218,10 @@ export function ProductionPlanSheet({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPlanItems(availableItems.map(a => ({ ...a })))}
+            onClick={() => {
+              setPlanItems(availableItems.map(a => ({ ...a })));
+              setCollapsedSectors(new Set());
+            }}
             className="text-xs"
           >
             <AppIcon name="RotateCcw" size={14} />
