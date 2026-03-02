@@ -213,10 +213,10 @@ export function SmartReceivingSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-8 max-h-[90vh] overflow-y-auto">
+      <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-8 max-h-[85vh] overflow-y-auto max-w-[calc(100vw)] sm:max-w-lg sm:mx-auto">
         <SheetHeader className="pb-4">
           <SheetTitle className="flex items-center gap-2">
-            <AppIcon name="AutoAwesome" size={20} className="text-primary" />
+            <AppIcon name="auto_awesome" size={20} className="text-primary" />
             Recebimento Inteligente
             {order?.supplier?.name && (
               <span className="text-sm font-normal text-muted-foreground">
@@ -316,7 +316,7 @@ export function SmartReceivingSheet({
               disabled={!invoiceFile && !boletoFile}
               className="w-full h-12 gap-2"
             >
-              <AppIcon name="AutoAwesome" size={16} />
+              <AppIcon name="auto_awesome" size={16} />
               Processar com IA
             </Button>
           </div>
@@ -326,8 +326,8 @@ export function SmartReceivingSheet({
         {step === 'processing' && (
           <div className="flex flex-col items-center justify-center py-12 gap-4">
             <div className="relative">
-              <AppIcon name="Progress_activity" size={48} className="text-primary animate-spin" />
-              <AppIcon name="AutoAwesome" size={20} className="text-primary absolute -top-1 -right-1 animate-pulse" />
+              <AppIcon name="progress_activity" size={48} className="text-primary animate-spin" />
+              <AppIcon name="auto_awesome" size={20} className="text-primary absolute -top-1 -right-1 animate-pulse" />
             </div>
             <p className="text-lg font-semibold">Processando...</p>
             <p className="text-sm text-muted-foreground text-center">

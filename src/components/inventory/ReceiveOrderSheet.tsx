@@ -135,7 +135,7 @@ export const ReceiveOrderSheet = forwardRef<HTMLDivElement, ReceiveOrderSheetPro
               }}
               className="w-full h-12 gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary"
             >
-              <AppIcon name="AutoAwesome" size={20} />
+              <AppIcon name="auto_awesome" size={20} />
               Escanear Nota Fiscal com IA
             </Button>
           )}
