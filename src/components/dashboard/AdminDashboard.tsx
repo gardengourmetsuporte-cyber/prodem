@@ -90,58 +90,58 @@ export function AdminDashboard() {
 
       {/* Checklists / Produção */}
       {hasAccess('checklists') && isVisible('checklist') && (
-        <DashboardSection title="Produção" icon="Factory" iconColor="text-warning" onNavigate={() => navigate('/checklists')}>
+        <div className="animate-spring-in">
           <LazyWidget><LazyChecklist /></LazyWidget>
-        </DashboardSection>
+        </div>
       )}
 
       {/* Orçamentos Recebidos */}
       {isVisible('quote-requests') && (
-        <DashboardSection title="Orçamentos recebidos" icon="FileText" iconColor="text-orange-400">
+        <div className="animate-spring-in">
           <QuoteRequestsWidget />
-        </DashboardSection>
+        </div>
       )}
 
       {/* Finance Chart */}
       {hasAccess('finance') && isVisible('finance-chart') && (
-        <DashboardSection title="Despesas do mês" icon="BarChart3" iconColor="text-primary" onNavigate={() => navigate('/finance')}>
+        <div className="animate-spring-in">
           <FinanceChartWidget />
-        </DashboardSection>
+        </div>
       )}
 
       {/* Bills Due */}
       {hasAccess('finance') && isVisible('bills-due') && (stats.billsDueSoon?.length ?? 0) > 0 && (
-        <DashboardSection title="Contas a vencer" icon="AlertTriangle" iconColor="text-amber-400" onNavigate={() => navigate('/finance')}>
+        <div className="animate-spring-in">
           <BillsDueWidget bills={stats.billsDueSoon || []} />
-        </DashboardSection>
+        </div>
       )}
 
       {/* Weekly Summary */}
       {hasAccess('cash-closing') && isVisible('weekly-summary') && (
-        <DashboardSection title="Resumo semanal" icon="Calendar" iconColor="text-blue-400" onNavigate={() => navigate('/cash-closing')}>
+        <div className="animate-spring-in">
           <LazyWidget><LazyWeeklySummary /></LazyWidget>
-        </DashboardSection>
+        </div>
       )}
 
       {/* Agenda */}
       {hasAccess('agenda') && isVisible('agenda') && (
-        <DashboardSection title="Agenda" icon="ListTodo" iconColor="text-violet-400" onNavigate={() => navigate('/agenda')}>
+        <div className="animate-spring-in">
           <LazyWidget><LazyAgenda /></LazyWidget>
-        </DashboardSection>
+        </div>
       )}
 
       {/* Leaderboard */}
       {hasAccess('ranking') && isVisible('leaderboard') && (
-        <DashboardSection title="Ranking" icon="Trophy" iconColor="text-yellow-400" onNavigate={() => navigate('/ranking')}>
+        <div className="animate-spring-in">
           <LazyWidget><LazyLeaderboard currentUserId={user?.id} /></LazyWidget>
-        </DashboardSection>
+        </div>
       )}
 
       {/* Cash Flow */}
       {hasAccess('finance') && isVisible('cash-flow') && (
-        <DashboardSection title="Fluxo de caixa projetado" icon="TrendingUp" iconColor="text-teal-400" onNavigate={() => navigate('/finance')}>
+        <div className="animate-spring-in">
           <LazyWidget><LazyCashFlow totalBalance={stats.monthBalance ?? 0} /></LazyWidget>
-        </DashboardSection>
+        </div>
       )}
 
       {/* Manage button */}
