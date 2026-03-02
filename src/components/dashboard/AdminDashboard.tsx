@@ -6,7 +6,6 @@ import { useUserModules } from '@/hooks/useAccessLevels';
 import { useDashboardWidgets } from '@/hooks/useDashboardWidgets';
 import { useLazyVisible } from '@/hooks/useLazyVisible';
 import { DashboardWidgetManager } from './DashboardWidgetManager';
-import { SetupChecklistWidget } from './SetupChecklistWidget';
 import { DashboardHeroFinance } from './DashboardHeroFinance';
 import { DashboardKPIGrid } from './DashboardKPIGrid';
 import { DashboardSection } from './DashboardSection';
@@ -14,6 +13,7 @@ import { FinanceChartWidget } from './FinanceChartWidget';
 import { BillsDueWidget } from './BillsDueWidget';
 import { AIInsightsWidget } from './AIInsightsWidget';
 import { PendingOrdersWidget } from './PendingOrdersWidget';
+import { QuoteRequestsWidget } from './QuoteRequestsWidget';
 import { AppIcon } from '@/components/ui/app-icon';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -80,9 +80,6 @@ export function AdminDashboard() {
         </p>
       </div>
 
-      {/* Setup Onboarding */}
-      <SetupChecklistWidget />
-
       {/* Hero Finance */}
       {hasAccess('finance') && isVisible('finance') && (
         <DashboardHeroFinance
@@ -100,10 +97,17 @@ export function AdminDashboard() {
         isVisible={isVisible}
       />
 
-      {/* Checklists */}
+      {/* Checklists / Produção */}
       {hasAccess('checklists') && isVisible('checklist') && (
-        <DashboardSection title="Checklists" icon="CheckSquare" iconColor="text-green-400" onNavigate={() => navigate('/checklists')}>
+        <DashboardSection title="Produção" icon="Factory" iconColor="text-amber-400" onNavigate={() => navigate('/checklists')}>
           <LazyWidget><LazyChecklist /></LazyWidget>
+        </DashboardSection>
+      )}
+
+      {/* Orçamentos Recebidos */}
+      {isVisible('quote-requests') && (
+        <DashboardSection title="Orçamentos recebidos" icon="FileText" iconColor="text-orange-400">
+          <QuoteRequestsWidget />
         </DashboardSection>
       )}
 
