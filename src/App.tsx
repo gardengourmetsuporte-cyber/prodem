@@ -227,7 +227,7 @@ const App = () => (
             <UnitProvider>
               <FabActionProvider>
                 <UnhandledRejectionGuard>
-                  <DevRoleSwitcher />
+                  {/* <DevRoleSwitcher /> */}
                   <AppRoutes />
                 </UnhandledRejectionGuard>
               </FabActionProvider>
