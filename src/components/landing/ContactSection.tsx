@@ -65,7 +65,7 @@ export function ContactSection() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-green-600 hover:bg-green-500 text-white font-bold text-base transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] shadow-[0_8px_30px_-8px_rgba(22,163,74,0.5)]"
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-success hover:bg-success/90 text-white font-bold text-base transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] shadow-lg"
           >
             <AppIcon name="MessageCircle" size={22} />
             Chamar no WhatsApp

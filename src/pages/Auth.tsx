@@ -30,7 +30,7 @@ function BrandPanel() {
         }}
       />
 
-      {/* Glow orbs - Emerald theme */}
+      {/* Glow orbs - Prodem theme */}
       <div
         className="absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full blur-[150px] opacity-20 pointer-events-none"
         style={{ background: 'hsl(25 85% 54%)' }}
@@ -120,7 +120,7 @@ function MobileBrandHeader() {
       {/* Subtle border top separator indicating header */}
       <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
-      {/* Animated glow orbs - Emerald Theme */}
+      {/* Animated glow orbs - Prodem Theme */}
       <div
         className="absolute top-[15%] left-[20%] w-[250px] h-[250px] rounded-full blur-[100px] opacity-20 pointer-events-none"
         style={{

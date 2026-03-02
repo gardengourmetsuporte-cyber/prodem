@@ -64,7 +64,7 @@ export function ScheduleCalendar({
     } else if (userSchedule) {
       // Current user's schedule
       if (userSchedule.status === 'approved') {
-        classes += ' bg-green-500/20 text-green-700 dark:text-green-400';
+        classes += ' bg-success/20 text-success';
       } else if (userSchedule.status === 'pending') {
         classes += ' bg-amber-500/20 text-amber-700 dark:text-amber-400';
       } else if (userSchedule.status === 'rejected') {
@@ -142,15 +142,15 @@ export function ScheduleCalendar({
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <div className="w-3 h-3 rounded-full bg-success" />
           <span>Aprovado</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-amber-500" />
+          <div className="w-3 h-3 rounded-full bg-warning" />
           <span>Pendente</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="w-3 h-3 rounded-full bg-destructive" />
           <span>Recusado</span>
         </div>
       </div>

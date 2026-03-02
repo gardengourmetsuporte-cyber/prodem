@@ -79,8 +79,8 @@ export function FinanceHome({
                 <span className={cn(
                   "text-[10px] font-bold px-1 py-0.5 rounded",
                   profit >= 0 
-                    ? "bg-green-500/15" 
-                    : "bg-red-500/15"
+                    ? "bg-success/15" 
+                    : "bg-destructive/15"
                 )} style={{ color: profit >= 0 ? 'var(--gp-positive)' : 'var(--gp-negative)' }}>
                   {profit >= 0 ? '+' : '-'}{Math.abs(Number(profitPercent))}%
                 </span>
