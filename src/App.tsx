@@ -64,6 +64,7 @@ const CashClosing = lazy(() => lazyRetry(() => import("./pages/CashClosing")));
 const Employees = lazy(() => lazyRetry(() => import("./pages/Employees")));
 const TabletConfirm = lazy(() => lazyRetry(() => import("./pages/TabletConfirm")));
 const CardapioHub = lazy(() => lazyRetry(() => import("./pages/CardapioHub")));
+const SeedPage = lazy(() => lazyRetry(() => import("./pages/Seed")));
 
 const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const Orders = lazy(() => lazyRetry(() => import("./pages/Orders")));
@@ -191,7 +192,7 @@ function AppRoutes() {
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/cash-closing" element={<ProtectedRoute><CashClosing /></ProtectedRoute>} />
-          
+
           <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
           <Route path="/cotacao/:token" element={<QuotationPublic />} />
           <Route path="/m/:unitId" element={<DigitalMenu />} />
@@ -202,16 +203,17 @@ function AppRoutes() {
           <Route path="/tablet-admin" element={<Navigate to="/cardapio" replace />} />
           <Route path="/cardapio" element={<ProtectedRoute><CardapioHub /></ProtectedRoute>} />
           <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
-          
+
           <Route path="/ranking" element={<ProtectedRoute><Ranking /></ProtectedRoute>} />
 
           <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          
+
           <Route path="/gamification" element={<Navigate to="/cardapio" replace />} />
           <Route path="/plans" element={<Navigate to="/" replace />} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarFull /></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+          <Route path="/seed" element={<ProtectedRoute><SeedPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
