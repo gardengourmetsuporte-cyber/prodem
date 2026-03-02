@@ -190,7 +190,11 @@ export function ProductionPlanSheet({
       }
     });
     setPlanItems([...merged]);
-    toast.success(`${items.length} itens pendentes importados`);
+    const yesterday = new Date(date);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateLabel = format(yesterday, "dd/MM", { locale: ptBR });
+    const totalQty = items.reduce((s, i) => s + i.quantity_ordered, 0);
+    toast.success(`${items.length} itens pendentes de ${dateLabel} importados (${totalQty} pç)`);
   };
 
   const handleSave = async () => {
@@ -306,10 +310,10 @@ export function ProductionPlanSheet({
               <button
                 onClick={handlePullPending}
                 className="h-9 flex-1 rounded-lg bg-secondary/60 hover:bg-secondary text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5"
-                title="Puxar pendentes do último turno"
+                title="Puxar pendências do dia anterior"
               >
                 <AppIcon name="History" size={14} />
-                <span>Puxar último turno</span>
+                <span>Pendências de ontem</span>
               </button>
               <button
                 onClick={handleReset}
