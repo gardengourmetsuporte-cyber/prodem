@@ -30,7 +30,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   // Produção (prioridade)
   { icon: 'Factory', label: 'Produção', href: '/production', group: 'producao', groupLabel: 'Produção' },
-  { icon: 'ClipboardCheck', label: 'Checklists', href: '/checklists', group: 'producao', groupLabel: 'Produção' },
+  
   { icon: 'Package', label: 'Estoque', href: '/inventory', group: 'producao', groupLabel: 'Produção' },
   { icon: 'ShoppingCart', label: 'Pedidos', href: '/orders', group: 'producao', groupLabel: 'Produção' },
   // Gestão
