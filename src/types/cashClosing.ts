@@ -76,10 +76,10 @@ export interface CashClosingFormData {
 
 export const PAYMENT_METHODS = [
   { key: 'cash_amount', label: 'Dinheiro', icon: 'Banknote', color: '#22c55e' },
-  { key: 'debit_amount', label: 'Débito', icon: 'CreditCard', color: '#3b82f6' },
-  { key: 'credit_amount', label: 'Crédito', icon: 'CreditCard', color: '#8b5cf6' },
+  { key: 'debit_amount', label: 'Boleto', icon: 'FileText', color: '#3b82f6' },
+  { key: 'credit_amount', label: 'Transferência / TED / DOC', icon: 'Building2', color: '#8b5cf6' },
   { key: 'pix_amount', label: 'Pix', icon: 'Smartphone', color: '#06b6d4' },
-  { key: 'meal_voucher_amount', label: 'Vale Alimentação', icon: 'Utensils', color: '#f59e0b' },
-  { key: 'delivery_amount', label: 'iFood/Delivery', icon: 'Truck', color: '#f97316' },
-  { key: 'signed_account_amount', label: 'Conta Assinada', icon: 'FileSignature', color: '#64748b' },
+  { key: 'meal_voucher_amount', label: 'Cheque', icon: 'FileCheck', color: '#f59e0b' },
+  { key: 'delivery_amount', label: 'Cartão (Débito/Crédito)', icon: 'CreditCard', color: '#f97316' },
+  { key: 'signed_account_amount', label: 'Faturado (a prazo)', icon: 'ClipboardList', color: '#64748b' },
 ] as const;
