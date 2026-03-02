@@ -35,6 +35,11 @@ export const ICON_MAP: Record<string, string> = {
   Send: 'send',
   Link2: 'link',
   Archive: 'archive',
+  Play: 'play_arrow',
+  Pause: 'pause',
+  SkipForward: 'skip_next',
+  Undo2: 'undo',
+  CheckCircle: 'check_circle',
 
   // Status & Feedback
   Check: 'check',
