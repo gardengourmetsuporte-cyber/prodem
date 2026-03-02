@@ -126,15 +126,6 @@ export function AdminDashboard() {
                   <span className="text-[11px] font-bold tracking-[0.12em] uppercase text-muted-foreground">
                     Produção hoje
                   </span>
-                  {hasOrder && (
-                    <span className={cn(
-                      "ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold",
-                      prodPercent >= 100 ? "bg-success/15 text-success" : prodPercent > 0 ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground"
-                    )}>
-                      <span className={cn("w-1.5 h-1.5 rounded-full", prodPercent >= 100 ? "bg-success" : prodPercent > 0 ? "bg-warning animate-pulse" : "bg-muted-foreground")} />
-                      {prodPercent >= 100 ? 'Concluído' : prodPercent > 0 ? 'Em andamento' : 'Não iniciado'}
-                    </span>
-                  )}
                 </div>
               </div>
               <AppIcon name="ChevronRight" size={16} className="text-muted-foreground/40" />
@@ -171,12 +162,15 @@ export function AdminDashboard() {
                     <div key={item.checklist_item_id} className="flex items-center gap-2 py-1">
                       <span className={cn(
                         "w-2 h-2 rounded-full shrink-0",
-                        item.status === 'complete' ? 'bg-success' : item.status === 'partial' ? 'bg-warning' : 'bg-muted-foreground/30'
+                        item.status === 'complete' ? 'bg-success' : item.status === 'partial' || item.status === 'in_progress' ? 'bg-warning' : 'bg-muted-foreground/30'
                       )} />
-                      <span className="text-xs text-foreground truncate flex-1">{item.item_name}</span>
+                      <span className={cn(
+                        "text-xs truncate flex-1",
+                        item.status === 'complete' ? 'text-success' : item.status === 'partial' || item.status === 'in_progress' ? 'text-warning' : 'text-foreground'
+                      )}>{item.item_name}</span>
                       <span className={cn(
                         "text-xs font-bold tabular-nums shrink-0",
-                        item.status === 'complete' ? 'text-success' : item.status === 'partial' ? 'text-warning' : 'text-muted-foreground'
+                        item.status === 'complete' ? 'text-success' : item.status === 'partial' || item.status === 'in_progress' ? 'text-warning' : 'text-muted-foreground'
                       )}>
                         {item.quantity_done}/{item.quantity_ordered}
                       </span>
