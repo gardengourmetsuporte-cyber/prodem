@@ -74,6 +74,9 @@ export function useChecklistCompletions({
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-checklist-completions'] });
     invalidateGamificationCaches(queryClient);
   }, [completions, userId, queryClient, activeUnitId]);
 
@@ -119,6 +122,8 @@ export function useChecklistCompletions({
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
     invalidateGamificationCaches(queryClient);
   }, [completions, sectors, queryClient, activeUnitId]);
 
@@ -259,6 +264,8 @@ export function useChecklistCompletions({
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
   }, [userId, queryClient, activeUnitId]);
 
   const finishProduction = useCallback(async (
@@ -284,6 +291,8 @@ export function useChecklistCompletions({
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
     invalidateGamificationCaches(queryClient);
   }, [completions, userId, queryClient, activeUnitId]);
 
