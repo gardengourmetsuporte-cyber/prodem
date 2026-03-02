@@ -22,6 +22,7 @@ interface PostCardProps {
 }
 
 async function handleShare(post: MarketingPost) {
+  // On mobile with Web Share API, share directly (Instagram appears as option)
   if (navigator.share && post.media_urls.length > 0) {
     try {
       const response = await fetch(post.media_urls[0]);
@@ -41,6 +42,8 @@ async function handleShare(post: MarketingPost) {
       /* fallback */
     }
   }
+
+  // Fallback: download image, copy caption, open Instagram
   if (post.media_urls.length > 0) {
     try {
       const response = await fetch(post.media_urls[0]);
@@ -59,13 +62,13 @@ async function handleShare(post: MarketingPost) {
   if (post.caption) {
     try {
       await navigator.clipboard.writeText(post.caption);
-      toast.success('Imagem baixada e legenda copiada! Abra o Instagram e poste.');
-    } catch {
-      toast.success('Imagem baixada! Copie a legenda manualmente.');
-    }
-  } else {
-    toast.success('Imagem baixada! Abra o Instagram e poste.');
+    } catch {}
   }
+  // Open Instagram
+  toast.success('Imagem baixada e legenda copiada! Abrindo o Instagram...');
+  setTimeout(() => {
+    window.open('https://www.instagram.com/', '_blank');
+  }, 800);
 }
 
 export function PostCard({ post, onEdit, onDelete, onPublish }: PostCardProps) {
@@ -149,7 +152,7 @@ export function PostCard({ post, onEdit, onDelete, onPublish }: PostCardProps) {
         <Button
           variant="outline"
           size="sm"
-          className="w-full gap-2 text-xs border-pink-500/30 hover:bg-pink-500/10 text-pink-400"
+          className="w-full gap-2 text-xs border-primary/30 hover:bg-primary/10 text-primary"
           onClick={() => handleShare(post)}
         >
           <AppIcon name="share" size={14} />
