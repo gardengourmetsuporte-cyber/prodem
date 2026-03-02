@@ -294,18 +294,18 @@ export function FinanceTransactions({
                   <div key={dateStr} ref={dateStr === todayStr ? todayRef : undefined}>
                     {/* Date Header */}
                     <div className={cn(
-                      "flex items-center justify-between py-2 px-3 rounded-lg sticky top-[52px] lg:top-[64px] z-20 backdrop-blur-xl transition-all duration-300 shadow-sm border border-border/10",
-                      dateStr === todayStr ? 'gradient-primary border-primary/20' : 'bg-background/80'
+                      "flex items-center justify-between py-2.5 px-3 rounded-lg sticky top-[52px] lg:top-[64px] z-20 backdrop-blur-xl transition-all duration-300 shadow-sm border",
+                      dateStr === todayStr ? 'bg-primary border-primary/30' : 'bg-background/80 border-border/10'
                     )}>
                       <div className="flex items-center gap-2">
                         {dateStr === todayStr && (
-                          <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
                         )}
-                        <span className={cn("text-xs uppercase tracking-wider font-semibold", dateStr === todayStr ? 'text-primary-foreground' : 'text-muted-foreground')}>
+                        <span className={cn("text-xs uppercase tracking-wider font-semibold", dateStr === todayStr ? 'text-white' : 'text-muted-foreground')}>
                           {getDateLabel(dateStr)}
                         </span>
                       </div>
-                      <span className={cn("text-sm font-bold font-display", dayTotal >= 0 ? (dateStr === todayStr ? 'text-primary-foreground' : 'text-success') : (dateStr === todayStr ? 'text-primary-foreground/90' : 'text-destructive'))}>
+                      <span className={cn("text-sm font-bold font-display", dateStr === todayStr ? 'text-white' : dayTotal >= 0 ? 'text-success' : 'text-destructive')}>
                         {formatCurrency(dayTotal)}
                       </span>
                     </div>
