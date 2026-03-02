@@ -65,7 +65,7 @@ export default function CashClosing() {
 
 
 
-        <Sheet open={isFormOpen} onOpenChange={(open) => {
+        <Sheet mobileHandleOnly open={isFormOpen} onOpenChange={(open) => {
           if (open) setIsFormOpen(true);
         }}>
           <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
