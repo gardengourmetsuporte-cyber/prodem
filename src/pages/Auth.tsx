@@ -67,9 +67,9 @@ function BrandPanel() {
           {[
             { icon: 'BarChart3', label: 'Financeiro' },
             { icon: 'Package', label: 'Estoque' },
+            { icon: 'ClipboardCheck', label: 'Produção' },
             { icon: 'Users', label: 'Equipe' },
-            { icon: 'ListChecks', label: 'Checklists' },
-            { icon: 'Sparkles', label: 'IA' },
+            { icon: 'ShoppingCart', label: 'Pedidos' },
           ].map(({ icon, label }) => (
             <div
               key={label}
@@ -169,9 +169,9 @@ function MobileBrandHeader() {
           {[
             { icon: 'BarChart3', label: 'Financeiro' },
             { icon: 'Package', label: 'Estoque' },
+            { icon: 'ClipboardCheck', label: 'Produção' },
             { icon: 'Users', label: 'Equipe' },
-            { icon: 'ListChecks', label: 'Checklists' },
-            { icon: 'Sparkles', label: 'IA' },
+            { icon: 'ShoppingCart', label: 'Pedidos' },
           ].map(({ icon, label }) => (
             <div
               key={label}
