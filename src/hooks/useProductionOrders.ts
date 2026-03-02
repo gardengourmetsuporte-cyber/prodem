@@ -129,6 +129,8 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       return data || [];
     },
     enabled: !!unitId && !!order?.id && orderItems.length > 0,
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
   });
 
   // Build report for THIS shift's items
