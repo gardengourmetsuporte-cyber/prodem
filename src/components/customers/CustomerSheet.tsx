@@ -12,14 +12,14 @@ import type { Customer } from '@/types/customer';
 
 const ORIGINS = [
   { value: 'manual', label: 'Manual' },
-  { value: 'pdv', label: 'PDV' },
-  { value: 'mesa', label: 'Mesa' },
-  { value: 'ifood', label: 'iFood' },
+  { value: 'pdv', label: 'ERP' },
+  { value: 'indicacao', label: 'Indicação' },
   { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'site', label: 'Site' },
   { value: 'csv', label: 'CSV' },
 ] as const;
 
-const SUGGESTED_TAGS = ['VIP', 'Delivery', 'Fiel', 'Corporativo', 'Evento', 'Alergias', 'Vegano', 'Sem glúten'];
+const SUGGESTED_TAGS = ['VIP', 'Corporativo', 'Fiel', 'Indústria', 'Governo', 'Revenda', 'Manutenção', 'Projeto'];
 
 interface Props {
   open: boolean;

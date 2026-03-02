@@ -85,7 +85,7 @@ export function CardapioSettings({ initialTab = null }: CardapioSettingsProps) {
   };
 
   const TABS: { id: SettingsTab; label: string; icon: string; description: string }[] = [
-    { id: 'pdv', label: 'Integração PDV', icon: 'Zap', description: 'Conexão com Colibri e envio automático' },
+    { id: 'pdv', label: 'Integração ERP', icon: 'Zap', description: 'Conexão com ERP Prodem e envio automático' },
     { id: 'mesas', label: 'Mesas & QR Codes', icon: 'QrCode', description: 'Cadastrar mesas e gerar QR codes' },
     { id: 'roleta', label: 'Roleta / Gamificação', icon: 'Dices', description: 'Prêmios, probabilidades e métricas' },
     { id: 'config', label: 'Geral', icon: 'Cog', description: 'Delivery, retirada e horários' },
@@ -128,7 +128,7 @@ export function CardapioSettings({ initialTab = null }: CardapioSettingsProps) {
       {activeTab === 'pdv' && (
         <div className="card-base p-4 space-y-4">
           <h3 className="font-bold text-foreground flex items-center gap-2 text-sm">
-            <AppIcon name="Zap" size={16} className="text-primary" /> Integração Colibri PDV
+            <AppIcon name="Zap" size={16} className="text-primary" /> Integração ERP Prodem
             {pdvConfig?.is_active && (
               <Badge variant="outline" className="text-success border-success/30 text-[10px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-success mr-1 inline-block" /> Conectado
@@ -137,7 +137,7 @@ export function CardapioSettings({ initialTab = null }: CardapioSettingsProps) {
           </h3>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs">URL do Hub Colibri</Label>
+              <Label className="text-xs">URL do Hub ERP</Label>
               <Input placeholder="http://192.168.1.100:8080/api/orders" value={hubUrl} onChange={e => setHubUrl(e.target.value)} />
             </div>
             <div>
@@ -147,7 +147,7 @@ export function CardapioSettings({ initialTab = null }: CardapioSettingsProps) {
             <div>
               <Label className="text-xs">Código de Pagamento</Label>
               <Input placeholder="1" value={paymentCode} onChange={e => setPaymentCode(e.target.value)} />
-              <p className="text-[10px] text-muted-foreground mt-1">Código da forma de pagamento no Colibri</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Código da forma de pagamento no ERP</p>
             </div>
             <div className="flex items-center justify-between py-1">
               <Label className="text-xs">Integração ativa</Label>

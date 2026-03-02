@@ -133,7 +133,7 @@ export const ALL_MODULES: ModuleDef[] = [
       { key: 'menu-admin.options', label: 'Grupos de opcionais', icon: 'ListPlus' },
       { key: 'menu-admin.orders', label: 'Cotações recebidas', icon: 'FileText' },
       { key: 'menu-admin.tables', label: 'QR Codes', icon: 'QrCode' },
-      { key: 'menu-admin.pdv', label: 'Conexão PDV (Colibri)', icon: 'Monitor' },
+      { key: 'menu-admin.pdv', label: 'Conexão ERP Prodem', icon: 'Monitor' },
     ],
   },
   // ── Sistema ──
