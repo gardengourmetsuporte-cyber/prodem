@@ -31,13 +31,14 @@ import { AppIcon } from '@/components/ui/app-icon';
  }
  
  export function CashClosingDetail({ closing, isAdmin, onClose }: Props) {
-   const { approveClosing, markDivergent, deleteClosing, updateClosing } = useCashClosing();
-   const [isApproving, setIsApproving] = useState(false);
-   const [isMarkingDivergent, setIsMarkingDivergent] = useState(false);
-   const [showDivergentDialog, setShowDivergentDialog] = useState(false);
-   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-   const [divergentNotes, setDivergentNotes] = useState('');
-   const [showReceipt, setShowReceipt] = useState(false);
+  const { approveClosing, markDivergent, deleteClosing, updateClosing } = useCashClosing();
+    const [isApproving, setIsApproving] = useState(false);
+    const [isMarkingDivergent, setIsMarkingDivergent] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDivergentDialog, setShowDivergentDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [divergentNotes, setDivergentNotes] = useState('');
+    const [showReceipt, setShowReceipt] = useState(false);
 
    // Edit mode
    const [isEditing, setIsEditing] = useState(false);
@@ -129,13 +130,18 @@ import { AppIcon } from '@/components/ui/app-icon';
      if (success) onClose();
    };
  
-    const handleDelete = async () => {
-      const success = await deleteClosing(closing.id);
-      if (success) {
-        onClose();
-      }
-      setShowDeleteDialog(false);
-    };
+     const handleDelete = async () => {
+       setIsDeleting(true);
+       try {
+         const success = await deleteClosing(closing.id);
+         if (success) {
+           setShowDeleteDialog(false);
+           onClose();
+         }
+       } finally {
+         setIsDeleting(false);
+       }
+     };
  
    const status = getStatusConfig(closing.status);
 
@@ -536,20 +542,25 @@ import { AppIcon } from '@/components/ui/app-icon';
            <AlertDialogHeader>
              <AlertDialogTitle>Excluir Fechamento</AlertDialogTitle>
              <AlertDialogDescription>
-               Tem certeza que deseja excluir este fechamento? Esta ação não pode ser desfeita.
-             </AlertDialogDescription>
-           </AlertDialogHeader>
-           <AlertDialogFooter>
-             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-             <AlertDialogAction
-               onClick={handleDelete}
-               className="bg-destructive hover:bg-destructive/90"
-             >
-               Excluir
-             </AlertDialogAction>
-           </AlertDialogFooter>
-         </AlertDialogContent>
-       </AlertDialog>
-     </ScrollArea>
-   );
- }
+                Tem certeza que deseja excluir este fechamento? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelete();
+                }}
+                disabled={isDeleting}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                {isDeleting && <AppIcon name="Loader2" className="w-4 h-4 mr-2 animate-spin" />}
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </ScrollArea>
+    );
+  }
