@@ -16,6 +16,18 @@ interface PlanItem {
   target_quantity: number;
   piece_dimensions: string | null;
   quantity_ordered: number;
+  sectorName: string;
+  sectorColor: string;
+  subcategoryName: string;
+}
+
+interface GroupedItems {
+  sectorName: string;
+  sectorColor: string;
+  subcategories: {
+    name: string;
+    items: PlanItem[];
+  }[];
 }
 
 interface ProductionPlanSheetProps {
@@ -35,8 +47,9 @@ export function ProductionPlanSheet({
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
 
-  // Build available items from sectors (only production items with target_quantity > 0)
+  // Build available items from sectors (ALL active items)
   const availableItems = useMemo(() => {
     const items: PlanItem[] = [];
     sectors.forEach((sector: any) => {
@@ -44,35 +57,73 @@ export function ProductionPlanSheet({
       sector.subcategories?.forEach(sub => {
         sub.items?.forEach((item: any) => {
           if (!item.is_active || item.deleted_at) return;
-          if (item.target_quantity > 0) {
-            items.push({
-              checklist_item_id: item.id,
-              name: item.name,
-              target_quantity: item.target_quantity,
-              piece_dimensions: item.piece_dimensions || null,
-              quantity_ordered: item.target_quantity, // Default to target
-            });
-          }
+          items.push({
+            checklist_item_id: item.id,
+            name: item.name,
+            target_quantity: item.target_quantity || 0,
+            piece_dimensions: item.piece_dimensions || null,
+            quantity_ordered: item.target_quantity || 0,
+            sectorName: sector.name,
+            sectorColor: sector.color || '#64748b',
+            subcategoryName: sub.name,
+          });
         });
       });
     });
     return items;
   }, [sectors]);
 
+  // Group items by sector > subcategory
+  const groupedItems = useMemo(() => {
+    const source = search
+      ? availableItems.filter(a =>
+          a.name.toLowerCase().includes(search.toLowerCase()) ||
+          a.subcategoryName.toLowerCase().includes(search.toLowerCase()) ||
+          a.sectorName.toLowerCase().includes(search.toLowerCase())
+        )
+      : availableItems;
+
+    const groups: GroupedItems[] = [];
+    const sectorMap = new Map<string, GroupedItems>();
+
+    source.forEach(item => {
+      let group = sectorMap.get(item.sectorName);
+      if (!group) {
+        group = { sectorName: item.sectorName, sectorColor: item.sectorColor, subcategories: [] };
+        sectorMap.set(item.sectorName, group);
+        groups.push(group);
+      }
+      let sub = group.subcategories.find(s => s.name === item.subcategoryName);
+      if (!sub) {
+        sub = { name: item.subcategoryName, items: [] };
+        group.subcategories.push(sub);
+      }
+      sub.items.push(item);
+    });
+
+    return groups;
+  }, [availableItems, search]);
+
   // Initialize from existing items or defaults
   useEffect(() => {
     if (!open) return;
     if (existingItems.length > 0) {
-      const mapped = existingItems.map(ei => ({
-        checklist_item_id: ei.checklist_item_id,
-        name: ei.checklist_item?.name || 'Item',
-        target_quantity: ei.checklist_item?.target_quantity || 0,
-        piece_dimensions: ei.checklist_item?.piece_dimensions || null,
-        quantity_ordered: ei.quantity_ordered,
-      }));
+      const nameMap = new Map(availableItems.map(a => [a.checklist_item_id, a]));
+      const mapped = existingItems.map(ei => {
+        const avail = nameMap.get(ei.checklist_item_id);
+        return {
+          checklist_item_id: ei.checklist_item_id,
+          name: ei.checklist_item?.name || 'Item',
+          target_quantity: ei.checklist_item?.target_quantity || 0,
+          piece_dimensions: ei.checklist_item?.piece_dimensions || null,
+          quantity_ordered: ei.quantity_ordered,
+          sectorName: avail?.sectorName || '',
+          sectorColor: avail?.sectorColor || '#64748b',
+          subcategoryName: avail?.subcategoryName || '',
+        };
+      });
       setPlanItems(mapped);
     } else {
-      // Start with all available items at their target qty
       setPlanItems(availableItems.map(a => ({ ...a })));
     }
   }, [open, existingItems, availableItems]);
@@ -93,6 +144,15 @@ export function ProductionPlanSheet({
     }
   };
 
+  const toggleSector = (sectorName: string) => {
+    setCollapsedSectors(prev => {
+      const next = new Set(prev);
+      if (next.has(sectorName)) next.delete(sectorName);
+      else next.add(sectorName);
+      return next;
+    });
+  };
+
   const handleCopyYesterday = async () => {
     const yesterday = format(subDays(date, 1), 'yyyy-MM-dd');
     const items = await onCopyFromDate(yesterday);
@@ -100,7 +160,6 @@ export function ProductionPlanSheet({
       toast.error('Nenhum plano encontrado no dia anterior');
       return;
     }
-    // Map copied items with names from availableItems
     const nameMap = new Map(availableItems.map(a => [a.checklist_item_id, a]));
     const mapped = items
       .filter(i => nameMap.has(i.checklist_item_id))
@@ -132,10 +191,6 @@ export function ProductionPlanSheet({
       setSaving(false);
     }
   };
-
-  const filteredAvailable = search
-    ? availableItems.filter(a => a.name.toLowerCase().includes(search.toLowerCase()))
-    : availableItems;
 
   const selectedIds = new Set(planItems.map(p => p.checklist_item_id));
   const totalOrdered = planItems.reduce((s, p) => s + p.quantity_ordered, 0);
@@ -169,74 +224,121 @@ export function ProductionPlanSheet({
 
         {/* Search */}
         <Input
-          placeholder="Buscar peça..."
+          placeholder="Buscar peça ou categoria..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="mb-3 h-10"
         />
 
-        {/* Items list */}
-        <div className="flex-1 overflow-y-auto space-y-1.5 -mx-2 px-2">
-          {filteredAvailable.map(item => {
-            const isSelected = selectedIds.has(item.checklist_item_id);
-            const planItem = planItems.find(p => p.checklist_item_id === item.checklist_item_id);
+        {/* Grouped Items list */}
+        <div className="flex-1 overflow-y-auto space-y-4 -mx-2 px-2">
+          {groupedItems.map(group => {
+            const isCollapsed = collapsedSectors.has(group.sectorName);
+            const sectorSelectedCount = group.subcategories.reduce(
+              (acc, sub) => acc + sub.items.filter(i => selectedIds.has(i.checklist_item_id)).length, 0
+            );
+            const sectorTotalItems = group.subcategories.reduce((acc, sub) => acc + sub.items.length, 0);
 
             return (
-              <div
-                key={item.checklist_item_id}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl transition-all",
-                  isSelected ? "bg-primary/5 ring-1 ring-primary/20" : "bg-card/60"
-                )}
-              >
+              <div key={group.sectorName}>
+                {/* Sector Header */}
                 <button
-                  onClick={() => toggleItem(item.checklist_item_id)}
-                  className={cn(
-                    "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
-                    isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
-                  )}
+                  onClick={() => toggleSector(group.sectorName)}
+                  className="w-full flex items-center gap-2 py-2 px-1 mb-1"
                 >
-                  {isSelected && <AppIcon name="Check" size={14} />}
+                  <div
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: group.sectorColor }}
+                  />
+                  <span className="text-sm font-bold text-foreground flex-1 text-left">
+                    {group.sectorName}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {sectorSelectedCount}/{sectorTotalItems}
+                  </span>
+                  <AppIcon
+                    name="ChevronDown"
+                    size={14}
+                    className={cn("text-muted-foreground transition-transform", isCollapsed && "-rotate-90")}
+                  />
                 </button>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{item.name}</p>
-                  {item.piece_dimensions && (
-                    <p className="text-[10px] text-muted-foreground">{item.piece_dimensions}</p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground">Meta padrão: {item.target_quantity}</p>
-                </div>
+                {!isCollapsed && group.subcategories.map(sub => (
+                  <div key={sub.name} className="mb-2">
+                    {/* Subcategory label */}
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-1">
+                      {sub.name}
+                    </p>
 
-                {isSelected && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => updateQty(item.checklist_item_id, (planItem?.quantity_ordered || 0) - 5)}
-                      className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center"
-                    >
-                      <AppIcon name="Minus" size={12} />
-                    </button>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={planItem?.quantity_ordered || 0}
-                      onChange={e => updateQty(item.checklist_item_id, parseInt(e.target.value) || 0)}
-                      className="w-14 h-7 text-center text-sm font-bold rounded-lg bg-background border border-border"
-                    />
-                    <button
-                      onClick={() => updateQty(item.checklist_item_id, (planItem?.quantity_ordered || 0) + 5)}
-                      className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center"
-                    >
-                      <AppIcon name="Plus" size={12} />
-                    </button>
+                    <div className="space-y-1">
+                      {sub.items.map(item => {
+                        const isSelected = selectedIds.has(item.checklist_item_id);
+                        const planItem = planItems.find(p => p.checklist_item_id === item.checklist_item_id);
+
+                        return (
+                          <div
+                            key={item.checklist_item_id}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl transition-all",
+                              isSelected ? "bg-primary/5 ring-1 ring-primary/20" : "bg-card/60"
+                            )}
+                          >
+                            <button
+                              onClick={() => toggleItem(item.checklist_item_id)}
+                              className={cn(
+                                "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all",
+                                isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/30"
+                              )}
+                            >
+                              {isSelected && <AppIcon name="Check" size={14} />}
+                            </button>
+
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{item.name}</p>
+                              {item.piece_dimensions && (
+                                <p className="text-[10px] text-muted-foreground">{item.piece_dimensions}</p>
+                              )}
+                              {item.target_quantity > 0 && (
+                                <p className="text-[10px] text-muted-foreground">Meta padrão: {item.target_quantity}</p>
+                              )}
+                            </div>
+
+                            {isSelected && (
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => updateQty(item.checklist_item_id, (planItem?.quantity_ordered || 0) - 5)}
+                                  className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center"
+                                >
+                                  <AppIcon name="Minus" size={12} />
+                                </button>
+                                <input
+                                  type="number"
+                                  inputMode="numeric"
+                                  value={planItem?.quantity_ordered || 0}
+                                  onChange={e => updateQty(item.checklist_item_id, parseInt(e.target.value) || 0)}
+                                  className="w-14 h-7 text-center text-sm font-bold rounded-lg bg-background border border-border"
+                                />
+                                <button
+                                  onClick={() => updateQty(item.checklist_item_id, (planItem?.quantity_ordered || 0) + 5)}
+                                  className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center"
+                                >
+                                  <AppIcon name="Plus" size={12} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             );
           })}
 
-          {filteredAvailable.length === 0 && (
+          {groupedItems.length === 0 && (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              Nenhuma peça com meta encontrada. Configure target_quantity nos itens do checklist.
+              {search ? 'Nenhum item encontrado para esta busca.' : 'Nenhum item de produção encontrado. Configure os itens nos setores do checklist.'}
             </div>
           )}
         </div>
