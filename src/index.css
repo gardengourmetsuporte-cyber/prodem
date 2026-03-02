@@ -269,8 +269,8 @@
     background-size: 350% 350%;
     animation: navyCardFlow 12s ease-in-out infinite;
     color: hsl(0 0% 95%);
-    border: 1px solid hsl(156 40% 28% / 0.4);
-    box-shadow: 0 4px 20px hsl(156 60% 5% / 0.5);
+    border: 1px solid hsl(25 60% 30% / 0.4);
+    box-shadow: 0 4px 20px hsl(25 60% 10% / 0.5);
     --foreground: 0 0% 95%;
     --muted-foreground: 0 0% 70%;
     --secondary: 0 0% 20%;
@@ -289,26 +289,26 @@
     background: linear-gradient(145deg,
         hsl(0 0% 97%) 0%,
         hsl(0 0% 95%) 25%,
-        hsl(156 30% 90%) 50%,
-        hsl(156 35% 87%) 65%,
+        hsl(25 30% 92%) 50%,
+        hsl(25 35% 89%) 65%,
         hsl(0 0% 96%) 80%,
         hsl(0 0% 98%) 100%);
     background-size: 200% 200%;
     animation: darkCardShimmer 8s ease-in-out infinite;
-    color: hsl(160 30% 15%);
+    color: hsl(25 20% 15%);
     box-shadow:
       0 4px 24px hsl(0 0% 0% / 0.15),
-      0 12px 48px hsl(156 60% 40% / 0.08),
+      0 12px 48px hsl(25 60% 40% / 0.08),
       inset 0 1px 0 hsl(0 0% 100% / 0.9);
-    border-color: hsl(156 30% 70% / 0.25);
-    --foreground: 160 30% 15%;
-    --muted-foreground: 160 15% 45%;
-    --secondary: 160 20% 85%;
-    --secondary-foreground: 160 30% 20%;
-    --gp-label: hsl(160 15% 50%);
-    --gp-sublabel: hsl(160 10% 55%);
-    --gp-value: hsl(160 30% 15%);
-    --gp-icon: hsl(160 15% 45%);
+    border-color: hsl(25 30% 70% / 0.25);
+    --foreground: 25 20% 15%;
+    --muted-foreground: 25 10% 45%;
+    --secondary: 25 15% 85%;
+    --secondary-foreground: 25 20% 20%;
+    --gp-label: hsl(25 10% 50%);
+    --gp-sublabel: hsl(25 8% 55%);
+    --gp-value: hsl(25 20% 15%);
+    --gp-icon: hsl(25 10% 45%);
     --gp-positive: hsl(142 60% 38%);
     --gp-negative: hsl(0 70% 50%);
   }
@@ -320,9 +320,9 @@
     inset: 0;
     background: linear-gradient(115deg,
         transparent 25%,
-        hsl(156 60% 50% / 0.06) 45%,
-        hsl(156 80% 70% / 0.12) 50%,
-        hsl(156 60% 50% / 0.06) 55%,
+        hsl(25 60% 50% / 0.06) 45%,
+        hsl(25 80% 70% / 0.12) 50%,
+        hsl(25 60% 50% / 0.06) 55%,
         transparent 75%);
     background-size: 250% 100%;
     animation: cardShineSwipe 6s ease-in-out infinite;
@@ -350,8 +350,8 @@
   :is(.dark) .card-base,
   :is(.dark) .card-surface {
     @apply backdrop-blur-2xl rounded-2xl overflow-hidden relative;
-    background: hsl(152 40% 5% / 0.6);
-    border: 1px solid hsl(152 50% 40% / 0.1);
+    background: hsl(25 40% 5% / 0.6);
+    border: 1px solid hsl(25 50% 40% / 0.1);
     box-shadow: var(--shadow-card);
   }
 
@@ -389,7 +389,7 @@
 
   .card-press {
     @apply card-surface active:scale-[0.985] transition-all duration-300;
-    &:hover { border-color: hsl(152 50% 40% / 0.25); }
+    &:hover { border-color: hsl(25 60% 40% / 0.25); }
   }
 
   .card-elevated {
@@ -447,12 +447,12 @@
 
   .finance-hero-card {
     @apply relative overflow-hidden rounded-2xl border transition-all duration-300 active:scale-[0.98];
-    background: linear-gradient(145deg, #0a1a12 0%, #102a1d 50%, #0a1a12 100%);
+    background: linear-gradient(145deg, hsl(25 40% 6%) 0%, hsl(25 50% 12%) 50%, hsl(25 40% 6%) 100%);
     background-size: 200% 200%;
     animation: navyCardFlow 12s ease-in-out infinite;
     backdrop-filter: blur(16px);
-    border-color: rgba(16, 185, 129, 0.25);
-    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px rgba(16, 185, 129, 0.08);
+    border-color: hsl(25 85% 54% / 0.25);
+    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px hsl(25 85% 54% / 0.08);
     color: hsl(0 0% 98%) !important;
   }
 
@@ -483,8 +483,8 @@
 
   .finance-hero-card:hover {
     transform: scale(1.01);
-    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1), 0 12px 40px rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1), 0 12px 40px hsl(25 85% 54% / 0.1);
+    border-color: hsl(25 85% 54% / 0.3);
   }
 
   .finance-hero-card:active {
@@ -506,19 +506,19 @@
   }
 
   .finance-hero-card--personal {
-    background: linear-gradient(145deg, #030603 0%, #060c06 50%, #030603 100%);
+    background: linear-gradient(145deg, hsl(25 30% 3%) 0%, hsl(25 40% 6%) 50%, hsl(25 30% 3%) 100%);
     box-shadow:
-      0 4px 24px rgba(16, 185, 129, 0.05),
-      0 8px 48px rgba(16, 185, 129, 0.02),
+      0 4px 24px hsl(25 85% 54% / 0.05),
+      0 8px 48px hsl(25 85% 54% / 0.02),
       inset 0 1px 0 rgba(255, 255, 255, 0.02);
-    border-color: rgba(16, 185, 129, 0.1);
+    border-color: hsl(25 85% 54% / 0.1);
   }
 
   .finance-hero-card--personal:hover {
-    border-color: rgba(16, 185, 129, 0.2);
+    border-color: hsl(25 85% 54% / 0.2);
     box-shadow:
-      0 6px 32px rgba(16, 185, 129, 0.1),
-      0 12px 56px rgba(16, 185, 129, 0.04),
+      0 6px 32px hsl(25 85% 54% / 0.1),
+      0 12px 56px hsl(25 85% 54% / 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
@@ -1903,14 +1903,14 @@
 
   .fab-gradient {
     background: linear-gradient(135deg,
-        #064e3b 0%,
-        #059669 35%,
-        #10b981 50%,
-        #059669 65%,
-        #064e3b 100%);
+        hsl(25 85% 25%) 0%,
+        hsl(25 85% 45%) 35%,
+        hsl(25 85% 54%) 50%,
+        hsl(25 85% 45%) 65%,
+        hsl(25 85% 25%) 100%);
     background-size: 300% 300%;
     animation: navyCardFlow 8s ease-in-out infinite;
-    border: 1px solid rgba(52, 211, 153, 0.3);
+    border: 1px solid hsl(25 85% 54% / 0.3);
   }
 
   /* ========== AMBIENT GLOW EFFECTS ========== */
@@ -1941,33 +1941,33 @@
   }
 
   .header-ambient-glow {
-    background: radial-gradient(ellipse 60% 100% at 50% 100%, hsl(156 60% 40% / 0.35) 0%, transparent 70%);
+    background: radial-gradient(ellipse 60% 100% at 50% 100%, hsl(25 85% 54% / 0.35) 0%, transparent 70%);
     animation: ambientGlow 8s ease-in-out infinite;
   }
 
   .tabbar-ambient-glow {
-    background: radial-gradient(ellipse 50% 120% at 50% 0%, hsl(156 60% 40% / 0.18) 0%, transparent 70%);
+    background: radial-gradient(ellipse 50% 120% at 50% 0%, hsl(25 85% 54% / 0.18) 0%, transparent 70%);
     animation: ambientGlow 8s ease-in-out infinite;
     animation-delay: -4s;
   }
 
   .light .header-ambient-glow {
-    background: radial-gradient(ellipse 60% 100% at 50% 100%, hsl(156 60% 40% / 0.12) 0%, transparent 70%);
+    background: radial-gradient(ellipse 60% 100% at 50% 100%, hsl(25 85% 54% / 0.12) 0%, transparent 70%);
   }
 
   .light .tabbar-ambient-glow {
-    background: radial-gradient(ellipse 50% 120% at 50% 0%, hsl(156 60% 40% / 0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse 50% 120% at 50% 0%, hsl(25 85% 54% / 0.06) 0%, transparent 70%);
   }
 
 
   .tab-icon-galaxy {
     color: transparent !important;
     background: linear-gradient(135deg,
-        #0a150a 0%,
-        #102a1a 35%,
-        #153f25 55%,
-        #102a1a 75%,
-        #0a150a 100%);
+        hsl(25 40% 10%) 0%,
+        hsl(25 60% 25%) 35%,
+        hsl(25 70% 35%) 55%,
+        hsl(25 60% 25%) 75%,
+        hsl(25 40% 10%) 100%);
     background-size: 400% 400%;
     animation: fabGradientSpin 16s ease-in-out infinite;
     -webkit-background-clip: text;
@@ -1978,9 +1978,9 @@
   .tab-icon-galaxy-text {
     color: transparent !important;
     background: linear-gradient(135deg,
-        #0a150a 0%,
-        #102a1a 50%,
-        #0a150a 100%);
+        hsl(25 40% 10%) 0%,
+        hsl(25 60% 25%) 50%,
+        hsl(25 40% 10%) 100%);
     background-size: 400% 400%;
     animation: fabGradientSpin 16s ease-in-out infinite;
     -webkit-background-clip: text;
