@@ -42,7 +42,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
   if (!hasOrder || report.length === 0) {
     return (
       <button
-        onClick={() => navigate('/checklists')}
+        onClick={() => navigate('/production')}
         className="card-surface p-5 w-full text-center"
       >
         <AppIcon name="Factory" size={24} className="mx-auto text-muted-foreground/40 mb-2" />
@@ -63,7 +63,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
 
   return (
     <button
-      onClick={() => navigate('/checklists')}
+      onClick={() => navigate('/production')}
       className="w-full text-left space-y-3"
     >
       {/* Summary KPI Row */}
@@ -85,26 +85,44 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
 
       {/* Item list — only in detailed variant */}
       {variant === 'detailed' && (
-        <div className="space-y-1.5">
+        <div className="card-surface divide-y divide-border/30">
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-4 py-2.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span>Peça</span>
+            <span>Qtd</span>
+            <span>Status</span>
+          </div>
           {report.map(item => {
-            const itemColor = item.status === 'complete' ? 'text-emerald-500'
-              : item.status === 'in_progress' ? 'text-amber-500'
-              : item.status === 'partial' ? 'text-amber-500'
-              : 'text-muted-foreground';
-            const dotColor = item.status === 'complete' ? 'bg-emerald-500'
-              : item.status === 'in_progress' ? 'bg-amber-500'
-              : item.status === 'partial' ? 'bg-amber-500'
-              : 'bg-muted-foreground/30';
+            const statusLabel = item.status === 'complete' ? 'Concluído'
+              : item.status === 'in_progress' ? 'Em produção'
+              : item.status === 'partial' ? 'Parcial'
+              : 'Aguardando';
+            const statusBg = item.status === 'complete' ? 'bg-success/10 text-success'
+              : item.status === 'in_progress' ? 'bg-blue-500/10 text-blue-500'
+              : item.status === 'partial' ? 'bg-warning/10 text-warning'
+              : 'bg-muted text-muted-foreground';
+            const nameClass = item.status === 'complete' ? 'text-success line-through opacity-60'
+              : item.status === 'in_progress' ? 'text-warning font-semibold'
+              : 'text-foreground';
             return (
-            <div key={item.checklist_item_id} className="flex items-center gap-2 px-1 py-1">
-              <span className={cn("w-2 h-2 rounded-full shrink-0", dotColor)} />
-              <p className={cn("text-sm flex-1 min-w-0 truncate", item.status === 'complete' || item.status === 'in_progress' || item.status === 'partial' ? 'text-foreground' : 'text-muted-foreground')}>
-                {item.item_name}
-              </p>
-              <p className={cn("text-sm font-bold tabular-nums shrink-0", itemColor)}>
-                {item.quantity_done}/{item.quantity_ordered}
-              </p>
-            </div>
+              <div key={item.checklist_item_id} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-4 py-3">
+                <div className="min-w-0">
+                  <p className={cn("text-sm truncate font-medium", nameClass)}>
+                    {item.item_name}
+                  </p>
+                  {item.piece_dimensions && (
+                    <p className="text-[11px] text-muted-foreground">{item.piece_dimensions}</p>
+                  )}
+                </div>
+                <p className={cn("text-sm font-bold tabular-nums shrink-0",
+                  item.status === 'complete' ? 'text-success' : item.status === 'partial' || item.status === 'in_progress' ? 'text-warning' : 'text-muted-foreground'
+                )}>
+                  {item.quantity_done}/{item.quantity_ordered}
+                </p>
+                <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap", statusBg)}>
+                  {statusLabel}
+                </span>
+              </div>
             );
           })}
         </div>
