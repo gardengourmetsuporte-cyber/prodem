@@ -73,7 +73,6 @@ const Copilot = lazy(() => lazyRetry(() => import("./pages/Copilot")));
 
 const Invite = lazy(() => lazyRetry(() => import("./pages/Invite")));
 
-const Plans = lazy(() => lazyRetry(() => import("./pages/Plans")));
 const QuotationPublic = lazy(() => lazyRetry(() => import("./pages/QuotationPublic")));
 const CalendarFull = lazy(() => lazyRetry(() => import("./pages/CalendarFull")));
 const Customers = lazy(() => lazyRetry(() => import("./pages/Customers")));
@@ -201,7 +200,7 @@ function AppRoutes() {
           <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/copilot" element={<ProtectedRoute><Copilot /></ProtectedRoute>} />
           <Route path="/gamification" element={<Navigate to="/cardapio" replace />} />
-          <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
+          <Route path="/plans" element={<Navigate to="/" replace />} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarFull /></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

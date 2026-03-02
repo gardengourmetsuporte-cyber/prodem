@@ -3,7 +3,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, AppRole } from '@/types/database';
 import type { PlanTier } from '@/lib/plans';
-import { planSatisfies } from '@/lib/plans';
 
 interface AuthContextType {
   user: User | null;
@@ -34,14 +33,14 @@ const AUTH_CACHE_KEY = 'garden_auth_cache';
 function getCachedAuth() {
   try {
     const cached = localStorage.getItem(AUTH_CACHE_KEY);
-    if (cached) return JSON.parse(cached) as { profile: Profile | null; role: AppRole | null; plan?: PlanTier; planStatus?: string };
+    if (cached) return JSON.parse(cached) as { profile: Profile | null; role: AppRole | null };
   } catch {}
   return null;
 }
 
-function setCachedAuth(profile: Profile | null, role: AppRole | null, plan?: PlanTier, planStatus?: string) {
+function setCachedAuth(profile: Profile | null, role: AppRole | null) {
   try {
-    localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ profile, role, plan, planStatus }));
+    localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ profile, role }));
   } catch {}
 }
 
@@ -55,119 +54,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(cached?.profile ?? null);
   const [role, setRole] = useState<AppRole | null>(cached?.role ?? null);
-  const [plan, setPlan] = useState<PlanTier>((cached?.plan as PlanTier) ?? 'free');
-  const [planStatus, setPlanStatus] = useState<string>(cached?.planStatus ?? 'active');
-  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const subIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fetchUserDataRef = useRef<(userId: string) => Promise<void>>();
-  // Track whether a fetchUserData call is in-flight to prevent double calls
   const fetchingRef = useRef(false);
-  // Track the effective plan set by UnitContext so refreshSubscription doesn't overwrite it
-  const effectivePlanRef = useRef<PlanTier | null>(null);
 
-  const resolveInheritedUnitPlan = useCallback(async (userId: string): Promise<PlanTier | null> => {
-    try {
-      const { data: userUnits, error: userUnitsError } = await supabase
-        .from('user_units')
-        .select('unit_id, is_default')
-        .eq('user_id', userId);
-
-      if (userUnitsError || !userUnits?.length) return null;
-
-      const preferredUnitId = userUnits.find((u) => u.is_default)?.unit_id ?? userUnits[0].unit_id;
-      if (!preferredUnitId) return null;
-
-      // Primary source: backend RPC
-      const { data: unitPlan, error: unitPlanError } = await supabase.rpc('get_unit_plan', {
-        p_unit_id: preferredUnitId,
-      });
-
-      const rpcPlan = (unitPlan as PlanTier | null) ?? null;
-      if (!unitPlanError && rpcPlan && rpcPlan !== 'free') {
-        effectivePlanRef.current = rpcPlan;
-        return rpcPlan;
-      }
-
-      // Fallback for legacy units where created_by has no profile:
-      // infer highest active plan among members of the unit
-      const { data: members, error: membersError } = await supabase
-        .from('user_units')
-        .select('user_id')
-        .eq('unit_id', preferredUnitId);
-
-      if (membersError || !members?.length) return rpcPlan;
-
-      const memberIds = members.map((m) => m.user_id);
-      const { data: memberProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('plan, plan_status')
-        .in('user_id', memberIds);
-
-      if (profilesError || !memberProfiles?.length) return rpcPlan;
-
-      const activePlans = memberProfiles
-        .filter((p) => (p.plan_status ?? 'active') === 'active')
-        .map((p) => (p.plan as PlanTier) || 'free');
-
-      const inferredPlan: PlanTier = activePlans.includes('business')
-        ? 'business'
-        : activePlans.includes('pro')
-          ? 'pro'
-          : 'free';
-
-      if (inferredPlan !== 'free') {
-        effectivePlanRef.current = inferredPlan;
-      }
-
-      return inferredPlan;
-    } catch (err) {
-      console.error('[AuthContext] Failed to resolve inherited unit plan:', err);
-      return null;
-    }
-  }, []);
-
-  const refreshSubscription = useCallback(async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      if (error) {
-        console.error('check-subscription error:', error);
-        return;
-      }
-      if (data) {
-        const stripePlan = (data.plan as PlanTier) || 'free';
-        const stripeStatus = data.subscribed ? 'active' : 'canceled';
-
-        if (stripePlan === 'free') {
-          const currentEffective = effectivePlanRef.current;
-          const inheritedPlan = !currentEffective || currentEffective === 'free'
-            ? (user?.id ? await resolveInheritedUnitPlan(user.id) : null)
-            : currentEffective;
-
-          if (inheritedPlan && inheritedPlan !== 'free') {
-            setPlan(inheritedPlan);
-            setPlanStatus(stripeStatus);
-            setSubscriptionEnd(data.subscription_end || null);
-            setCachedAuth(profile, role, inheritedPlan, stripeStatus);
-            return;
-          }
-        }
-
-        setPlan(stripePlan);
-        setPlanStatus(stripeStatus);
-        setSubscriptionEnd(data.subscription_end || null);
-        setCachedAuth(profile, role, stripePlan, stripeStatus);
-      }
-    } catch (err) {
-      console.error('Failed to check subscription:', err);
-    }
-  }, [profile, role, user?.id, resolveInheritedUnitPlan]);
+  // Prodem: all plans unlocked — always business
+  const plan: PlanTier = 'business';
+  const planStatus = 'active';
+  const subscriptionEnd: string | null = null;
+  const isPro = true;
+  const isBusiness = true;
+  const isFree = false;
+  const hasPlan = useCallback((_required: PlanTier) => true, []);
+  const setEffectivePlan = useCallback((_plan: PlanTier) => {}, []);
+  const refreshSubscription = useCallback(async () => {}, []);
 
   useEffect(() => {
     let isMounted = true;
 
     async function fetchUserData(userId: string) {
-      // Deduplicate: skip if already fetching
       if (fetchingRef.current) return;
       fetchingRef.current = true;
 
@@ -194,25 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? rolesData.reduce((best, cur) => (ROLE_PRIORITY[cur.role] ?? 0) > (ROLE_PRIORITY[best.role] ?? 0) ? cur : best).role
           : 'funcionario';
 
-        const profilePlan = (p?.plan as PlanTier) || 'free';
-        const profilePlanStatus = p?.plan_status || 'active';
-
         setProfile(p as Profile | null);
         setRole(r);
-
-        let nextPlan = profilePlan;
-        if (!effectivePlanRef.current || effectivePlanRef.current === 'free') {
-          const inheritedPlan = await resolveInheritedUnitPlan(userId);
-          if (inheritedPlan && inheritedPlan !== 'free') {
-            nextPlan = inheritedPlan;
-          }
-          setPlan(nextPlan);
-          setPlanStatus(profilePlanStatus);
-        } else {
-          nextPlan = effectivePlanRef.current;
-        }
-
-        setCachedAuth(p, r, nextPlan, profilePlanStatus);
+        setCachedAuth(p, r);
       } catch (err) {
         console.error('Failed to fetch user data:', err);
       } finally {
@@ -221,7 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Keep ref in sync for visibilitychange handler
     fetchUserDataRef.current = fetchUserData;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -240,10 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (session?.user) {
-          // Use setTimeout to avoid Supabase deadlock warning
           setTimeout(() => fetchUserData(session.user.id), 0);
 
-          // Audit login event
           if (event === 'SIGNED_IN') {
             supabase.rpc('log_audit_event' as any, {
               p_user_id: session.user.id,
@@ -258,10 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setProfile(null);
             setRole(null);
-            setPlan('free');
-            setPlanStatus('active');
-            setSubscriptionEnd(null);
-            effectivePlanRef.current = null;
             setIsLoading(false);
           }
         }
@@ -296,24 +178,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Poll subscription every 15min when logged in (reduced from 5min to lower backend load at scale)
-  useEffect(() => {
-    if (user) {
-      const timeout = setTimeout(() => refreshSubscription(), 10_000);
-      subIntervalRef.current = setInterval(refreshSubscription, 900_000);
-      return () => {
-        clearTimeout(timeout);
-        if (subIntervalRef.current) clearInterval(subIntervalRef.current);
-      };
-    } else {
-      if (subIntervalRef.current) clearInterval(subIntervalRef.current);
-    }
-  }, [user, refreshSubscription]);
-
-  // Re-validate user data when tab regains focus (debounced to avoid rapid re-fetches)
+  // Re-validate user data when tab regains focus
   useEffect(() => {
     let lastFetchAt = 0;
-    const DEBOUNCE_MS = 30_000; // 30s minimum between visibility refetches
+    const DEBOUNCE_MS = 30_000;
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && user) {
@@ -350,26 +218,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setRole(null);
-    setPlan('free');
-    setPlanStatus('active');
-    setSubscriptionEnd(null);
-    effectivePlanRef.current = null;
     clearCachedAuth();
   };
 
   const isAdmin = role === 'admin' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
-  const isPro = plan === 'pro' || plan === 'business';
-  const isBusiness = plan === 'business';
-  const isFree = plan === 'free';
-
-  const hasPlan = useCallback((required: PlanTier) => planSatisfies(plan, required), [plan]);
-
-  const setEffectivePlan = useCallback((newPlan: PlanTier) => {
-    effectivePlanRef.current = newPlan;
-    setPlan(newPlan);
-    setCachedAuth(profile, role, newPlan, planStatus);
-  }, [profile, role, planStatus]);
 
   return (
     <AuthContext.Provider

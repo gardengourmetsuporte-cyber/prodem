@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useScrollToTopOnChange } from '@/components/ScrollToTop';
-import { createPortal } from 'react-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AppIcon } from '@/components/ui/app-icon';
 import { useFabAction } from '@/contexts/FabActionContext';
@@ -12,12 +11,9 @@ import { MarketingFeed } from '@/components/marketing/MarketingFeed';
 import { MarketingIdeasAI } from '@/components/marketing/MarketingIdeasAI';
 import { PostSheet } from '@/components/marketing/PostSheet';
 import { PublishActions } from '@/components/marketing/PublishActions';
-import { UpgradeWall } from '@/components/paywall/UpgradeWall';
-import { useAuth } from '@/contexts/AuthContext';
 import type { MarketingPost } from '@/types/marketing';
 
 export default function Marketing() {
-  const { hasPlan } = useAuth();
   const { posts, isLoading, createPost, updatePost, deletePost, markPublished, uploadMedia } = useMarketing();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<MarketingPost | null>(null);
@@ -29,16 +25,6 @@ export default function Marketing() {
   const [prefillTitle, setPrefillTitle] = useState('');
 
   useFabAction({ icon: 'Plus', label: 'Novo Post', onClick: () => { setEditingPost(null); setPrefillDate(null); setPrefillTitle(''); setSheetOpen(true); } }, []);
-
-  if (!hasPlan('business')) {
-    return (
-      <AppLayout>
-        <div className="min-h-screen bg-background pb-24">
-          <UpgradeWall moduleKey="marketing" moduleLabel="Marketing" />
-        </div>
-      </AppLayout>
-    );
-  }
 
   const handleEdit = (post: MarketingPost) => {
     setEditingPost(post);
@@ -115,7 +101,6 @@ export default function Marketing() {
             )}
           </div>
         </div>
-
       </div>
 
       <PostSheet
