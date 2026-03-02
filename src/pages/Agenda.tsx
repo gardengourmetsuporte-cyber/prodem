@@ -509,8 +509,8 @@ function CategoryManagerSheet({ open, onOpenChange, categories, onAdd, onUpdate,
             className={cn(
               "flex items-center justify-center p-1.5 rounded-lg transition-colors",
                selectedIcon === icon
-                 ? "bg-emerald-500/15 text-emerald-400"
-                 : "hover:bg-emerald-500/5 text-muted-foreground"
+                 ? "bg-primary/15 text-primary"
+                 : "hover:bg-primary/5 text-muted-foreground"
             )}
             title={icon.replace(/_/g, ' ')}
           >
@@ -534,7 +534,7 @@ function CategoryManagerSheet({ open, onOpenChange, categories, onAdd, onUpdate,
 
         <div className="space-y-4 mt-4 pb-4">
           {/* Add new */}
-          <div className="bg-[#0a1a10] rounded-2xl p-4 border border-emerald-500/10 space-y-3">
+          <div className="bg-card rounded-2xl p-4 border border-border/30 space-y-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -578,7 +578,7 @@ function CategoryManagerSheet({ open, onOpenChange, categories, onAdd, onUpdate,
           ) : (
             <div className="space-y-2">
               {categories.map((cat) => (
-                <div key={cat.id} className="bg-[#0a1a10] rounded-2xl border border-emerald-500/10 p-4">
+                <div key={cat.id} className="bg-card rounded-2xl border border-border/30 p-4">
                   {editingId === cat.id ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
