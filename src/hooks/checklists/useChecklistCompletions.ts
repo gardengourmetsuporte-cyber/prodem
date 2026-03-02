@@ -167,12 +167,18 @@ export function useChecklistCompletions({
 
   const isItemCompleted = useCallback((itemId: string) => {
     // Cross-shift: check if the item is completed across all shifts
-    // An item with target_quantity > 0 is complete when total quantity_done >= target
+    // For production items (target_quantity > 0):
+    // - completed in current shift => completed for this shift
+    // - otherwise, completed only when total quantity_done across shifts reaches target
     const itemData = sectors.flatMap(s => s.subcategories?.flatMap(sub => sub.items || []) || []).find(i => i.id === itemId);
     const targetQty = (itemData as any)?.target_quantity || 0;
 
     if (targetQty > 0) {
-      // Production item: sum quantity_done across all shifts
+      const currentShiftCompleted = completions.some(
+        c => c.item_id === itemId && !c.is_skipped && (c as any).status === 'completed'
+      );
+      if (currentShiftCompleted) return true;
+
       const totalDone = allShiftCompletions
         .filter(c => c.item_id === itemId && !c.is_skipped && c.status === 'completed')
         .reduce((sum, c) => sum + (c.quantity_done || 0), 0);
@@ -184,20 +190,31 @@ export function useChecklistCompletions({
       c => c.item_id === itemId && c.status !== 'in_progress'
     );
     return hasCompletion;
-  }, [allShiftCompletions, sectors]);
+  }, [allShiftCompletions, sectors, completions]);
 
   const getItemStatus = useCallback((itemId: string) => {
     const completion = completions.find(c => c.item_id === itemId);
-    if (!completion) {
-      // Check if completed in other shift
-      const otherShift = allShiftCompletions.find(c => c.item_id === itemId && c.status !== 'in_progress');
-      if (otherShift) return 'completed';
-      const inProgress = allShiftCompletions.find(c => c.item_id === itemId && c.status === 'in_progress');
-      if (inProgress) return 'in_progress';
-      return 'pending';
+    if (completion) return (completion as any).status || 'completed';
+
+    const itemData = sectors.flatMap(s => s.subcategories?.flatMap(sub => sub.items || []) || []).find(i => i.id === itemId);
+    const targetQty = (itemData as any)?.target_quantity || 0;
+
+    // For production items, don't inherit in_progress/completed status from another shift
+    // unless the daily target is fully reached.
+    if (targetQty > 0) {
+      const totalDone = allShiftCompletions
+        .filter(c => c.item_id === itemId && !c.is_skipped && c.status === 'completed')
+        .reduce((sum, c) => sum + (c.quantity_done || 0), 0);
+      return totalDone >= targetQty ? 'completed' : 'pending';
     }
-    return (completion as any).status || 'completed';
-  }, [completions, allShiftCompletions]);
+
+    // Standard items stay cross-shift
+    const otherShift = allShiftCompletions.find(c => c.item_id === itemId && c.status !== 'in_progress');
+    if (otherShift) return 'completed';
+    const inProgress = allShiftCompletions.find(c => c.item_id === itemId && c.status === 'in_progress');
+    if (inProgress) return 'in_progress';
+    return 'pending';
+  }, [completions, allShiftCompletions, sectors]);
 
   /** Get cross-shift accumulated progress for an item (for production items with target_quantity) */
   const getCrossShiftItemProgress = useCallback((itemId: string) => {
