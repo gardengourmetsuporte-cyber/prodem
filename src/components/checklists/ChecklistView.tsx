@@ -942,7 +942,7 @@ export function ChecklistView({
                                     </div>
                                     <div className="flex-1 min-w-0 text-left">
                                       <div className="flex items-start justify-between gap-2">
-                                        <div>
+                                        <div className="min-w-0">
                                           <p className={cn("font-medium line-through text-sm leading-tight", isContested ? "text-amber-600 dark:text-amber-400" : wasSkipped ? "text-destructive" : "text-success")}>{item.name}</p>
                                           {(item as any).piece_dimensions && (
                                             <p className="text-[10px] text-muted-foreground font-mono mt-0.5">📐 {(item as any).piece_dimensions}</p>
@@ -972,7 +972,7 @@ export function ChecklistView({
                                               </div>)}
                                         </div>
                                       </div>
-                                      {/* Quantity done info for industrial items (cross-shift) */}
+                                      {/* Production metrics row */}
                                       {(item as any).target_quantity > 0 && (() => {
                                         const cs = getCrossShiftItemProgress ? getCrossShiftItemProgress(item.id) : null;
                                         const done = cs?.totalDone || (completion as any)?.quantity_done || 0;
@@ -980,25 +980,32 @@ export function ChecklistView({
                                         const startedAt = (completion as any)?.started_at;
                                         const finishedAt = (completion as any)?.finished_at;
                                         const duration = startedAt && finishedAt ? new Date(finishedAt).getTime() - new Date(startedAt).getTime() : null;
+                                        const progressPct = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
                                         return (
-                                          <div className="flex items-center gap-2 mt-1 text-[11px] flex-wrap">
-                                            <span className="text-success font-semibold">
-                                              ✓ {done}/{target} peças
-                                            </span>
-                                            {duration && duration > 0 && (
-                                              <span className="font-mono text-muted-foreground">
-                                                ⏱ {formatDuration(duration)}
+                                          <div className="mt-2 space-y-1.5">
+                                            <div className="flex items-center gap-2 text-[11px] flex-wrap">
+                                              <span className="text-success font-semibold">
+                                                ✓ {done}/{target} peças
                                               </span>
-                                            )}
+                                              {duration && duration > 0 && (
+                                                <span className="font-mono text-muted-foreground px-1.5 py-0.5 rounded bg-muted/50">
+                                                  ⏱ {formatDuration(duration)}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
+                                              <div className={cn("h-full rounded-full transition-all duration-700", progressPct >= 100 ? "bg-success" : "bg-primary")}
+                                                style={{ width: `${progressPct}%` }} />
+                                            </div>
                                           </div>
                                         );
                                       })()}
                                       {isContested && contestedReason && (
-                                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Contestado: {contestedReason}</p>
+                                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Contestado: {contestedReason}</p>
                                       )}
-                                      {item.description && !isContested && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.description}</p>}
+                                      {item.description && !isContested && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.description}</p>}
                                       {completion && (
-                                        <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground flex-wrap">
+                                        <div className="flex items-center gap-1 mt-1.5 text-[11px] text-muted-foreground flex-wrap">
                                           <AppIcon name="User" className="w-3 h-3 shrink-0" />
                                           <span className="truncate">{completion.profile?.full_name || 'Usuário'} · {format(new Date(completion.completed_at), 'HH:mm')}</span>
                                           {isContested && <span className="text-amber-600 dark:text-amber-400">(contestado)</span>}
@@ -1311,7 +1318,7 @@ export function ChecklistView({
                                             {remaining > 0 ? `${remaining} restantes` : '✓ Completo'}
                                           </span>
                                         </div>
-                                        <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+                                        <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
                                           <div className={cn("h-full rounded-full transition-all duration-700 ease-out", progressPercent === 100 ? "bg-success" : progressPercent > 50 ? "bg-primary" : "bg-amber-500")}
                                             style={{ width: `${progressPercent}%` }} />
                                         </div>
@@ -1410,7 +1417,7 @@ export function ChecklistView({
                                   disabled={!canToggle}
                                   onClick={() => canToggle && setOpenPopover(openPopover === item.id ? null : item.id)}
                                   className={cn(
-                                    "w-full flex flex-col gap-2 p-4 rounded-xl transition-all duration-200",
+                                    "w-full flex flex-col gap-2 p-3 rounded-xl transition-all duration-200",
                                     !canToggle && "cursor-not-allowed opacity-80",
                                     canToggle && "active:scale-[0.97] hover:shadow-md hover:border-primary/40",
                                     "card-base border-2",
@@ -1418,8 +1425,8 @@ export function ChecklistView({
                                   )}
                                   style={{ animationDelay: `${itemIndex * 40}ms` }}
                                 >
-                                  <div className="flex items-start gap-4 w-full">
-                                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border-2 border-muted-foreground/30 bg-background transition-all duration-300 hover:border-primary/50 hover:bg-primary/5" />
+                                  <div className="flex items-start gap-3 w-full">
+                                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border-2 border-muted-foreground/30 bg-background transition-all duration-300 hover:border-primary/50 hover:bg-primary/5 mt-0.5" />
                                     <div className="flex-1 text-left">
                                       <div className="flex items-center gap-1.5">
                                         <p className="font-medium text-foreground">{item.name}</p>
@@ -1445,14 +1452,14 @@ export function ChecklistView({
                                   </div>
                                   {/* Industrial progress bar */}
                                   {hasIndustrialData && (
-                                    <div className="w-full space-y-1 pl-12">
+                                    <div className="w-full space-y-1 pl-11">
                                       <div className="flex items-center justify-between text-[11px]">
                                         <span className="text-muted-foreground">{totalDone}/{targetQty} feitas</span>
                                         <span className={cn("font-bold", remaining === 0 ? "text-success" : remaining <= targetQty * 0.3 ? "text-primary" : "text-muted-foreground")}>
                                           {remaining > 0 ? `${remaining} restantes` : '✓ Completo'}
                                         </span>
                                       </div>
-                                      <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+                                      <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
                                         <div className={cn("h-full rounded-full transition-all duration-700 ease-out", progressPercent === 100 ? "bg-success" : progressPercent > 50 ? "bg-primary" : "bg-amber-500")}
                                           style={{ width: `${progressPercent}%` }} />
                                       </div>
