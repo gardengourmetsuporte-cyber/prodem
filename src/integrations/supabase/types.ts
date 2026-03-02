@@ -537,6 +537,7 @@ export type Database = {
         Row: {
           checklist_type: Database["public"]["Enums"]["checklist_type"]
           created_at: string
+          cut_length_mm: number | null
           deleted_at: string | null
           description: string | null
           frequency: string
@@ -546,6 +547,8 @@ export type Database = {
           name: string
           piece_dimensions: string | null
           points: number
+          process_type: string | null
+          qty_per_rack: number | null
           requires_photo: boolean
           sort_order: number
           subcategory_id: string
@@ -556,6 +559,7 @@ export type Database = {
         Insert: {
           checklist_type?: Database["public"]["Enums"]["checklist_type"]
           created_at?: string
+          cut_length_mm?: number | null
           deleted_at?: string | null
           description?: string | null
           frequency?: string
@@ -565,6 +569,8 @@ export type Database = {
           name: string
           piece_dimensions?: string | null
           points?: number
+          process_type?: string | null
+          qty_per_rack?: number | null
           requires_photo?: boolean
           sort_order?: number
           subcategory_id: string
@@ -575,6 +581,7 @@ export type Database = {
         Update: {
           checklist_type?: Database["public"]["Enums"]["checklist_type"]
           created_at?: string
+          cut_length_mm?: number | null
           deleted_at?: string | null
           description?: string | null
           frequency?: string
@@ -584,6 +591,8 @@ export type Database = {
           name?: string
           piece_dimensions?: string | null
           points?: number
+          process_type?: string | null
+          qty_per_rack?: number | null
           requires_photo?: boolean
           sort_order?: number
           subcategory_id?: string
@@ -2757,6 +2766,66 @@ export type Database = {
           },
         ]
       }
+      production_operations: {
+        Row: {
+          completion_id: string
+          created_at: string
+          finished_at: string | null
+          id: string
+          machine_ref: string | null
+          notes: string | null
+          operator_id: string | null
+          process_type: string
+          quantity_done: number
+          started_at: string | null
+          step_order: number
+          unit_id: string | null
+        }
+        Insert: {
+          completion_id: string
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          machine_ref?: string | null
+          notes?: string | null
+          operator_id?: string | null
+          process_type: string
+          quantity_done?: number
+          started_at?: string | null
+          step_order?: number
+          unit_id?: string | null
+        }
+        Update: {
+          completion_id?: string
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          machine_ref?: string | null
+          notes?: string | null
+          operator_id?: string | null
+          process_type?: string
+          quantity_done?: number
+          started_at?: string | null
+          step_order?: number
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_operations_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_operations_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       production_order_items: {
         Row: {
           checklist_item_id: string
@@ -2811,9 +2880,12 @@ export type Database = {
           created_at: string
           created_by: string
           date: string
+          destination: string | null
           id: string
           notes: string | null
+          order_number: number | null
           project_id: string | null
+          requester: string | null
           shift: number
           status: string
           unit_id: string
@@ -2823,9 +2895,12 @@ export type Database = {
           created_at?: string
           created_by: string
           date: string
+          destination?: string | null
           id?: string
           notes?: string | null
+          order_number?: number | null
           project_id?: string | null
+          requester?: string | null
           shift?: number
           status?: string
           unit_id: string
@@ -2835,9 +2910,12 @@ export type Database = {
           created_at?: string
           created_by?: string
           date?: string
+          destination?: string | null
           id?: string
           notes?: string | null
+          order_number?: number | null
           project_id?: string | null
+          requester?: string | null
           shift?: number
           status?: string
           unit_id?: string
@@ -2903,6 +2981,70 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "production_projects_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_shipments: {
+        Row: {
+          checklist_item_id: string
+          created_at: string
+          destination: string | null
+          id: string
+          notes: string | null
+          order_id: string
+          quantity_shipped: number
+          requester: string | null
+          shipped_at: string
+          shipped_by: string | null
+          unit_id: string | null
+        }
+        Insert: {
+          checklist_item_id: string
+          created_at?: string
+          destination?: string | null
+          id?: string
+          notes?: string | null
+          order_id: string
+          quantity_shipped?: number
+          requester?: string | null
+          shipped_at?: string
+          shipped_by?: string | null
+          unit_id?: string | null
+        }
+        Update: {
+          checklist_item_id?: string
+          created_at?: string
+          destination?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string
+          quantity_shipped?: number
+          requester?: string | null
+          shipped_at?: string
+          shipped_by?: string | null
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_shipments_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "production_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_shipments_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
