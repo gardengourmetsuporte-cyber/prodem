@@ -36,7 +36,7 @@ export function ChecklistDashboardWidget() {
 
   const isComplete = totals.percent >= 100;
   const hasInProgress = report.some(r => r.status === 'in_progress');
-  const statusLabel = isComplete ? "✓ Concluído" : hasInProgress ? "⚙ Em Produção" : totals.percent > 0 ? "Em andamento" : "Não iniciado";
+  const statusLabel = isComplete ? "✓ Concluído" : totals.percent > 0 ? `${totals.done} de ${totals.ordered} peças` : "Não iniciado";
 
   return (
     <button
