@@ -25,7 +25,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/menu-admin': 'Cardápio',
 };
 
-const APP_NAME = 'Garden Gestão';
+const APP_NAME = 'Prodem';
 
 export function useDocumentTitle() {
   const { pathname } = useLocation();
