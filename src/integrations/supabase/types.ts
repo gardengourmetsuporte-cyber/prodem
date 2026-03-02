@@ -2784,6 +2784,7 @@ export type Database = {
           created_at: string
           date: string
           finished_at: string | null
+          finished_by: string | null
           id: string
           machine_ref: string | null
           operation: string
@@ -2798,6 +2799,7 @@ export type Database = {
           created_at?: string
           date?: string
           finished_at?: string | null
+          finished_by?: string | null
           id?: string
           machine_ref?: string | null
           operation: string
@@ -2812,6 +2814,7 @@ export type Database = {
           created_at?: string
           date?: string
           finished_at?: string | null
+          finished_by?: string | null
           id?: string
           machine_ref?: string | null
           operation?: string
