@@ -22,9 +22,10 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { InventoryItem } from '@/types/database';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { ProductionStockView } from '@/components/inventory/ProductionStockView';
 
 type View = 'items' | 'history';
-type LocationFilter = 'todos' | 'almoxarifado' | 'producao';
+type LocationFilter = 'almoxarifado' | 'producao';
 
 export default function InventoryPage() {
   const location = useLocation();
@@ -47,7 +48,7 @@ export default function InventoryPage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string> | null>(null);
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'zero' | null>(null);
-  const [locationFilter, setLocationFilter] = useState<LocationFilter>('todos');
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>('almoxarifado');
 
   // Handle ?action=move from quick actions
   useEffect(() => {
@@ -82,13 +83,6 @@ export default function InventoryPage() {
     let base = items;
     if (stockFilter === 'zero') base = outOfStockItems;
     else if (stockFilter === 'low') base = lowStockItems;
-    
-    // Apply location filter
-    if (locationFilter === 'almoxarifado') {
-      base = base.filter(item => ((item as any).warehouse_stock ?? item.current_stock) > 0);
-    } else if (locationFilter === 'producao') {
-      base = base.filter(item => ((item as any).production_stock ?? 0) > 0);
-    }
     return base;
   };
 
@@ -196,7 +190,6 @@ export default function InventoryPage() {
           {/* Location Filter */}
           <div className="flex gap-2">
             {([
-              { key: 'todos' as LocationFilter, label: 'Todos', icon: 'Package' },
               { key: 'almoxarifado' as LocationFilter, label: 'Almoxarifado', icon: 'Warehouse' },
               { key: 'producao' as LocationFilter, label: 'Produção', icon: 'Factory' },
             ] as const).map(loc => (
@@ -208,9 +201,7 @@ export default function InventoryPage() {
                   locationFilter === loc.key
                     ? loc.key === 'almoxarifado'
                       ? 'bg-blue-500/15 border-blue-500/30 text-blue-400'
-                      : loc.key === 'producao'
-                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
-                      : 'bg-primary/15 border-primary/30 text-primary'
+                      : 'bg-amber-500/15 border-amber-500/30 text-amber-400'
                     : 'bg-secondary/50 border-transparent text-muted-foreground'
                 )}
               >
@@ -220,26 +211,31 @@ export default function InventoryPage() {
             ))}
           </div>
 
-          {/* Tabs */}
-          <AnimatedTabs
-            tabs={[
-              { key: 'items', label: 'Itens', icon: <AppIcon name="ClipboardList" size={16} /> },
-              { key: 'history', label: 'Histórico', icon: <AppIcon name="History" size={16} /> },
-            ]}
-            activeTab={view}
-            onTabChange={(key) => { setView(key as View); if (key === 'history') setStockFilter(null); }}
-          />
+          {/* Tabs & Search - only for Almoxarifado */}
+          {locationFilter === 'almoxarifado' && (
+            <>
+              <AnimatedTabs
+                tabs={[
+                  { key: 'items', label: 'Itens', icon: <AppIcon name="ClipboardList" size={16} /> },
+                  { key: 'history', label: 'Histórico', icon: <AppIcon name="History" size={16} /> },
+                ]}
+                activeTab={view}
+                onTabChange={(key) => { setView(key as View); if (key === 'history') setStockFilter(null); }}
+              />
 
-          {/* Search */}
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder={view === 'items' ? 'Buscar itens...' : 'Buscar movimentações...'}
-          />
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder={view === 'items' ? 'Buscar itens...' : 'Buscar movimentações...'}
+              />
+            </>
+          )}
 
           {/* Content with fade transition */}
-          <div className="animate-fade-in" key={view}>
-            {view === 'items' ? (
+          <div className="animate-fade-in" key={`${view}-${locationFilter}`}>
+            {locationFilter === 'producao' ? (
+              <ProductionStockView />
+            ) : view === 'items' ? (
               <div className="space-y-4">
                 {filteredItems.length === 0 ? (
                   items.length === 0 ? (
@@ -268,7 +264,6 @@ export default function InventoryPage() {
                         className="space-y-2 animate-fade-in"
                         style={{ animationDelay: `${catIndex * 40}ms` }}
                       >
-                        {/* Category Header */}
                         <button
                           onClick={() => toggleCategory(categoryName)}
                           className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-secondary/50 transition-colors"
@@ -288,7 +283,6 @@ export default function InventoryPage() {
                           />
                         </button>
 
-                        {/* Category Items with collapse animation */}
                         <div
                           className={cn(
                             "space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 overflow-hidden transition-all duration-300 ease-out",
