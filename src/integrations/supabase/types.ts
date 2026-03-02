@@ -4612,30 +4612,18 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
-      log_audit_event:
-        | {
-            Args: {
-              p_action: string
-              p_details?: Json
-              p_entity_id: string
-              p_entity_type: string
-              p_unit_id: string
-              p_user_id: string
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_action: string
-              p_details?: Json
-              p_entity_id: string
-              p_entity_type: string
-              p_old_values?: Json
-              p_unit_id: string
-              p_user_id: string
-            }
-            Returns: undefined
-          }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_entity_id: string
+          p_entity_type: string
+          p_old_values?: Json
+          p_unit_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       recalculate_all_customer_scores: {
         Args: { p_unit_id: string }
         Returns: undefined
