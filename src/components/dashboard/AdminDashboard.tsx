@@ -352,9 +352,7 @@ function ProductionFlightBoard({
                   <div className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.02]">
                     <span className="text-xs font-bold text-primary">OS {os.project_number}</span>
                     {os.client && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-secondary/60 text-muted-foreground font-medium truncate max-w-[120px]">
-                        {os.client}
-                      </span>
+                      <span className="text-[10px] text-muted-foreground font-medium">• {os.client}</span>
                     )}
                     <span className="text-[10px] text-muted-foreground truncate flex-1">{os.description}</span>
                     <span className={cn(
