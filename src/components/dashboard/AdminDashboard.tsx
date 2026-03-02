@@ -26,10 +26,9 @@ export function AdminDashboard() {
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
   const { stats, isLoading: statsLoading } = useDashboardStats();
   const { closings } = useCashClosing();
-  const shift1 = useProductionOrders(activeUnitId, new Date(), 1, '__all__');
-  const shift2 = useProductionOrders(activeUnitId, new Date(), 2, '__all__');
-  const activeProd = (shift1.order?.status === 'closed' && shift2.hasOrder) ? shift2 : shift1;
-  const { report, totals, isLoading: prodLoading, hasOrder } = activeProd;
+  const activeProd = useProductionOrders(activeUnitId, new Date(), '__all__');
+  const { report, totals, isLoading: prodLoading } = activeProd;
+  const hasOrder = report.length > 0;
 
   const isReady = !statsLoading && !modulesLoading && !!profile;
 
@@ -79,7 +78,7 @@ export function AdminDashboard() {
             {/* Animated gradient orbs */}
             <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-primary/20 blur-3xl animate-pulse pointer-events-none" />
             <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-primary/10 blur-3xl animate-pulse pointer-events-none" style={{ animationDelay: '1s' }} />
-            
+
             {/* Top row */}
             <div className="relative flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
