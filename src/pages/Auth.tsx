@@ -62,47 +62,10 @@ function BrandPanel() {
           </p>
         </div>
 
-        {/* Feature pills */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {[
-            { icon: 'BarChart3', label: 'Financeiro' },
-            { icon: 'Package', label: 'Estoque' },
-            { icon: 'ClipboardCheck', label: 'Produção' },
-            { icon: 'Users', label: 'Equipe' },
-            { icon: 'ShoppingCart', label: 'Pedidos' },
-          ].map(({ icon, label }) => (
-            <div
-              key={label}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium"
-              style={{
-                background: 'hsl(25 85% 54% / 0.1)',
-                color: 'hsl(25 85% 60%)',
-                border: '1px solid hsl(25 85% 54% / 0.15)',
-              }}
-            >
-              <AppIcon name={icon} size={14} />
-              {label}
-            </div>
-          ))}
-        </div>
-
-        {/* Social proof */}
-        <div className="text-center space-y-4 mt-4">
-          <p className="text-sm text-white/40 leading-relaxed max-w-xs mx-auto">
-            Simplifique a gestão da sua operação com a plataforma mais veloz do mercado.
-          </p>
-          <div className="flex items-center justify-center gap-6 text-white/20 text-xs">
-            <div className="flex items-center gap-1.5">
-              <AppIcon name="Shield" size={14} />
-              <span>Dados seguros</span>
-            </div>
-            <div className="w-px h-3 bg-white/10" />
-            <div className="flex items-center gap-1.5">
-              <AppIcon name="Zap" size={14} />
-              <span>Setup rápido</span>
-            </div>
-          </div>
-        </div>
+        {/* Tagline */}
+        <p className="text-sm text-white/30 leading-relaxed max-w-xs text-center">
+          Sistema interno de gestão
+        </p>
       </div>
     </div>
   );
@@ -164,42 +127,10 @@ function MobileBrandHeader() {
           <p className="text-[10px] text-white/35 tracking-[0.25em] uppercase font-semibold">Gestão Industrial</p>
         </div>
 
-        {/* Feature pills with stagger */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-2 animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_0.4s_both]">
-          {[
-            { icon: 'BarChart3', label: 'Financeiro' },
-            { icon: 'Package', label: 'Estoque' },
-            { icon: 'ClipboardCheck', label: 'Produção' },
-            { icon: 'Users', label: 'Equipe' },
-            { icon: 'ShoppingCart', label: 'Pedidos' },
-          ].map(({ icon, label }) => (
-            <div
-              key={label}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium"
-              style={{
-                background: 'hsl(25 85% 54% / 0.1)',
-                color: 'hsl(25 85% 60%)',
-                border: '1px solid hsl(25 85% 54% / 0.15)',
-              }}
-            >
-              <AppIcon name={icon} size={12} />
-              {label}
-            </div>
-          ))}
-        </div>
-
-        {/* Social proof */}
-        <div className="flex items-center justify-center gap-5 text-white/20 text-[10px] mt-2 animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_0.55s_both]">
-          <div className="flex items-center gap-1">
-            <AppIcon name="Shield" size={12} />
-            <span>Dados seguros</span>
-          </div>
-          <div className="w-px h-3 bg-white/10" />
-          <div className="flex items-center gap-1">
-            <AppIcon name="Zap" size={12} />
-            <span>Setup rápido</span>
-          </div>
-        </div>
+        {/* Tagline */}
+        <p className="text-xs text-white/30 mt-2 animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_0.4s_both]">
+          Sistema interno de gestão
+        </p>
       </div>
 
       {/* Bottom overlay blending mask into page content */}
