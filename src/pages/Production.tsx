@@ -31,7 +31,7 @@ export default function ProductionPage() {
   } = useProductionPage();
 
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
-  const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  const [reportSheetShift, setReportSheetShift] = useState<number | null>(null);
   const [projectSheetOpen, setProjectSheetOpen] = useState(false);
   const [groupingSheetOpen, setGroupingSheetOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -190,7 +190,7 @@ export default function ProductionPage() {
             onSelectShift={setCurrentShift}
             isAdmin={isAdmin}
             onCreatePlan={() => setPlanSheetOpen(true)}
-            onViewReport={() => setReportSheetOpen(true)}
+            onViewReport={(shift) => setReportSheetShift(shift)}
             onReopenShift={handleReopenShift}
           />
 
@@ -249,20 +249,20 @@ export default function ProductionPage() {
       />
 
       <ProductionReportSheet
-        open={reportSheetOpen}
-        onOpenChange={setReportSheetOpen}
-        report={activeShift.report}
-        totals={activeShift.totals}
-        order={activeShift.order}
+        open={reportSheetShift !== null}
+        onOpenChange={(v) => { if (!v) setReportSheetShift(null); }}
+        report={reportSheetShift === 1 ? shift1.report : shift2.report}
+        totals={reportSheetShift === 1 ? shift1.totals : shift2.totals}
+        order={reportSheetShift === 1 ? shift1.order : shift2.order}
         date={selectedDate}
         isAdmin={isAdmin}
-        currentShift={currentShift}
+        currentShift={reportSheetShift || currentShift}
         shift1Report={shift1.report}
         shift1Totals={shift1.totals}
         shift2Report={shift2.report}
         shift2Totals={shift2.totals}
         hasShift2={shift2.hasOrder}
-        onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
+        onEditPlan={() => { setReportSheetShift(null); setPlanSheetOpen(true); }}
       />
 
       <ProjectSheet
