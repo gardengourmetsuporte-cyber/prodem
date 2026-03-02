@@ -286,6 +286,21 @@ export function CashClosingForm({ onSuccess }: Props) {
         </CardContent>
       </Card>
 
+      {/* Turno / Shift info */}
+      <Card className="card-unified border-primary/20 bg-primary/5">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary/15">
+              <AppIcon name="Factory" className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Fechamento Industrial</p>
+              <p className="text-xs text-muted-foreground">Registre os recebimentos e despesas operacionais do dia</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Payment Values */}
       {/* Initial Cash */}
       <Card className="card-unified">
@@ -300,7 +315,7 @@ export function CashClosingForm({ onSuccess }: Props) {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-warning/10">
               <AppIcon name="Wallet" className="w-5 h-5 text-warning" />
             </div>
-            <Label className="flex-1 text-sm font-medium">Valor inicial do caixa</Label>
+            <Label className="flex-1 text-sm font-medium">Saldo inicial do caixa</Label>
             <div className="relative w-32">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
               <Input
@@ -316,7 +331,7 @@ export function CashClosingForm({ onSuccess }: Props) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Valor em dinheiro que estava no caixa no início do turno
+            Valor em dinheiro disponível no início do expediente
           </p>
         </CardContent>
       </Card>
@@ -326,7 +341,7 @@ export function CashClosingForm({ onSuccess }: Props) {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <AppIcon name="Banknote" className="w-4 h-4" />
-            Dinheiro Contado no Caixa
+            Dinheiro Contado
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -353,15 +368,16 @@ export function CashClosingForm({ onSuccess }: Props) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Valor físico contado no caixa no fim do turno
+            Valor físico em dinheiro contado no fim do expediente
           </p>
         </CardContent>
       </Card>
 
-      {/* Other Payment Methods */}
+      {/* Recebimentos do dia */}
       <Card className="card-unified">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Outros Meios de Pagamento</CardTitle>
+          <CardTitle className="text-base">Recebimentos do Dia</CardTitle>
+          <p className="text-xs text-muted-foreground">Valores recebidos de clientes por forma de pagamento</p>
         </CardHeader>
         <CardContent className="space-y-3">
           {PAYMENT_METHODS.filter(m => m.key !== 'cash_amount').map(method => {
@@ -402,8 +418,9 @@ export function CashClosingForm({ onSuccess }: Props) {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <AppIcon name="Receipt" className="w-4 h-4" />
-            Gastos do Dia (opcional)
+            Despesas Operacionais (opcional)
           </CardTitle>
+          <p className="text-xs text-muted-foreground">Compras de material, manutenção, combustível, etc.</p>
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Existing expenses */}
@@ -427,7 +444,7 @@ export function CashClosingForm({ onSuccess }: Props) {
           {/* Add new expense */}
           <div className="flex gap-2">
             <Input
-              placeholder="Descrição (ex: Geladeira)"
+              placeholder="Descrição (ex: Eletrodo, Disco de corte)"
               value={newExpense.description}
               onChange={(e) => setNewExpense(prev => ({ ...prev, description: e.target.value }))}
               className="flex-1"
@@ -469,15 +486,15 @@ export function CashClosingForm({ onSuccess }: Props) {
       {/* Calculated Sales Summary */}
       <Card className="card-unified bg-success/5 border-success/20">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">📊 Resumo Calculado</CardTitle>
+          <CardTitle className="text-base">📊 Resumo do Dia</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {/* Dinheiro Vendido */}
+          {/* Dinheiro recebido */}
           <div className="bg-background/50 rounded-lg p-3 space-y-1">
-            <div className="text-xs text-muted-foreground">Dinheiro Vendido (calculado)</div>
+            <div className="text-xs text-muted-foreground">Dinheiro Recebido (calculado)</div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                Contado ({cashCounted.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) + Gastos ({totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) − Inicial ({initialCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
+                Contado ({cashCounted.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) + Despesas ({totalExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) − Inicial ({initialCash.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})
               </span>
               <span className="text-lg font-bold text-success">
                 R$ {cashSold.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -487,11 +504,11 @@ export function CashClosingForm({ onSuccess }: Props) {
 
           <div className="border-t pt-2 mt-2 space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">+ Débito</span>
+              <span className="text-muted-foreground">+ Boleto</span>
               <span>R$ {debitAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">+ Crédito</span>
+              <span className="text-muted-foreground">+ Transferência / TED</span>
               <span>R$ {creditAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
@@ -499,22 +516,22 @@ export function CashClosingForm({ onSuccess }: Props) {
               <span>R$ {pixAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">+ Vale Alimentação</span>
+              <span className="text-muted-foreground">+ Cheque</span>
               <span>R$ {mealVoucherAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">+ Delivery</span>
+              <span className="text-muted-foreground">+ Cartão</span>
               <span>R$ {deliveryAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">+ Conta Assinada</span>
+              <span className="text-muted-foreground">+ Faturado (a prazo)</span>
               <span>R$ {signedAccountAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
 
           <div className="border-t pt-3 mt-2">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-lg">Total em Vendas</span>
+              <span className="font-semibold text-lg">Total Recebido</span>
               <span className="text-2xl font-bold text-primary">
                 R$ {totalPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
@@ -523,14 +540,11 @@ export function CashClosingForm({ onSuccess }: Props) {
 
           <div className="border-t pt-3 mt-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total esperado no caixa</span>
+              <span className="text-sm text-muted-foreground">Saldo esperado no caixa</span>
               <span className="font-semibold text-primary">
                 R$ {expectedCashInDrawer.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              (Igual ao dinheiro contado se não houver diferença)
-            </p>
           </div>
         </CardContent>
       </Card>
@@ -567,7 +581,7 @@ export function CashClosingForm({ onSuccess }: Props) {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <AppIcon name="Upload" className="w-4 h-4" />
-            Comprovante do PDV (Colibri) - opcional
+            Comprovante / NF (opcional)
           </CardTitle>
         </CardHeader>
         <CardContent>
