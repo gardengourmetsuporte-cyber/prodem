@@ -666,67 +666,6 @@ export default function ChecklistsPage() {
               </button>
             </div>
 
-            {/* Bônus Card */}
-            <button
-              onClick={() => setChecklistType('bonus')}
-              className={cn(
-                "relative w-full overflow-hidden rounded-2xl p-5 text-left transition-all duration-300",
-                checklistType === 'bonus'
-                  ? "finance-hero-card checklist-gradient-slow ring-0 scale-[1.01] shadow-xl"
-                  : "bg-card hover:shadow-lg"
-              )}
-              style={checklistType !== 'bonus' ? {
-                border: '1px solid hsl(160 60% 45% / 0.15)',
-              } : undefined}
-            >
-              {settingsMode && isAdmin && (
-                <DeadlineSettingPopover
-                  type="bonus"
-                  currentSetting={deadlineSettings.find(s => s.checklist_type === 'bonus') || null}
-                  onSave={updateDeadline}
-                  onRemove={removeDeadline}
-                  isSaving={isSavingDeadline}
-                />
-              )}
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
-                  checklistType === 'bonus' ? "bg-primary/15" : "bg-primary/10"
-                )}>
-                  <AppIcon
-                    name="Zap"
-                    size={22}
-                    fill={checklistType === 'bonus' ? 1 : 0}
-                    className="transition-colors"
-                    style={{ color: 'hsl(160 70% 45%)' }}
-                  />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Bônus</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{
-                      color: checklistType === 'bonus' ? 'hsl(160 84% 70%)' : 'hsl(160 84% 50%)',
-                      background: checklistType === 'bonus' ? 'hsl(160 84% 39% / 0.2)' : 'hsl(160 84% 39% / 0.12)',
-                    }}>
-                      Extra pts
-                    </span>
-                  </div>
-                  <p className="text-xs mt-0.5 text-muted-foreground">
-                    Tarefas exclusivas para mais pontos ⚡
-                  </p>
-                </div>
-                <AppIcon name="ChevronRight" size={18} className="text-muted-foreground" />
-              </div>
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  opacity: checklistType === 'bonus' ? 0.3 : 0.2,
-                  background: 'linear-gradient(105deg, transparent 40%, hsl(160 84% 39% / 0.15) 45%, hsl(var(--neon-cyan) / 0.1) 55%, transparent 60%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 120s ease-in-out infinite',
-                }}
-              />
-            </button>
 
             {/* Content area — either checklist view or settings */}
             <div className="pt-3">
