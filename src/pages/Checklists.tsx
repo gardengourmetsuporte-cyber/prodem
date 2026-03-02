@@ -24,6 +24,7 @@ import { ProductionPlanSheet } from '@/components/production/ProductionPlanSheet
 import { ProductionReportSheet } from '@/components/production/ProductionReportSheet';
 import { useProductionProjects } from '@/hooks/useProductionProjects';
 import { ProjectCard } from '@/components/production/ProjectCard';
+import { ProjectSheet } from '@/components/production/ProjectSheet';
 
 function DateStrip({ days, selectedDate, onSelectDate }: {
   days: Date[];
@@ -134,12 +135,13 @@ export default function ChecklistsPage() {
   const shift2Hook = useProductionOrders(activeUnitId, selectedDate, 2);
 
   // Production projects
-  const { activeProjects } = useProductionProjects(activeUnitId);
+  const { projects, activeProjects, createProject, updateProject, deleteProject } = useProductionProjects(activeUnitId);
   const activeProject = activeProjects.length > 0 ? activeProjects[0] : null;
 
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [reportShiftView, setReportShiftView] = useState<number>(1);
+  const [projectSheetOpen, setProjectSheetOpen] = useState(false);
 
   // Auto-switch to Turno 2 if shift 1 is closed and user is viewing Turno 1
   useEffect(() => {
@@ -386,9 +388,9 @@ export default function ChecklistsPage() {
     }
   };
 
-  const handleFinishProduction = async (itemId: string, quantityDone: number, points: number, completedByUserId?: string) => {
+  const handleFinishProduction = async (itemId: string, quantityDone: number, points: number, completedByUserId?: string, machineRef?: string) => {
     try {
-      await finishProduction(itemId, checklistType, currentDate, quantityDone, points, completedByUserId);
+      await finishProduction(itemId, checklistType, currentDate, quantityDone, points, completedByUserId, machineRef);
       toast.success('Produção finalizada!');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao finalizar produção');
@@ -494,7 +496,25 @@ export default function ChecklistsPage() {
 
             {/* Active Project Card */}
             {!settingsMode && checklistType !== 'bonus' && activeProject && (
-              <ProjectCard project={activeProject} isAdmin={isAdmin} />
+              <ProjectCard project={activeProject} isAdmin={isAdmin} onEdit={() => setProjectSheetOpen(true)} />
+            )}
+            {/* No project — admin can create */}
+            {!settingsMode && checklistType !== 'bonus' && !activeProject && isAdmin && (
+              <button
+                onClick={() => setProjectSheetOpen(true)}
+                className="w-full rounded-2xl p-3 text-left transition-all bg-card ring-1 ring-border/40 hover:ring-primary/30 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <AppIcon name="Briefcase" size={18} className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm font-bold text-foreground">Cadastrar Projeto / OS</span>
+                    <p className="text-[11px] text-muted-foreground">Vincule pedidos a um projeto com cliente</p>
+                  </div>
+                  <AppIcon name="Plus" size={16} className="text-primary" />
+                </div>
+              </button>
             )}
 
             {/* Create plan button — admin only, no plan yet */}
@@ -863,6 +883,8 @@ export default function ChecklistsPage() {
         hasExistingPlan={hasProductionOrder}
         currentShift={currentShift}
         isShift1Closed={isShift1Closed}
+        activeProjects={activeProjects}
+        selectedProjectId={productionOrder?.project_id || activeProject?.id}
         onCloseShift={async () => {
           await closeShiftAndCreateNext();
           toast.success('Turno 1 fechado! Turno 2 pronto para continuar.');
@@ -889,6 +911,14 @@ export default function ChecklistsPage() {
         shift2Totals={shift2Hook.totals}
         hasShift2={shift2Hook.hasOrder}
         onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
+      />
+      <ProjectSheet
+        open={projectSheetOpen}
+        onOpenChange={setProjectSheetOpen}
+        projects={projects}
+        onCreateProject={createProject}
+        onUpdateProject={updateProject}
+        onDeleteProject={deleteProject}
       />
     </AppLayout>
   );

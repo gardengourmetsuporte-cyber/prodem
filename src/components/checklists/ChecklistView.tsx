@@ -25,7 +25,7 @@ interface ChecklistViewProps {
   getItemStatus: (itemId: string) => string;
   onToggleItem: (itemId: string, points: number, completedByUserId?: string, isSkipped?: boolean, photoUrl?: string) => void;
   onStartProduction: (itemId: string, completedByUserId?: string) => Promise<void>;
-  onFinishProduction: (itemId: string, quantityDone: number, points: number, completedByUserId?: string) => Promise<void>;
+  onFinishProduction: (itemId: string, quantityDone: number, points: number, completedByUserId?: string, machineRef?: string) => Promise<void>;
   onUpdateProductionQuantity?: (completionId: string, newQuantity: number) => Promise<void>;
   getCompletionProgress: (sectorId: string) => { completed: number; total: number };
   getCrossShiftItemProgress?: (itemId: string) => { targetQty: number; totalDone: number; remaining: number; isFullyComplete: boolean };
@@ -135,6 +135,7 @@ export function ChecklistView({
   // Production finish state
   const [finishingItemId, setFinishingItemId] = useState<string | null>(null);
   const [finishQuantity, setFinishQuantity] = useState('');
+  const [finishMachineRef, setFinishMachineRef] = useState('');
   const [finishLoading, setFinishLoading] = useState(false);
   const [startingItemId, setStartingItemId] = useState<string | null>(null);
   // Update production quantity state
@@ -1308,14 +1309,26 @@ export function ChecklistView({
                                                 if (remaining > 0 && qty > remaining) qty = remaining;
                                                 if (qty > 0) {
                                                   setFinishLoading(true);
-                                                  onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by)
-                                                    .then(() => { setFinishingItemId(null); setFinishQuantity(''); })
+                                                  onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by, finishMachineRef || undefined)
+                                                    .then(() => { setFinishingItemId(null); setFinishQuantity(''); setFinishMachineRef(''); })
                                                     .catch((err: any) => toast.error(err.message))
                                                     .finally(() => setFinishLoading(false));
                                                 }
                                               }
-                                              if (e.key === 'Escape') { setFinishingItemId(null); setFinishQuantity(''); }
+                                              if (e.key === 'Escape') { setFinishingItemId(null); setFinishQuantity(''); setFinishMachineRef(''); }
                                             }}
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="text-xs text-muted-foreground mb-1 block">
+                                            Ref. Máquina <span className="text-muted-foreground/50">(opcional)</span>
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={finishMachineRef}
+                                            onChange={(e) => setFinishMachineRef(e.target.value)}
+                                            placeholder="Ex: Serra 01, Metaleira 02"
+                                            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
                                           />
                                         </div>
                                         <div className="flex gap-2">
@@ -1325,8 +1338,8 @@ export function ChecklistView({
                                               if (qty <= 0) { toast.error('Informe a quantidade'); return; }
                                               if (remaining > 0 && qty > remaining) qty = remaining;
                                               setFinishLoading(true);
-                                              onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by)
-                                                .then(() => { setFinishingItemId(null); setFinishQuantity(''); })
+                                              onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by, finishMachineRef || undefined)
+                                                .then(() => { setFinishingItemId(null); setFinishQuantity(''); setFinishMachineRef(''); })
                                                 .catch((err: any) => toast.error(err.message))
                                                 .finally(() => setFinishLoading(false));
                                             }}
@@ -1336,7 +1349,7 @@ export function ChecklistView({
                                             {finishLoading ? 'Finalizando...' : '✓ Confirmar'}
                                           </button>
                                           <button
-                                            onClick={() => { setFinishingItemId(null); setFinishQuantity(''); }}
+                                            onClick={() => { setFinishingItemId(null); setFinishQuantity(''); setFinishMachineRef(''); }}
                                             className="p-3 rounded-xl hover:bg-secondary transition-colors"
                                           >
                                             <AppIcon name="X" className="w-5 h-5 text-muted-foreground" />
