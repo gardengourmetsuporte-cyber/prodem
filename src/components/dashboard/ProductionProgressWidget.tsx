@@ -28,7 +28,7 @@ function statusColor(status: ProductionReportItem['status']) {
 export function ProductionProgressWidget({ variant, userId }: ProductionProgressWidgetProps) {
   const { activeUnitId } = useUnit();
   const navigate = useNavigate();
-  const { report, totals, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date());
+  const { report, totals, isLoading, hasOrder } = useProductionOrders(activeUnitId, new Date(), 1, '__all__');
 
   if (isLoading) {
     return (

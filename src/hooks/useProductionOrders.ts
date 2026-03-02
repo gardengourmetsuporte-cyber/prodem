@@ -46,7 +46,9 @@ export interface ProductionReportItem {
 }
 
 // Helper: apply project filter consistently — eq when has value, is null when null/undefined
+// Special value '__all__' skips the filter entirely (used by dashboard to aggregate all projects)
 function addProjectFilter(query: any, pid: string | null | undefined): any {
+  if (pid === '__all__') return query;
   return pid ? query.eq('project_id', pid) : query.is('project_id', null);
 }
 
@@ -58,7 +60,9 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   const orderKey = ['production-order', unitId, dateStr, shift, projectId ?? '__null__'];
   const itemsKey = ['production-order-items', unitId, dateStr, shift, projectId ?? '__null__'];
 
-  // Fetch current day's order for this shift (strictly isolated by project)
+  const isAllProjects = projectId === '__all__';
+
+  // Fetch current day's order(s) for this shift
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: orderKey,
     queryFn: async () => {
@@ -69,11 +73,19 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .eq('date', dateStr)
         .eq('shift', shift);
       
-      query = addProjectFilter(query, projectId);
-      
-      const { data, error } = await query.maybeSingle();
-      if (error) throw error;
-      return data as ProductionOrder | null;
+      if (!isAllProjects) {
+        query = addProjectFilter(query, projectId);
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        return data as ProductionOrder | null;
+      } else {
+        // For '__all__' mode, return the first order as representative (for status checks)
+        const { data, error } = await query;
+        if (error) throw error;
+        if (!data || data.length === 0) return null;
+        // Create a synthetic order that represents all
+        return { ...data[0], id: '__aggregate__', _allOrderIds: data.map((d: any) => d.id), _allStatuses: data.map((d: any) => d.status) } as any;
+      }
     },
     enabled: !!user && !!unitId,
   });
@@ -90,11 +102,17 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .eq('date', dateStr)
         .eq('shift', otherShift);
       
-      query = addProjectFilter(query, projectId);
-      
-      const { data, error } = await query.maybeSingle();
-      if (error) throw error;
-      return data as ProductionOrder | null;
+      if (!isAllProjects) {
+        query = addProjectFilter(query, projectId);
+        const { data, error } = await query.maybeSingle();
+        if (error) throw error;
+        return data as ProductionOrder | null;
+      } else {
+        const { data, error } = await query;
+        if (error) throw error;
+        if (!data || data.length === 0) return null;
+        return { ...data[0], id: '__aggregate__', _allOrderIds: data.map((d: any) => d.id), _allStatuses: data.map((d: any) => d.status) } as any;
+      }
     },
     enabled: !!user && !!unitId,
   });
@@ -109,10 +127,11 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     queryKey: itemsKey,
     queryFn: async () => {
       if (!order?.id) return [];
+      const orderIds = (order as any)._allOrderIds || [order.id];
       const { data, error } = await supabase
         .from('production_order_items')
         .select('*, checklist_item:checklist_items(id, name, target_quantity, subcategory_id, piece_dimensions)')
-        .eq('order_id', order.id);
+        .in('order_id', orderIds);
       if (error) throw error;
       return (data || []) as ProductionOrderItem[];
     },
@@ -127,14 +146,15 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     queryFn: async () => {
       if (!order?.id) return [];
       
-      // Fetch item IDs directly from DB to avoid stale orderItems dependency
+      // Fetch item IDs from all relevant orders
+      const orderIds = (order as any)._allOrderIds || [order.id];
       const { data: freshItems, error: itemsErr } = await supabase
         .from('production_order_items')
         .select('checklist_item_id')
-        .eq('order_id', order.id);
+        .in('order_id', orderIds);
       if (itemsErr) throw itemsErr;
       
-      const itemIds = (freshItems || []).map(i => i.checklist_item_id);
+      const itemIds = [...new Set((freshItems || []).map(i => i.checklist_item_id))];
       if (itemIds.length === 0) return [];
       
       const { data, error } = await supabase
@@ -172,12 +192,10 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
           if (qtyDone > 0) {
             doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + qtyDone);
           } else {
-            // Legacy/quick completion without quantity should count as fully completed for pending calc
             completedWithoutQtySet.add(c.item_id);
           }
         }
 
-        // Track items that are currently in_progress (started but not finished)
         const startedAt = (c as any).started_at;
         const finishedAt = (c as any).finished_at;
         if (startedAt && !finishedAt) {
@@ -191,24 +209,39 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       }
     });
 
-    return orderItems.map(oi => {
-      const rawDone = doneMap.get(oi.checklist_item_id) || 0;
-      const done = completedWithoutQtySet.has(oi.checklist_item_id)
-        ? Math.max(rawDone, oi.quantity_ordered)
+    // Aggregate order items by checklist_item_id (needed for __all__ mode with same item across projects)
+    const aggregated = new Map<string, { qty: number; name: string; dims: string | null }>();
+    orderItems.forEach(oi => {
+      const existing = aggregated.get(oi.checklist_item_id);
+      if (existing) {
+        existing.qty += oi.quantity_ordered;
+      } else {
+        aggregated.set(oi.checklist_item_id, {
+          qty: oi.quantity_ordered,
+          name: oi.checklist_item?.name || 'Item',
+          dims: oi.checklist_item?.piece_dimensions || null,
+        });
+      }
+    });
+
+    return [...aggregated.entries()].map(([itemId, agg]) => {
+      const rawDone = doneMap.get(itemId) || 0;
+      const done = completedWithoutQtySet.has(itemId)
+        ? Math.max(rawDone, agg.qty)
         : rawDone;
-      const pending = Math.max(0, oi.quantity_ordered - done);
-      const percent = oi.quantity_ordered > 0 ? Math.round((done / oi.quantity_ordered) * 100) : 0;
-      const isInProgress = inProgressSet.has(oi.checklist_item_id);
+      const pending = Math.max(0, agg.qty - done);
+      const percent = agg.qty > 0 ? Math.round((done / agg.qty) * 100) : 0;
+      const isInProgress = inProgressSet.has(itemId);
       return {
-        checklist_item_id: oi.checklist_item_id,
-        item_name: oi.checklist_item?.name || 'Item',
-        piece_dimensions: oi.checklist_item?.piece_dimensions || null,
-        quantity_ordered: oi.quantity_ordered,
+        checklist_item_id: itemId,
+        item_name: agg.name,
+        piece_dimensions: agg.dims,
+        quantity_ordered: agg.qty,
         quantity_done: done,
         quantity_pending: pending,
         percent: Math.min(percent, 100),
         status: percent >= 100 ? 'complete' : done > 0 ? 'partial' : isInProgress ? 'in_progress' : 'not_started',
-        duration_ms: durationMap.get(oi.checklist_item_id) ?? null,
+        duration_ms: durationMap.get(itemId) ?? null,
       };
     });
   }, [orderItems, completions]);
