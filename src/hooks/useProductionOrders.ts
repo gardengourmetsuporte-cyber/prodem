@@ -45,15 +45,20 @@ export interface ProductionReportItem {
   duration_ms: number | null;
 }
 
+// Helper: apply project filter consistently — eq when has value, is null when null/undefined
+function addProjectFilter(query: any, pid: string | null | undefined): any {
+  return pid ? query.eq('project_id', pid) : query.is('project_id', null);
+}
+
 export function useProductionOrders(unitId: string | null, date: Date, shift: number = 1, projectId?: string | null) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const dateStr = format(date, 'yyyy-MM-dd');
 
-  const orderKey = ['production-order', unitId, dateStr, shift, projectId ?? '__all__'];
-  const itemsKey = ['production-order-items', unitId, dateStr, shift, projectId ?? '__all__'];
+  const orderKey = ['production-order', unitId, dateStr, shift, projectId ?? '__null__'];
+  const itemsKey = ['production-order-items', unitId, dateStr, shift, projectId ?? '__null__'];
 
-  // Fetch current day's order for this shift (filtered by project when provided)
+  // Fetch current day's order for this shift (strictly isolated by project)
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: orderKey,
     queryFn: async () => {
@@ -64,9 +69,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .eq('date', dateStr)
         .eq('shift', shift);
       
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
+      query = addProjectFilter(query, projectId);
       
       const { data, error } = await query.maybeSingle();
       if (error) throw error;
@@ -78,7 +81,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   // Also fetch the other shift's order (to know if shift 1 is closed)
   const otherShift = shift === 1 ? 2 : 1;
   const { data: otherShiftOrder } = useQuery({
-    queryKey: ['production-order', unitId, dateStr, otherShift, projectId ?? '__all__'],
+    queryKey: ['production-order', unitId, dateStr, otherShift, projectId ?? '__null__'],
     queryFn: async () => {
       let query = supabase
         .from('production_orders')
@@ -87,9 +90,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .eq('date', dateStr)
         .eq('shift', otherShift);
       
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
+      query = addProjectFilter(query, projectId);
       
       const { data, error } = await query.maybeSingle();
       if (error) throw error;
@@ -233,9 +234,11 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   const saveOrder = useCallback(async (
     items: { checklist_item_id: string; quantity_ordered: number }[],
     notes?: string,
-    projectId?: string
+    saveProjectId?: string
   ) => {
     if (!user || !unitId) throw new Error('Not authenticated');
+    // Use saveProjectId if provided, otherwise fall back to hook-level projectId
+    const effectiveProjectId = saveProjectId !== undefined ? saveProjectId : projectId;
 
     let orderId = order?.id;
 
@@ -247,23 +250,21 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
         .eq('unit_id', unitId!)
         .eq('date', dateStr)
         .eq('shift', shift);
-      if (projectId) {
-        existingQuery = existingQuery.eq('project_id', projectId);
-      }
+      existingQuery = addProjectFilter(existingQuery, effectiveProjectId || null);
       const { data: existing } = await existingQuery.maybeSingle();
 
       if (existing?.id) {
         // Order already exists — reuse it
         orderId = existing.id;
         const updateData: any = { notes, status: 'active', updated_at: new Date().toISOString() };
-        if (projectId !== undefined) updateData.project_id = projectId || null;
+        if (effectiveProjectId !== undefined) updateData.project_id = effectiveProjectId || null;
         await supabase
           .from('production_orders')
           .update(updateData)
           .eq('id', orderId);
       } else {
         const insertData: any = { unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes, shift };
-        if (projectId) insertData.project_id = projectId;
+        if (effectiveProjectId) insertData.project_id = effectiveProjectId;
         const { data, error } = await supabase
           .from('production_orders')
           .insert(insertData)
@@ -274,7 +275,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       }
     } else {
       const updateData: any = { notes, status: 'active', updated_at: new Date().toISOString() };
-      if (projectId !== undefined) updateData.project_id = projectId || null;
+      if (effectiveProjectId !== undefined) updateData.project_id = effectiveProjectId || null;
       await supabase
         .from('production_orders')
         .update(updateData)
@@ -346,9 +347,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       .eq('unit_id', unitId)
       .eq('date', dateStr);
     
-    if (projectId) {
-      dayQuery = dayQuery.eq('project_id', projectId);
-    }
+    dayQuery = addProjectFilter(dayQuery, projectId);
     
     const { data: dayOrders, error: dayOrdersError } = await dayQuery;
 
@@ -426,9 +425,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       .eq('date', dateStr)
       .eq('shift', 2);
     
-    if (projectId) {
-      shift2Query = shift2Query.eq('project_id', projectId);
-    }
+    shift2Query = addProjectFilter(shift2Query, projectId);
     
     const { data: existingShift2, error: existingShift2Error } = await shift2Query.maybeSingle();
 
@@ -514,13 +511,14 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
   // Copy from another date
   const copyFromDate = useCallback(async (sourceDate: string) => {
     if (!unitId) return null;
-    const { data: sourceOrder } = await supabase
+    let sourceQuery = supabase
       .from('production_orders')
       .select('id')
       .eq('unit_id', unitId)
       .eq('date', sourceDate)
-      .eq('shift', 1)
-      .maybeSingle();
+      .eq('shift', 1);
+    sourceQuery = addProjectFilter(sourceQuery, projectId);
+    const { data: sourceOrder } = await sourceQuery.maybeSingle();
     if (!sourceOrder) return null;
 
     const { data: sourceItems } = await supabase
@@ -530,18 +528,20 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     if (!sourceItems || sourceItems.length === 0) return null;
 
     return sourceItems as { checklist_item_id: string; quantity_ordered: number }[];
-  }, [unitId]);
+  }, [unitId, projectId]);
 
   // Get pending (unfinished) items from a given date
   const getPendingFromDate = useCallback(async (sourceDate: string) => {
     if (!unitId) return null;
 
-    // Get all orders for that date (both shifts)
-    const { data: sourceOrders } = await supabase
+    // Get all orders for that date (both shifts) — filtered by project
+    let sourceQuery = supabase
       .from('production_orders')
       .select('id')
       .eq('unit_id', unitId)
       .eq('date', sourceDate);
+    sourceQuery = addProjectFilter(sourceQuery, projectId);
+    const { data: sourceOrders } = await sourceQuery;
     if (!sourceOrders || sourceOrders.length === 0) return null;
 
     const orderIds = sourceOrders.map(o => o.id);
@@ -587,7 +587,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     });
 
     return pendingItems.length > 0 ? pendingItems : null;
-  }, [unitId]);
+  }, [unitId, projectId]);
 
   return {
     order,

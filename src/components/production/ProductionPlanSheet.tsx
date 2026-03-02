@@ -61,6 +61,13 @@ export function ProductionPlanSheet({
   const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set(['__init__']));
   const [projectId, setProjectId] = useState<string | undefined>(selectedProjectId || undefined);
 
+  // Sync projectId with the active project whenever the sheet opens
+  useEffect(() => {
+    if (open) {
+      setProjectId(selectedProjectId || undefined);
+    }
+  }, [open, selectedProjectId]);
+
   // Build available items from sectors
   const availableItems = useMemo(() => {
     const items: PlanItem[] = [];
