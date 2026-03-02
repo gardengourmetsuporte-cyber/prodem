@@ -47,7 +47,7 @@ export function ProductionPlanSheet({
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
-  const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
+  const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set(['__init__']));
 
   // Build available items from sectors (ALL active items)
   const availableItems = useMemo(() => {
@@ -107,6 +107,10 @@ export function ProductionPlanSheet({
   // Initialize from existing items or defaults
   useEffect(() => {
     if (!open) return;
+    // Start with all sectors collapsed
+    const allSectorNames = new Set(availableItems.map(a => a.sectorName));
+    setCollapsedSectors(allSectorNames);
+
     if (existingItems.length > 0) {
       const nameMap = new Map(availableItems.map(a => [a.checklist_item_id, a]));
       const mapped = existingItems.map(ei => {
