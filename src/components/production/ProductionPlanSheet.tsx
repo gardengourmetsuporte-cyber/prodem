@@ -447,28 +447,7 @@ export function ProductionPlanSheet({
         </div>
 
         {/* Fixed Footer */}
-        <div className="px-6 pb-5 pt-3 space-y-2 border-t border-border/30 bg-background">
-          {canCloseShift && (
-            <button
-              onClick={handleCloseShift}
-              disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-xs font-semibold text-foreground disabled:opacity-60"
-            >
-              <AppIcon name="ArrowRight" size={14} />
-              Fechar Turno 1 e liberar Turno 2
-            </button>
-          )}
-
-          {canResetDay && (
-            <button
-              onClick={handleDeletePlan}
-              className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-destructive/5 border border-destructive/15 hover:bg-destructive/10 transition-colors text-xs font-semibold text-destructive"
-            >
-              <AppIcon name="Trash2" size={14} />
-              Zerar tudo do dia (teste)
-            </button>
-          )}
-
+        <div className="px-6 pb-5 pt-3 space-y-2.5 border-t border-border/30 bg-background">
           {/* Notes — compact */}
           <Input
             placeholder="Observações (opcional)"
@@ -478,14 +457,38 @@ export function ProductionPlanSheet({
           />
 
           {/* Save row */}
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground flex-1">
               <span className="font-bold text-foreground">{activeCount}</span> itens · <span className="font-bold text-foreground">{totalOrdered}</span> peças
             </p>
-            <Button onClick={handleSave} disabled={saving} size="sm" className="min-w-[100px]">
+
+            {canCloseShift && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCloseShift}
+                disabled={saving}
+                className="gap-1.5 text-xs border-warning/30 text-warning hover:bg-warning/10 hover:text-warning"
+              >
+                <AppIcon name="ArrowRightToLine" size={14} />
+                T1 → T2
+              </Button>
+            )}
+
+            <Button onClick={handleSave} disabled={saving} size="sm" className="min-w-[90px]">
               {saving ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
+
+          {/* Danger zone — collapsible */}
+          {canResetDay && (
+            <button
+              onClick={handleDeletePlan}
+              className="text-[10px] text-destructive/50 hover:text-destructive transition-colors underline underline-offset-2 mx-auto block"
+            >
+              Zerar dia (teste)
+            </button>
+          )}
         </div>
       </SheetContent>
     </Sheet>
