@@ -314,6 +314,19 @@ function ProductionFlightBoard({
               <FlightKpi label="PROGRESSO" value={`${totals.percent}%`} accent={totals.percent >= 100 ? 'success' : totals.percent > 0 ? 'warning' : undefined} />
             </div>
 
+            {/* Global progress bar */}
+            <div className="px-4 py-2.5 border-b border-white/[0.06] bg-white/[0.02]">
+              <div className="relative h-2 rounded-full bg-secondary overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-1000",
+                    totals.percent >= 100 ? 'bg-success' : totals.percent > 0 ? 'bg-primary' : 'bg-muted-foreground/20'
+                  )}
+                  style={{ width: `${Math.min(totals.percent, 100)}%` }}
+                />
+              </div>
+            </div>
+
             {/* Per-OS sections */}
             <div className="divide-y divide-white/[0.06]">
               {osList.map(os => (
@@ -365,18 +378,6 @@ function ProductionFlightBoard({
               ))}
             </div>
 
-            {/* Global progress bar at bottom */}
-            <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.06]">
-              <div className="relative h-2 rounded-full bg-secondary overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-1000",
-                    totals.percent >= 100 ? 'bg-success' : totals.percent > 0 ? 'bg-primary' : 'bg-muted-foreground/20'
-                  )}
-                  style={{ width: `${Math.min(totals.percent, 100)}%` }}
-                />
-              </div>
-            </div>
           </>
         )}
       </div>
