@@ -65,10 +65,6 @@ export function BottomTabBar() {
       }
     }
 
-    // TEMPORARY: Add Anty tab for user review
-    if (hasAccess('production')) {
-      resolvedTabs.splice(2, 0, { key: 'prod-anty', icon: 'FileSpreadsheet', label: 'Pr. Anty', path: '/production-anty', moduleKey: 'production' });
-    }
   }
 
   const leftTabs = resolvedTabs.slice(0, 2);
