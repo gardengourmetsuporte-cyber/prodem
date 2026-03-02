@@ -52,19 +52,49 @@ export function useProductionProjects(unitId: string | null) {
 
     if (error) throw error;
 
-    // 2. Insert Items if any
+    // 2. Insert Items into production_pieces (new table)
     if (items && items.length > 0 && newProject?.id) {
-      const rows = items.map(i => ({
+      // Fetch checklist item details to populate production_pieces
+      const itemIds = items.map(i => i.checklist_item_id);
+      const { data: checklistItems } = await supabase
+        .from('checklist_items')
+        .select('id, name, material_code, cut_length_mm, qty_per_rack, process_type, piece_dimensions')
+        .in('id', itemIds);
+
+      const itemMap = new Map((checklistItems || []).map(ci => [ci.id, ci]));
+
+      const pieceRows = items.map((i, idx) => {
+        const ci = itemMap.get(i.checklist_item_id);
+        return {
+          project_id: newProject.id,
+          unit_id: unitId,
+          material_code: ci?.material_code || null,
+          description: ci?.name || 'Peça',
+          cut_length_mm: ci?.cut_length_mm || null,
+          qty_per_rack: ci?.qty_per_rack || 1,
+          qty_total: i.quantity_ordered,
+          process_type: ci?.process_type || 'SERRA',
+          sort_order: idx,
+        };
+      });
+
+      const { error: piecesError } = await supabase.from('production_pieces').insert(pieceRows as any);
+      if (piecesError) throw piecesError;
+
+      // Also save to legacy table for backward compat
+      const legacyRows = items.map(i => ({
         project_id: newProject.id,
         checklist_item_id: i.checklist_item_id,
         quantity_ordered: i.quantity_ordered,
         unit_id: unitId,
       }));
-      const { error: itemsError } = await supabase.from('production_order_items').insert(rows as any);
-      if (itemsError) throw itemsError;
+      try {
+        await supabase.from('production_order_items').insert(legacyRows as any);
+      } catch (_) { /* legacy table might not exist */ }
     }
 
     queryClient.invalidateQueries({ queryKey: ['production-projects', unitId] });
+    queryClient.invalidateQueries({ queryKey: ['production-pieces', newProject?.id] });
     return newProject?.id;
   }, [unitId, queryClient]);
 
@@ -82,19 +112,48 @@ export function useProductionProjects(unitId: string | null) {
 
     // 2. Update Items if provided
     if (items) {
-      // Clear existing for a clean sync
-      await (supabase.from('production_order_items') as any).delete().eq('project_id', id);
+      // Clear existing pieces
+      await (supabase.from('production_pieces') as any).delete().eq('project_id', id);
 
       if (items.length > 0) {
-        const rows = items.map(i => ({
-          project_id: id,
-          checklist_item_id: i.checklist_item_id,
-          quantity_ordered: i.quantity_ordered,
-          unit_id: unitId!,
-        }));
-        const { error: itemsError } = await supabase.from('production_order_items').insert(rows as any);
-        if (itemsError) throw itemsError;
+        const itemIds = items.map(i => i.checklist_item_id);
+        const { data: checklistItems } = await supabase
+          .from('checklist_items')
+          .select('id, name, material_code, cut_length_mm, qty_per_rack, process_type, piece_dimensions')
+          .in('id', itemIds);
+        const itemMap = new Map((checklistItems || []).map(ci => [ci.id, ci]));
+
+        const pieceRows = items.map((i, idx) => {
+          const ci = itemMap.get(i.checklist_item_id);
+          return {
+            project_id: id,
+            unit_id: unitId!,
+            material_code: ci?.material_code || null,
+            description: ci?.name || 'Peça',
+            cut_length_mm: ci?.cut_length_mm || null,
+            qty_per_rack: ci?.qty_per_rack || 1,
+            qty_total: i.quantity_ordered,
+            process_type: ci?.process_type || 'SERRA',
+            sort_order: idx,
+          };
+        });
+        await supabase.from('production_pieces').insert(pieceRows as any);
       }
+
+      // Legacy sync
+      try {
+        await (supabase.from('production_order_items') as any).delete().eq('project_id', id);
+        if (items.length > 0) {
+          const legacyRows = items.map(i => ({
+            project_id: id,
+            checklist_item_id: i.checklist_item_id,
+            quantity_ordered: i.quantity_ordered,
+            unit_id: unitId!,
+          }));
+          await supabase.from('production_order_items').insert(legacyRows as any);
+        }
+      } catch (_) {}
+      queryClient.invalidateQueries({ queryKey: ['production-pieces'] });
       queryClient.invalidateQueries({ queryKey: ['production-project-items'] });
     }
 
