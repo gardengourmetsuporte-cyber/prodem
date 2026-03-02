@@ -43,6 +43,7 @@ export function ProductionShiftPanel({
           isAdmin={isAdmin}
           onSelect={() => {
             if (isShift1Closed) onViewReport(1);
+            else if (currentShift === 1) onViewReport(1);
             else onSelectShift(1);
           }}
           onReopen={isShift1Closed && isAdmin ? () => onReopenShift?.(1) : undefined}
@@ -59,6 +60,7 @@ export function ProductionShiftPanel({
           onSelect={() => {
             if (isShift2Locked) return;
             if (shift2.order?.status === 'closed') onViewReport(2);
+            else if (currentShift === 2) onViewReport(2);
             else onSelectShift(2);
           }}
           onReopen={shift2.order?.status === 'closed' && isAdmin ? () => onReopenShift?.(2) : undefined}
