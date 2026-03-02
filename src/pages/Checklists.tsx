@@ -99,7 +99,7 @@ export default function ChecklistsPage() {
     addItem, updateItem, deleteItem, reorderItems,
     toggleCompletion, contestCompletion, splitCompletion, isItemCompleted, getItemStatus, getCompletionProgress,
     getCrossShiftItemProgress,
-    startProduction, finishProduction,
+    startProduction, finishProduction, updateProductionQuantity,
     fetchCompletions,
   } = useChecklists();
 
@@ -338,6 +338,14 @@ export default function ChecklistsPage() {
       toast.success('Produção finalizada!');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao finalizar produção');
+    }
+  };
+
+  const handleUpdateProductionQuantity = async (completionId: string, newQuantity: number) => {
+    try {
+      await updateProductionQuantity(completionId, currentDate, checklistType, newQuantity);
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao atualizar quantidade');
     }
   };
 
@@ -661,6 +669,7 @@ export default function ChecklistsPage() {
                   onToggleItem={handleToggleItem}
                   onStartProduction={handleStartProduction}
                   onFinishProduction={handleFinishProduction}
+                  onUpdateProductionQuantity={handleUpdateProductionQuantity}
                   getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
                   getCrossShiftItemProgress={getCrossShiftItemProgress}
                   currentUserId={user?.id}

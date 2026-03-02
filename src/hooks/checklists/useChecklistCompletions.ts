@@ -166,55 +166,32 @@ export function useChecklistCompletions({
   }, [completions, userId, queryClient, activeUnitId]);
 
   const isItemCompleted = useCallback((itemId: string) => {
-    // Cross-shift: check if the item is completed across all shifts
-    // For production items (target_quantity > 0):
-    // - completed in current shift => completed for this shift
-    // - otherwise, completed only when total quantity_done across shifts reaches target
-    const itemData = sectors.flatMap(s => s.subcategories?.flatMap(sub => sub.items || []) || []).find(i => i.id === itemId);
-    const targetQty = (itemData as any)?.target_quantity || 0;
+    // Production items: completed once ANY shift has status='completed' (even if qty < target)
+    const hasCompletedCompletion = allShiftCompletions.some(
+      c => c.item_id === itemId && !c.is_skipped && c.status === 'completed'
+    );
+    if (hasCompletedCompletion) return true;
 
-    if (targetQty > 0) {
-      const currentShiftCompleted = completions.some(
-        c => c.item_id === itemId && !c.is_skipped && (c as any).status === 'completed'
-      );
-      if (currentShiftCompleted) return true;
-
-      const totalDone = allShiftCompletions
-        .filter(c => c.item_id === itemId && !c.is_skipped && c.status === 'completed')
-        .reduce((sum, c) => sum + (c.quantity_done || 0), 0);
-      return totalDone >= targetQty;
-    }
-
-    // Non-production item: completed if any non-in_progress completion exists across all shifts
+    // Non-production item: completed if any non-in_progress completion exists
     const hasCompletion = allShiftCompletions.some(
       c => c.item_id === itemId && c.status !== 'in_progress'
     );
     return hasCompletion;
-  }, [allShiftCompletions, sectors, completions]);
+  }, [allShiftCompletions]);
 
   const getItemStatus = useCallback((itemId: string) => {
     const completion = completions.find(c => c.item_id === itemId);
     if (completion) return (completion as any).status || 'completed';
 
-    const itemData = sectors.flatMap(s => s.subcategories?.flatMap(sub => sub.items || []) || []).find(i => i.id === itemId);
-    const targetQty = (itemData as any)?.target_quantity || 0;
-
-    // For production items, don't inherit in_progress/completed status from another shift
-    // unless the daily target is fully reached.
-    if (targetQty > 0) {
-      const totalDone = allShiftCompletions
-        .filter(c => c.item_id === itemId && !c.is_skipped && c.status === 'completed')
-        .reduce((sum, c) => sum + (c.quantity_done || 0), 0);
-      return totalDone >= targetQty ? 'completed' : 'pending';
-    }
-
-    // Standard items stay cross-shift
-    const otherShift = allShiftCompletions.find(c => c.item_id === itemId && c.status !== 'in_progress');
-    if (otherShift) return 'completed';
+    // Check cross-shift
+    const otherCompleted = allShiftCompletions.find(c => c.item_id === itemId && c.status === 'completed');
+    if (otherCompleted) return 'completed';
+    const otherSkipped = allShiftCompletions.find(c => c.item_id === itemId && c.status === 'skipped');
+    if (otherSkipped) return 'completed';
     const inProgress = allShiftCompletions.find(c => c.item_id === itemId && c.status === 'in_progress');
     if (inProgress) return 'in_progress';
     return 'pending';
-  }, [completions, allShiftCompletions, sectors]);
+  }, [completions, allShiftCompletions]);
 
   /** Get cross-shift accumulated progress for an item (for production items with target_quantity) */
   const getCrossShiftItemProgress = useCallback((itemId: string) => {
@@ -313,6 +290,21 @@ export function useChecklistCompletions({
     invalidateGamificationCaches(queryClient);
   }, [completions, userId, queryClient, activeUnitId]);
 
+  const updateProductionQuantity = useCallback(async (
+    completionId: string, date: string, checklistType: ChecklistType, newQuantity: number
+  ) => {
+    const { error } = await supabase
+      .from('checklist_completions')
+      .update({ quantity_done: newQuantity } as any)
+      .eq('id', completionId);
+    if (error) throw error;
+
+    queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
+    queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
+  }, [queryClient, activeUnitId]);
+
   return {
     toggleCompletion,
     splitCompletion,
@@ -323,5 +315,6 @@ export function useChecklistCompletions({
     getCrossShiftItemProgress,
     startProduction,
     finishProduction,
+    updateProductionQuantity,
   };
 }

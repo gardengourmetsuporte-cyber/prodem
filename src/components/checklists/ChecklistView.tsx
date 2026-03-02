@@ -26,6 +26,7 @@ interface ChecklistViewProps {
   onToggleItem: (itemId: string, points: number, completedByUserId?: string, isSkipped?: boolean, photoUrl?: string) => void;
   onStartProduction: (itemId: string, completedByUserId?: string) => Promise<void>;
   onFinishProduction: (itemId: string, quantityDone: number, points: number, completedByUserId?: string) => Promise<void>;
+  onUpdateProductionQuantity?: (completionId: string, newQuantity: number) => Promise<void>;
   getCompletionProgress: (sectorId: string) => { completed: number; total: number };
   getCrossShiftItemProgress?: (itemId: string) => { targetQty: number; totalDone: number; remaining: number; isFullyComplete: boolean };
   currentUserId?: string;
@@ -84,6 +85,7 @@ export function ChecklistView({
   onToggleItem,
   onStartProduction,
   onFinishProduction,
+  onUpdateProductionQuantity,
   getCompletionProgress,
   getCrossShiftItemProgress,
   onContestCompletion,
@@ -125,6 +127,10 @@ export function ChecklistView({
   const [finishQuantity, setFinishQuantity] = useState('');
   const [finishLoading, setFinishLoading] = useState(false);
   const [startingItemId, setStartingItemId] = useState<string | null>(null);
+  // Update production quantity state
+  const [updatingQtyItemId, setUpdatingQtyItemId] = useState<string | null>(null);
+  const [updateQtyValue, setUpdateQtyValue] = useState('');
+  const [updateQtyLoading, setUpdateQtyLoading] = useState(false);
 
   useEffect(() => {
     if (!activeUnitId) return;
@@ -1003,6 +1009,78 @@ export function ChecklistView({
                                             <p className="text-xs text-muted-foreground">Reverter a conclusão</p>
                                           </div>
                                         </button>
+                                      )}
+                                      {/* Update production quantity for industrial items */}
+                                      {!wasSkipped && (item as any).target_quantity > 0 && onUpdateProductionQuantity && (completion as any)?.quantity_done != null && (
+                                        <>
+                                          <div className="border-t border-border" />
+                                          {updatingQtyItemId === item.id ? (
+                                            <div className="space-y-3 animate-fade-in">
+                                              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                                                <AppIcon name="Pencil" className="w-4 h-4" />
+                                                <span>Atualizar quantidade ({(completion as any).quantity_done} atual)</span>
+                                              </div>
+                                              <input
+                                                type="number"
+                                                inputMode="numeric"
+                                                value={updateQtyValue}
+                                                onChange={(e) => setUpdateQtyValue(e.target.value)}
+                                                placeholder={`Ex: ${(completion as any).quantity_done + 5}`}
+                                                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-lg font-bold outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/40"
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    const qty = parseInt(updateQtyValue) || 0;
+                                                    if (qty > 0) {
+                                                      setUpdateQtyLoading(true);
+                                                      onUpdateProductionQuantity(completion.id, qty)
+                                                        .then(() => { setUpdatingQtyItemId(null); setUpdateQtyValue(''); toast.success('Quantidade atualizada!'); })
+                                                        .catch((err: any) => toast.error(err.message))
+                                                        .finally(() => setUpdateQtyLoading(false));
+                                                    }
+                                                  }
+                                                  if (e.key === 'Escape') { setUpdatingQtyItemId(null); setUpdateQtyValue(''); }
+                                                }}
+                                              />
+                                              <div className="flex gap-2">
+                                                <button
+                                                  onClick={() => {
+                                                    const qty = parseInt(updateQtyValue) || 0;
+                                                    if (qty <= 0) { toast.error('Informe a quantidade'); return; }
+                                                    setUpdateQtyLoading(true);
+                                                    onUpdateProductionQuantity(completion.id, qty)
+                                                      .then(() => { setUpdatingQtyItemId(null); setUpdateQtyValue(''); toast.success('Quantidade atualizada!'); })
+                                                      .catch((err: any) => toast.error(err.message))
+                                                      .finally(() => setUpdateQtyLoading(false));
+                                                  }}
+                                                  disabled={updateQtyLoading || !updateQtyValue}
+                                                  className="flex-1 p-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold disabled:opacity-50 hover:bg-primary/90 transition-colors"
+                                                >
+                                                  {updateQtyLoading ? 'Salvando...' : '✓ Confirmar'}
+                                                </button>
+                                                <button
+                                                  onClick={() => { setUpdatingQtyItemId(null); setUpdateQtyValue(''); }}
+                                                  className="p-3 rounded-xl hover:bg-secondary transition-colors"
+                                                >
+                                                  <AppIcon name="X" className="w-5 h-5 text-muted-foreground" />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <button
+                                              onClick={() => { setUpdatingQtyItemId(item.id); setUpdateQtyValue(String((completion as any).quantity_done || '')); }}
+                                              className="w-full flex items-center gap-3 p-3 rounded-xl bg-primary/5 hover:bg-primary/10 text-left transition-all duration-200 border border-primary/20 active:scale-[0.97]"
+                                            >
+                                              <div className="w-10 h-10 bg-primary/15 rounded-xl flex items-center justify-center">
+                                                <AppIcon name="Pencil" className="w-5 h-5 text-primary" />
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold text-primary">Atualizar produção</p>
+                                                <p className="text-xs text-muted-foreground">Alterar quantidade produzida</p>
+                                              </div>
+                                            </button>
+                                          )}
+                                        </>
                                       )}
                                       {/* Dividir pontos */}
                                       {!wasSkipped && onSplitCompletion && profiles.length > 0 && (
