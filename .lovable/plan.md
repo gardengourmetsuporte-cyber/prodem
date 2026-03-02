@@ -1,46 +1,55 @@
 
 
-## Plano: Corrigir Toda a Lógica do Fluxo de Produção
+## Problema Atual
 
-### Problema Central
-A lógica de queries no `useProductionOrders` **não isola corretamente por projeto**. Quando `projectId` é `null`, as queries omitem o filtro ao invés de filtrar `project_id IS NULL`, causando:
-- Ordens de projetos diferentes se misturando
-- Erros de duplicidade na criação
-- Pendências importadas de projetos errados
-- Fluxo T1→T2 puxando dados cruzados
+Hoje, ao navegar para um novo dia, **todos os projetos ativos** aparecem no seletor — mesmo os que já foram 100% concluídos no dia anterior. Isso permite que o usuário "puxe" uma OS já finalizada para um novo dia, duplicando trabalho. A lógica de "Pendências de ontem" já calcula corretamente os itens pendentes, mas não há **guarda** impedindo de recriar uma OS completa.
 
-### Mudanças Necessárias
+## Plano
 
-#### 1. `useProductionOrders.ts` — Isolamento por projeto em TODAS as queries
+### 1. Filtrar projetos disponíveis por dia com base em status de conclusão
 
-**Fetch de ordem (linhas 57-76):** Quando `projectId` é `null`, adicionar `.is('project_id', null)` ao invés de simplesmente omitir o filtro. Mesma correção para a query do outro turno (linhas 80-99).
+**Arquivo:** `src/hooks/useProductionPage.ts`
 
-**`saveOrder` (linhas 242-274):** A busca de ordem existente antes do insert também precisa do filtro `.is('project_id', null)` quando projectId é falso. O parâmetro `projectId` interno sombreia o do hook — renomear para `saveProjectId` para clareza.
+Alterar o filtro de `activeProjects` para excluir projetos que:
+- Já têm produção em dias anteriores **e** estão 100% concluídos (sem pendências)
+- Não têm produção no dia selecionado
 
-**`closeShiftAndCreateNext` (linhas 422-431):** A busca do turno 2 existente precisa do mesmo tratamento — filtrar `.is('project_id', null)` quando sem projeto.
+Manter no dropdown apenas:
+- Projetos **com ordens no dia selecionado** (já planejados para esse dia)
+- Projetos **novos** (sem nenhuma ordem ainda — nunca foram planejados)
+- Projetos **com pendências** de dias anteriores (incompletos)
 
-**`getPendingFromDate` (linhas 536-590):** Adicionar filtro de `project_id` para não puxar pendências de outros projetos.
+### 2. Validar no "Pendências de ontem" se há de fato itens pendentes
 
-**`copyFromDate` (linhas 515-533):** Adicionar filtro de `project_id`.
+**Arquivo:** `src/hooks/useProductionOrders.ts` → `getPendingFromDate`
 
-**`resetDayOrders` (linhas 340-399):** Já filtra por projectId — mas precisa do `.is('project_id', null)` quando sem projeto.
+Já funciona corretamente (retorna `null` se tudo foi concluído). Apenas reforçar a mensagem no `ProductionPlanSheet` para indicar que a OS foi finalizada.
 
-#### 2. `useProductionPage.ts` — Sincronização de projeto selecionado
+### 3. Adicionar query de "projeto tem pendências?" 
 
-- Quando `activeProjects` muda e o `selectedProjectId` não está mais na lista, fazer fallback automático para o primeiro projeto disponível
-- Garantir que `currentProjectId` nunca fique dessincronizado dos dados renderizados
+**Arquivo:** `src/hooks/useProductionPage.ts`
 
-#### 3. `ProductionPlanSheet.tsx` — Proteção na criação
+Nova query que, para cada projeto ativo, verifica se a última data de produção tem itens pendentes. Se não tiver, o projeto não aparece para novos dias (só aparece nos dias onde já tem ordem).
 
-- Sincronizar o `projectId` interno do sheet com o projeto ativo da página ao abrir
-- Prevenir salvamento se o projeto mudou enquanto o sheet estava aberto (stale state)
+### Detalhes Técnicos
 
-### Resumo Técnico
+```text
+Fluxo de decisão para exibir projeto no dropdown:
 
-Criar uma função helper `addProjectFilter(query, projectId)` que aplica `.eq('project_id', pid)` se existir ou `.is('project_id', null)` se não, e usá-la consistentemente em **todas** as 8+ queries que precisam de isolamento por projeto no hook.
+Projeto X no dia D selecionado:
+├─ Tem ordem no dia D? → MOSTRA (já planejado)
+├─ Nunca teve ordem em nenhum dia? → MOSTRA (novo)
+├─ Teve ordens em dias anteriores?
+│   ├─ Tem pendências (itens não concluídos)? → MOSTRA
+│   └─ Tudo concluído? → NÃO MOSTRA
+└─ Arquivado? → NÃO MOSTRA
+```
 
-**Arquivos modificados:**
-- `src/hooks/useProductionOrders.ts` — ~12 pontos de correção
-- `src/hooks/useProductionPage.ts` — sync de projeto selecionado  
-- `src/components/production/ProductionPlanSheet.tsx` — sync de projeto ao abrir
+A verificação de pendências será feita via query que compara `production_order_items.quantity_ordered` com `checklist_completions.quantity_done` para a última data de produção de cada projeto. Isso será uma query única agrupada, não N+1.
+
+### 4. Prevenir criação duplicada no `saveOrder`
+
+**Arquivo:** `src/hooks/useProductionOrders.ts`
+
+Antes de criar uma nova ordem, verificar se o projeto já tem todas as peças concluídas (sem pendências globais). Se sim, bloquear com toast de erro: "Esta OS já foi concluída. Não há pendências."
 
