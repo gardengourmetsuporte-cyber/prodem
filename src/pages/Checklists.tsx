@@ -860,6 +860,10 @@ export default function ChecklistsPage() {
         shift2Totals={shift2Hook.totals}
         hasShift2={shift2Hook.hasOrder}
         onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
+        onReopenShift={async () => {
+          const hook = reportShiftView === 1 ? shift1Hook : shift2Hook;
+          await hook.reopenOrder();
+        }}
       />
     </AppLayout>
   );
