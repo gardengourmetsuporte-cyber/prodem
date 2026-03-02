@@ -8,7 +8,6 @@ import { ProductionCutTable } from '@/components/production/ProductionCutTable';
 import { ProductionDateStrip } from '@/components/production/ProductionDateStrip';
 import { ProductionItemSheet } from '@/components/production/ProductionItemSheet';
 import { ProductionFinishDialog } from '@/components/production/ProductionFinishDialog';
-import { ProductionPlanSheet } from '@/components/production/ProductionPlanSheet';
 import { ProductionReportSheet } from '@/components/production/ProductionReportSheet';
 import { ProjectSheet } from '@/components/production/ProjectSheet';
 import { GroupingSheet } from '@/components/production/GroupingSheet';
@@ -22,17 +21,16 @@ export default function ProductionPage() {
   const {
     isAdmin, user, activeUnitId,
     selectedDate, setSelectedDate, currentDate, days,
-    currentShift, setCurrentShift,
-    shift1, shift2, activeShift, checklistType,
+    checklistType,
     projects, activeProjects, allActiveProjects, activeProject,
     selectedProjectId, setSelectedProjectId,
     createProject, updateProject, deleteProject,
     projectProgress,
+    production,
     sectors, checklistsLoading,
     startProduction, finishProduction, updateProductionQuantity,
   } = useProductionPage();
 
-  const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetShift, setReportSheetShift] = useState<number | null>(null);
   const [projectSheetOpen, setProjectSheetOpen] = useState(false);
   const [groupingSheetOpen, setGroupingSheetOpen] = useState(false);
@@ -49,15 +47,9 @@ export default function ProductionPage() {
     deleteGrouping,
   } = useProductionGroupings(activeProject?.id || null, activeUnitId);
 
-  useFabAction(isAdmin ? {
-    icon: 'ClipboardList',
-    label: 'Plano',
-    onClick: () => setPlanSheetOpen(true),
-  } : null, [isAdmin]);
-
   const getItemFromReport = useCallback((itemId: string) => {
-    return activeShift.report.find(r => r.checklist_item_id === itemId);
-  }, [activeShift.report]);
+    return production.report.find(r => r.checklist_item_id === itemId);
+  }, [production.report]);
 
   const getItemMeta = useCallback((itemId: string) => {
     let meta = { name: 'Item', materialCode: '', dimensions: '' };
@@ -104,14 +96,6 @@ export default function ProductionPage() {
       throw err;
     }
   }, [finishingItemId, finishProduction, checklistType, currentDate]);
-
-  const handleReopenShift = useCallback(async (shift: number) => {
-    const hook = shift === 1 ? shift1 : shift2;
-    if (hook.reopenOrder) {
-      await hook.reopenOrder();
-      toast.success(`Turno ${shift} reaberto`);
-    }
-  }, [shift1, shift2]);
 
   const handleGroupingImageUpload = useCallback(async (groupingId: string, file: File) => {
     try {
@@ -195,102 +179,46 @@ export default function ProductionPage() {
             }}
           />
 
-          {/* Shift Panel */}
-          <ProductionShiftPanel
-            shift1={{
-              order: shift1.order,
-              totals: shift1.totals,
-              hasOrder: shift1.hasOrder,
-            }}
-            shift2={{
-              order: shift2.order,
-              totals: shift2.totals,
-              hasOrder: shift2.hasOrder,
-            }}
-            currentShift={currentShift}
-            onSelectShift={setCurrentShift}
-            isAdmin={isAdmin}
-            onCreatePlan={() => setPlanSheetOpen(true)}
-            onViewReport={(shift) => setReportSheetShift(shift)}
-            onReopenShift={handleReopenShift}
-          />
-
           {/* Cut Table — Industrial Production List */}
-          {activeShift.hasOrder && (
+          {production.orderItems.length > 0 && (
             <ProductionCutTable
-              report={activeShift.report}
-              orderItems={activeShift.orderItems}
+              report={production.report}
+              orderItems={production.orderItems}
               sectors={sectors}
               onStartItem={handleStartItem}
               onFinishItem={(itemId) => setFinishingItemId(itemId)}
               onQuickComplete={handleQuickComplete}
               onTapItem={(itemId) => setSelectedItemId(itemId)}
               isAdmin={isAdmin}
-              isClosed={activeShift.order?.status === 'closed'}
+              isClosed={false}
               itemGroupingMap={itemGroupingMap}
             />
           )}
 
           {/* Empty state when no plan */}
-          {!activeShift.hasOrder && !isAdmin && (
+          {production.orderItems.length === 0 && !isAdmin && (
             <div className="text-center py-16 space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-muted/10 flex items-center justify-center mx-auto industrial-border">
                 <AppIcon name="Factory" size={32} className="text-muted-foreground/30" />
               </div>
-              <p className="text-sm font-bold text-muted-foreground">Aguardando plano de produção</p>
-              <p className="text-xs text-muted-foreground/60">O líder ainda não criou o plano para este turno</p>
+              <p className="text-sm font-bold text-muted-foreground">Aguardando receita de produção</p>
+              <p className="text-xs text-muted-foreground/60">A OS selecionada ainda não possui itens cadastrados</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Sheets */}
-      <ProductionPlanSheet
-        open={planSheetOpen}
-        onOpenChange={setPlanSheetOpen}
-        sectors={sectors}
-        existingItems={activeShift.orderItems}
-        date={selectedDate}
-        onSave={activeShift.saveOrder}
-        onPullPendingFromYesterday={activeShift.getPendingFromDate
-          ? async () => {
-            const yesterday = new Date(selectedDate);
-            yesterday.setDate(yesterday.getDate() - 1);
-            const dateStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-            return activeShift.getPendingFromDate(dateStr);
-          }
-          : async () => null
-        }
-        hasExistingPlan={activeShift.hasOrder}
-        currentShift={currentShift}
-        isShift1Closed={shift1.order?.status === 'closed'}
-        onCloseShift={currentShift === 1 ? shift1.closeShiftAndCreateNext : undefined}
-        onDeletePlan={activeShift.resetDayOrders}
-        activeProjects={allActiveProjects}
-        selectedProjectId={activeShift.order?.project_id}
-      />
 
-      <ProductionReportSheet
-        open={reportSheetShift !== null}
-        onOpenChange={(v) => { if (!v) setReportSheetShift(null); }}
-        report={reportSheetShift === 1 ? shift1.report : shift2.report}
-        totals={reportSheetShift === 1 ? shift1.totals : shift2.totals}
-        order={reportSheetShift === 1 ? shift1.order : shift2.order}
-        date={selectedDate}
-        isAdmin={isAdmin}
-        currentShift={reportSheetShift || currentShift}
-        shift1Report={shift1.report}
-        shift1Totals={shift1.totals}
-        shift2Report={shift2.report}
-        shift2Totals={shift2.totals}
-        hasShift2={shift2.hasOrder}
-        onEditPlan={() => { setReportSheetShift(null); setPlanSheetOpen(true); }}
-      />
+
+
+
 
       <ProjectSheet
         open={projectSheetOpen}
         onOpenChange={setProjectSheetOpen}
         projects={projects}
+        sectors={sectors}
         onCreateProject={createProject}
         onUpdateProject={updateProject}
         onDeleteProject={deleteProject}

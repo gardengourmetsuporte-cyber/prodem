@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,16 +10,27 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnit } from '@/contexts/UnitContext';
 
+import { ChecklistSector } from '@/types/database';
+import { ProductionOrderItem } from '@/hooks/useProductionOrders';
+
 interface ProjectSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projects: ProductionProject[];
-  onCreateProject: (data: { project_number: string; description: string; client?: string }) => Promise<void>;
-  onUpdateProject: (id: string, data: Partial<Pick<ProductionProject, 'project_number' | 'description' | 'client' | 'status'>>) => Promise<void>;
+  sectors: ChecklistSector[];      // <-- added
+  onCreateProject: (
+    data: { project_number: string; description: string; client?: string; material?: string; thickness?: string; plate_size?: string },
+    items?: { checklist_item_id: string; quantity_ordered: number }[]
+  ) => Promise<string | undefined>; // <-- updated
+  onUpdateProject: (
+    id: string,
+    data: Partial<Pick<ProductionProject, 'project_number' | 'description' | 'client' | 'status' | 'material' | 'thickness' | 'plate_size'>>,
+    items?: { checklist_item_id: string; quantity_ordered: number }[]
+  ) => Promise<void>;
   onDeleteProject: (id: string) => Promise<void>;
 }
 
-export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, onUpdateProject, onDeleteProject }: ProjectSheetProps) {
+export function ProjectSheet({ open, onOpenChange, projects, sectors, onCreateProject, onUpdateProject, onDeleteProject }: ProjectSheetProps) {
   const { activeUnit } = useUnit();
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list');
   const [editingProject, setEditingProject] = useState<ProductionProject | null>(null);
@@ -31,6 +42,42 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
   const [materialField, setMaterialField] = useState('');
   const [thicknessField, setThicknessField] = useState('');
   const [plateSizeField, setPlateSizeField] = useState('');
+
+  // Dual step logic
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [planItems, setPlanItems] = useState<{ checklist_item_id: string; quantity_ordered: number }[]>([]);
+  const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
+
+  // Generate available items
+  const availableItems = useMemo(() => {
+    const items: any[] = [];
+    sectors.forEach((sector: any) => {
+      if (sector.scope === 'bonus') return;
+      sector.subcategories?.forEach((sub: any) => {
+        sub.items?.forEach((item: any) => {
+          if (!item.is_active || item.deleted_at) return;
+          items.push({
+            checklist_item_id: item.id,
+            name: item.name,
+            material_code: item.material_code || null,
+            piece_dimensions: item.piece_dimensions || null,
+            sectorName: sector.name,
+            sectorColor: sector.color || '#64748b',
+            subcategoryName: sub.name,
+            quantity_ordered: 0,
+          });
+        });
+      });
+    });
+    return items;
+  }, [sectors]);
+
+  // Expand sectors by default
+  useEffect(() => {
+    if (open) {
+      setCollapsedSectors(new Set(availableItems.map(a => a.sectorName)));
+    }
+  }, [open, availableItems]);
 
   // Fetch customers for client picker
   const { data: customers = [] } = useQuery({
@@ -67,17 +114,48 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
     setThicknessField('');
     setPlateSizeField('');
     setEditingProject(null);
+    setCurrentStep(1);
+    setPlanItems([]);
   };
 
-  const handleCreate = async () => {
+  const handleNextStep = async () => {
     if (!projectNumber.trim() || !description.trim()) {
       toast.error('Preencha número e descrição');
       return;
     }
+
+    // If editing, try to grab existing items
+    if (editingProject && planItems.length === 0) {
+      setSaving(true);
+      try {
+        const { data: existing } = await supabase
+          .from('production_order_items')
+          .select('checklist_item_id, quantity_ordered')
+          .eq('project_id', editingProject.id);
+
+        if (existing) {
+          setPlanItems(existing);
+        }
+      } catch (err) { }
+      setSaving(false);
+    }
+
+    setCurrentStep(2);
+  };
+
+  const handleCreate = async () => {
+    const activeItems = planItems.filter(p => p.quantity_ordered > 0);
     setSaving(true);
     try {
-      await onCreateProject({ project_number: projectNumber.trim(), description: description.trim(), client: client.trim() || undefined, material: materialField.trim() || undefined, thickness: thicknessField.trim() || undefined, plate_size: plateSizeField.trim() || undefined } as any);
-      toast.success('Projeto criado!');
+      await onCreateProject({
+        project_number: projectNumber.trim(),
+        description: description.trim(),
+        client: client.trim() || undefined,
+        material: materialField.trim() || undefined,
+        thickness: thicknessField.trim() || undefined,
+        plate_size: plateSizeField.trim() || undefined
+      }, activeItems);
+      toast.success('Projeto e Receita criados!');
       resetForm();
       setMode('list');
     } catch (err: any) {
@@ -89,6 +167,7 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
 
   const handleUpdate = async () => {
     if (!editingProject) return;
+    const activeItems = planItems.filter(p => p.quantity_ordered > 0);
     setSaving(true);
     try {
       await onUpdateProject(editingProject.id, {
@@ -98,7 +177,7 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
         material: materialField.trim() || undefined,
         thickness: thicknessField.trim() || undefined,
         plate_size: plateSizeField.trim() || undefined,
-      } as any);
+      }, activeItems);
       toast.success('Projeto atualizado!');
       resetForm();
       setMode('list');
@@ -137,8 +216,49 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
     setMaterialField((project as any).material || '');
     setThicknessField((project as any).thickness || '');
     setPlateSizeField((project as any).plate_size || '');
+    setPlanItems([]);
+    setCurrentStep(1);
     setMode('edit');
   };
+
+  const updateQty = (itemId: string, qty: number) => {
+    setPlanItems(prev => {
+      const exists = prev.find(p => p.checklist_item_id === itemId);
+      if (exists) {
+        return prev.map(p => p.checklist_item_id === itemId ? { ...p, quantity_ordered: Math.max(0, qty) } : p);
+      }
+      return [...prev, { checklist_item_id: itemId, quantity_ordered: Math.max(0, qty) }];
+    });
+  };
+
+  const toggleSector = (sectorName: string) => {
+    setCollapsedSectors(prev => {
+      const next = new Set(prev);
+      if (next.has(sectorName)) next.delete(sectorName);
+      else next.add(sectorName);
+      return next;
+    });
+  };
+
+  const groupedItems = useMemo(() => {
+    const groups: any[] = [];
+    const sectorMap = new Map<string, any>();
+    availableItems.forEach(item => {
+      let group = sectorMap.get(item.sectorName);
+      if (!group) {
+        group = { sectorName: item.sectorName, sectorColor: item.sectorColor, subcategories: [] };
+        sectorMap.set(item.sectorName, group);
+        groups.push(group);
+      }
+      let sub = group.subcategories.find((s: any) => s.name === item.subcategoryName);
+      if (!sub) {
+        sub = { name: item.subcategoryName, items: [] };
+        group.subcategories.push(sub);
+      }
+      sub.items.push(item);
+    });
+    return groups;
+  }, [availableItems]);
 
   const activeProjects = projects.filter(p => p.status === 'active');
   const archivedProjects = projects.filter(p => p.status === 'archived');
@@ -151,12 +271,17 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
             <SheetTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {mode !== 'list' && (
-                  <button onClick={() => { setMode('list'); resetForm(); }} className="p-1 rounded-lg hover:bg-secondary/60">
+                  <button onClick={() => { if (currentStep === 2) setCurrentStep(1); else { setMode('list'); resetForm(); } }} className="p-1 rounded-lg hover:bg-secondary/60">
                     <AppIcon name="ArrowLeft" size={18} />
                   </button>
                 )}
-                <AppIcon name="Briefcase" size={20} className="text-primary" />
-                <span>{mode === 'create' ? 'Novo Projeto' : mode === 'edit' ? 'Editar Projeto' : 'Projetos / OS'}</span>
+                {currentStep === 1 && <AppIcon name="Briefcase" size={20} className="text-primary" />}
+                {currentStep === 2 && <AppIcon name="ListChecks" size={20} className="text-warning" />}
+                <span>
+                  {mode === 'list' ? 'Projetos / OS'
+                    : currentStep === 1 ? (mode === 'create' ? 'Detalhes da OS' : 'Editar Detalhes')
+                      : 'Receita (Peças)'}
+                </span>
               </div>
               {mode === 'list' && (
                 <Button size="sm" onClick={() => { resetForm(); setMode('create'); }}>
@@ -232,7 +357,7 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
                 </div>
               )}
             </div>
-          ) : (
+          ) : currentStep === 1 ? (
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Número do Projeto / OS *</label>
@@ -322,11 +447,86 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
               </div>
               <Button
                 className="w-full"
-                onClick={mode === 'edit' ? handleUpdate : handleCreate}
+                onClick={handleNextStep}
                 disabled={saving || !projectNumber.trim() || !description.trim()}
               >
-                {saving ? 'Salvando...' : mode === 'edit' ? 'Salvar alterações' : 'Criar Projeto'}
+                Continuar para Receita <AppIcon name="ArrowRight" size={16} className="ml-1" />
               </Button>
+            </div>
+          ) : (
+            <div className="pb-24">
+              {groupedItems.map(group => {
+                const isCollapsed = collapsedSectors.has(group.sectorName);
+                const sectorQty = group.subcategories.reduce(
+                  (acc: number, sub: any) => acc + sub.items.reduce((a: number, i: any) => {
+                    const p = planItems.find(pi => pi.checklist_item_id === i.checklist_item_id);
+                    return a + (p?.quantity_ordered || 0);
+                  }, 0), 0
+                );
+
+                return (
+                  <div key={group.sectorName}>
+                    <button
+                      onClick={() => toggleSector(group.sectorName)}
+                      className="w-full flex items-center gap-3 py-4 px-2 hover:bg-white/5 transition-colors border-b border-border/10 last:border-0"
+                    >
+                      <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: group.sectorColor }} />
+                      <span className="text-base font-bold text-foreground flex-1 text-left">{group.sectorName}</span>
+                      {sectorQty > 0 && <span className="text-[11px] font-black text-warning bg-warning/10 px-2 py-0.5 rounded-md">{sectorQty} pç</span>}
+                      <AppIcon name="ChevronRight" size={16} className={cn("text-muted-foreground transition-transform duration-200", !isCollapsed && "rotate-90")} />
+                    </button>
+
+                    {!isCollapsed && (
+                      <div className="pl-2 space-y-0.5 pb-2">
+                        {group.subcategories.map((sub: any) => (
+                          <div key={sub.name}>
+                            {group.subcategories.length > 1 && (
+                              <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider px-2 pt-1.5 pb-0.5">{sub.name}</p>
+                            )}
+                            {sub.items.map((item: any) => {
+                              const planItem = planItems.find(p => p.checklist_item_id === item.checklist_item_id);
+                              const qty = planItem?.quantity_ordered || 0;
+
+                              return (
+                                <div key={item.checklist_item_id} className={cn("flex flex-col gap-2 py-2.5 px-3 rounded-xl transition-all border border-border/10", qty > 0 ? "bg-primary/5 border-primary/20" : "")}>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] font-bold truncate leading-tight">{item.name}</p>
+                                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                                      {item.material_code && <span className="text-[10px] font-mono text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded">{item.material_code}</span>}
+                                      {item.piece_dimensions && <span className="text-[10px] text-muted-foreground/60">📐 {item.piece_dimensions}</span>}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1 justify-end">
+                                    <button onClick={() => updateQty(item.checklist_item_id, qty - 1)} className="w-8 h-8 rounded-lg bg-secondary/80 flex items-center justify-center active:scale-95 hover:bg-secondary">
+                                      <AppIcon name="Minus" size={14} />
+                                    </button>
+                                    <input
+                                      type="number"
+                                      inputMode="numeric"
+                                      value={qty}
+                                      onChange={e => updateQty(item.checklist_item_id, parseInt(e.target.value) || 0)}
+                                      className="w-14 h-8 text-center text-sm font-bold rounded-lg bg-background border border-border/60"
+                                    />
+                                    <button onClick={() => updateQty(item.checklist_item_id, qty + 1)} className="w-8 h-8 rounded-lg bg-secondary/80 flex items-center justify-center active:scale-95 hover:bg-secondary">
+                                      <AppIcon name="Plus" size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border/20">
+                <Button onClick={mode === 'create' ? handleCreate : handleUpdate} disabled={saving} className="w-full h-12 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  {saving ? 'Salvando...' : 'Salvar OS e Receita'}
+                </Button>
+              </div>
             </div>
           )}
         </div>

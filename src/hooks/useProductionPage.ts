@@ -184,13 +184,9 @@ export function useProductionPage() {
     ? activeProjects.find(p => p.id === selectedProjectId) || activeProjects[0] || null
     : activeProjects[0] || null;
 
-  // Production orders for both shifts — filtered by active project
+  // Production items — filtered by active project ONLY (no shifts)
   const currentProjectId = activeProject?.id || null;
-  const shift1 = useProductionOrders(activeUnitId, selectedDate, 1, currentProjectId);
-  const shift2 = useProductionOrders(activeUnitId, selectedDate, 2, currentProjectId);
-
-  // Active shift data
-  const activeShift = currentShift === 1 ? shift1 : shift2;
+  const production = useProductionOrders(activeUnitId, selectedDate, currentProjectId);
 
   // Checklists (for sectors/items data and production actions)
   const {
@@ -199,15 +195,10 @@ export function useProductionPage() {
     fetchCompletions, isLoading: checklistsLoading,
   } = useChecklists();
 
-  // Auto-switch to shift 2 when shift 1 is closed
-  useEffect(() => {
-    if (shift1.order?.status === 'closed' && currentShift === 1) {
-      setCurrentShift(2);
-    }
-  }, [shift1.order?.status, currentShift]);
+  // We no longer strictly care about "shift" type completions, we just fetch ALL completions
+  // However, `useChecklists` might still need *a* type for legacy purposes on other screens
+  const checklistType = 'abertura' as const;
 
-  // Fetch completions when date/shift changes
-  const checklistType = currentShift === 1 ? 'abertura' as const : 'fechamento' as const;
   useEffect(() => {
     fetchCompletions(currentDate, checklistType);
   }, [currentDate, checklistType, fetchCompletions]);
@@ -217,11 +208,11 @@ export function useProductionPage() {
     const channel = supabase
       .channel('production-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist_completions' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['production-completions'] });
+        queryClient.invalidateQueries({ queryKey: ['production-completions-project'] });
         fetchCompletions(currentDate, checklistType);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_orders' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['production-order'] });
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_order_items' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['production-project-items'] });
         queryClient.invalidateQueries({ queryKey: ['production-date-project-ids'] });
       })
       .subscribe();
@@ -235,20 +226,11 @@ export function useProductionPage() {
     return Array.from({ length: 30 }, (_, i) => subDays(today, 20 - i));
   }, []);
 
-  // Overall project progress (sum across all dates for this project)
+  // Overall project progress reading directly from the single hook
   const projectProgress = useMemo(() => {
-    // Use the larger ordered value — shift 2 may carry over remaining from shift 1
-    const totalOrdered = Math.max(shift1.totals.ordered, shift2.totals.ordered);
-    // Avoid double-counting: total done is capped at ordered
-    const totalDone = Math.min(shift1.totals.done + shift2.totals.done, totalOrdered);
-    const totalPending = Math.max(0, totalOrdered - totalDone);
-    return {
-      ordered: totalOrdered,
-      done: totalDone,
-      pending: totalPending,
-      percent: totalOrdered > 0 ? Math.round((totalDone / totalOrdered) * 100) : 0,
-    };
-  }, [shift1.totals, shift2.totals]);
+    const { ordered, done, pending, percent } = production.totals;
+    return { ordered, done, pending, percent };
+  }, [production.totals]);
 
   return {
     // Auth/unit
@@ -260,12 +242,6 @@ export function useProductionPage() {
     setSelectedDate,
     currentDate,
     days,
-    // Shifts
-    currentShift,
-    setCurrentShift,
-    shift1,
-    shift2,
-    activeShift,
     checklistType,
     // Project
     projects,
@@ -278,11 +254,16 @@ export function useProductionPage() {
     updateProject,
     deleteProject,
     projectProgress,
+
+    // Core Data
+    production,
+
     // Checklists data
     sectors,
     completions,
     completionsFetched,
     checklistsLoading,
+
     // Production actions
     startProduction,
     finishProduction,
