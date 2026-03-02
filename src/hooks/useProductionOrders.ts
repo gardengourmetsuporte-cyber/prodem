@@ -87,16 +87,18 @@ export function useProductionOrders(unitId: string | null, date: Date) {
     queryKey: ['production-completions', unitId, dateStr],
     queryFn: async () => {
       const itemIds = orderItems.map(i => i.checklist_item_id);
-      if (itemIds.length === 0) return [];
+      if (itemIds.length === 0 || !unitId) return [];
       const { data, error } = await supabase
         .from('checklist_completions')
         .select('item_id, quantity_done, is_skipped, started_at, finished_at')
         .eq('date', dateStr)
+        .eq('unit_id', unitId)
+        .eq('status', 'done')
         .in('item_id', itemIds);
       if (error) throw error;
       return data || [];
     },
-    enabled: orderItems.length > 0,
+    enabled: orderItems.length > 0 && !!unitId,
   });
 
   // Build report
@@ -108,7 +110,7 @@ export function useProductionOrders(unitId: string | null, date: Date) {
     const durationMap = new Map<string, number | null>();
     completions.forEach(c => {
       if (!c.is_skipped) {
-        doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + (c.quantity_done || 1));
+        doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + (c.quantity_done ?? 0));
         // Calculate duration from started_at/finished_at
         const startedAt = (c as any).started_at;
         const finishedAt = (c as any).finished_at;
