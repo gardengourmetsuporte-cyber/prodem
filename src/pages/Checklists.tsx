@@ -133,6 +133,7 @@ export default function ChecklistsPage() {
 
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  const [reportShiftView, setReportShiftView] = useState<number>(1);
 
   // Auto-switch to Turno 2 if shift 1 is closed and user is viewing Turno 1
   useEffect(() => {
@@ -510,7 +511,7 @@ export default function ChecklistsPage() {
               <button
                 onClick={() => {
                   if (isShift1Closed) {
-                    // Open report for closed shift 1
+                    setReportShiftView(1);
                     setReportSheetOpen(true);
                     return;
                   }
@@ -841,12 +842,12 @@ export default function ChecklistsPage() {
       <ProductionReportSheet
         open={reportSheetOpen}
         onOpenChange={setReportSheetOpen}
-        report={productionReport}
-        totals={productionTotals}
-        order={productionOrder}
+        report={reportShiftView === 1 ? shift1Hook.report : shift2Hook.report}
+        totals={reportShiftView === 1 ? shift1Hook.totals : shift2Hook.totals}
+        order={reportShiftView === 1 ? shift1Hook.order : shift2Hook.order}
         date={selectedDate}
         isAdmin={isAdmin}
-        currentShift={currentShift}
+        currentShift={reportShiftView}
         shift1Report={shift1Hook.report}
         shift1Totals={shift1Hook.totals}
         shift2Report={shift2Hook.report}
