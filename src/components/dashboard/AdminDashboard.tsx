@@ -403,7 +403,7 @@ function FlightRow({ piece, index }: { piece: PieceReport; index: number }) {
     complete: { label: 'CONCLUÍDO', bg: 'bg-success/15', text: 'text-success', dot: 'bg-success' },
     partial: { label: 'PARCIAL', bg: 'bg-warning/15', text: 'text-warning', dot: 'bg-warning' },
     in_progress: { label: 'PRODUZINDO', bg: 'bg-primary/15', text: 'text-primary', dot: 'bg-primary animate-pulse' },
-    not_started: { label: 'AGUARDANDO', bg: 'bg-muted/50', text: 'text-muted-foreground', dot: 'bg-muted-foreground/40' },
+    not_started: { label: 'AGUARDANDO', bg: 'bg-muted', text: 'text-foreground/70', dot: 'bg-foreground/40' },
   };
 
   const s = statusConfig[piece.status];
@@ -419,7 +419,7 @@ function FlightRow({ piece, index }: { piece: PieceReport; index: number }) {
       <div className="min-w-0">
         <p className={cn(
           "text-sm font-semibold truncate",
-          piece.status === 'complete' ? 'text-success' : piece.status === 'in_progress' || piece.status === 'partial' ? 'text-foreground' : 'text-muted-foreground'
+          piece.status === 'complete' ? 'text-success' : 'text-foreground'
         )}>
           {piece.name}
         </p>
@@ -428,9 +428,9 @@ function FlightRow({ piece, index }: { piece: PieceReport; index: number }) {
       <div className="text-center">
         <span className={cn(
           "text-sm font-bold tabular-nums",
-          piece.status === 'complete' ? 'text-success' : piece.status === 'in_progress' || piece.status === 'partial' ? 'text-warning' : 'text-muted-foreground'
+          piece.status === 'complete' ? 'text-success' : piece.status === 'in_progress' || piece.status === 'partial' ? 'text-warning' : 'text-foreground/70'
         )}>
-          {piece.qty_done}<span className="text-muted-foreground/40">/{piece.qty_ordered}</span>
+          {piece.qty_done}<span className="text-foreground/30">/{piece.qty_ordered}</span>
         </span>
       </div>
 
