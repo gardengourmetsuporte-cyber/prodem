@@ -83,7 +83,7 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
             </p>
             <span className={cn(
               "text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded inline-block mt-0.5 shadow-sm border",
-              status === 'ok' && "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+              status === 'ok' && "bg-success/10 border-success/20 text-success",
               status === 'low' && "bg-amber-500/10 border-amber-500/20 text-amber-400",
               status === 'out' && "bg-rose-500/10 border-rose-500/20 text-rose-400"
             )}>

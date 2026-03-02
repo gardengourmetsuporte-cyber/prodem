@@ -465,7 +465,7 @@ export function RecipeSheet({
                 {fixedCost > 0 && (
                   <div className="rounded-xl border p-4 space-y-2">
                     <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <AppIcon name="Building2" className="h-4 w-4 text-emerald-500" />
+                      <AppIcon name="Building2" className="h-4 w-4 text-primary" />
                       Custos Fixos
                       <span className="text-[10px] text-muted-foreground font-normal ml-auto">somente leitura</span>
                     </div>

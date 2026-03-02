@@ -182,7 +182,7 @@ export default function OrdersPage() {
   const getStatusConfig = (status: Order['status']) => {
     switch (status) {
       case 'draft': return { label: 'Rascunho', bg: 'bg-muted', text: 'text-muted-foreground' };
-      case 'sent': return { label: 'Enviado', bg: 'bg-emerald-500/10', text: 'text-emerald-400' };
+      case 'sent': return { label: 'Enviado', bg: 'bg-primary/10', text: 'text-primary' };
       case 'received': return { label: 'Recebido', bg: 'bg-success/10', text: 'text-success' };
       case 'cancelled': return { label: 'Cancelado', bg: 'bg-destructive/10', text: 'text-destructive' };
       default: return { label: status, bg: 'bg-muted', text: 'text-muted-foreground' };

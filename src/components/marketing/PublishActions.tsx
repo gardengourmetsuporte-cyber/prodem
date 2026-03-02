@@ -41,8 +41,8 @@ export function PublishActions({ post, open, onOpenChange, onConfirmPublished }:
             </Button>
           )}
           {post.channels.includes('whatsapp_status') && (
-            <Button variant="outline" className="w-full justify-start gap-3 h-14 border-emerald-500/30 hover:bg-emerald-500/10" onClick={() => handlePublish('whatsapp_status')}>
-              <AppIcon name="MessageCircle" size={20} className="text-emerald-400" />
+            <Button variant="outline" className="w-full justify-start gap-3 h-14 border-success/30 hover:bg-success/10" onClick={() => handlePublish('whatsapp_status')}>
+              <AppIcon name="MessageCircle" size={20} className="text-success" />
               <div className="text-left"><p className="text-sm font-medium">WhatsApp Status</p><p className="text-[10px] text-muted-foreground">Compartilha via WhatsApp</p></div>
             </Button>
           )}

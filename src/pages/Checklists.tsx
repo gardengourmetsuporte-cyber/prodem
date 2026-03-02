@@ -66,7 +66,7 @@ function DateStrip({ days, selectedDate, onSelectDate }: {
                 )}>
                   <span className={cn(
                     "text-sm font-bold leading-none",
-                    isSelected ? "text-white drop-shadow-md" : isDayToday ? "text-primary dark:text-emerald-400" : "text-foreground"
+                    isSelected ? "text-white drop-shadow-md" : isDayToday ? "text-primary" : "text-foreground"
                   )}>
                     {format(day, 'dd')}
                   </span>
@@ -600,7 +600,7 @@ export default function ChecklistsPage() {
               <div className="flex items-center gap-4">
                 <div className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
-                  checklistType === 'bonus' ? "bg-emerald-500/15" : "bg-emerald-500/10"
+                  checklistType === 'bonus' ? "bg-primary/15" : "bg-primary/10"
                 )}>
                   <AppIcon
                     name="Zap"

@@ -196,8 +196,8 @@ export default function Recipes() {
             </div>
             <div className="rounded-2xl border bg-card p-3">
               <div className="flex flex-col items-center text-center gap-1">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <AppIcon name="DollarSign" size={18} className="text-emerald-500" />
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <AppIcon name="DollarSign" size={18} className="text-primary" />
                 </div>
                 <p className="text-lg font-extrabold text-foreground font-display" style={{ letterSpacing: '-0.03em' }}>{formatCurrency(stats.avgCost)}</p>
                 <p className="text-[10px] text-muted-foreground">Custo Médio</p>

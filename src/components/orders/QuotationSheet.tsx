@@ -109,8 +109,8 @@ export function QuotationSheet({ open, onOpenChange }: Props) {
                   className={cn(
                     'px-3 py-1.5 rounded-xl text-sm font-medium border transition-all',
                      selectedSuppliers.includes(s.id)
-                       ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-                       : 'bg-emerald-500/5 text-foreground border-emerald-500/10 hover:border-emerald-500/20'
+                       ? 'bg-primary/15 border-primary/30 text-primary'
+                       : 'bg-primary/5 text-foreground border-primary/10 hover:border-primary/20'
                   )}
                 >
                   {s.name}
@@ -138,7 +138,7 @@ export function QuotationSheet({ open, onOpenChange }: Props) {
                     key={item.id}
                     className={cn(
                       'flex items-center gap-3 p-2.5 rounded-xl transition-colors',
-                      selected ? 'bg-emerald-500/5 border border-emerald-500/20' : 'hover:bg-emerald-500/5'
+                      selected ? 'bg-primary/5 border border-primary/20' : 'hover:bg-primary/5'
                     )}
                   >
                     <Checkbox
@@ -168,7 +168,7 @@ export function QuotationSheet({ open, onOpenChange }: Props) {
           <Button
             onClick={handleSubmit}
             disabled={submitting || selectedSuppliers.length < 2 || itemCount === 0}
-            className="w-full h-12 rounded-xl shadow-lg shadow-emerald-500/20"
+            className="w-full h-12 rounded-xl shadow-lg shadow-primary/20"
           >
             {submitting ? 'Criando...' : `Criar Cotação (${itemCount} itens, ${selectedSuppliers.length} fornecedores)`}
           </Button>

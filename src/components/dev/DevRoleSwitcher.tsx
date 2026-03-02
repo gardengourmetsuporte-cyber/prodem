@@ -9,7 +9,7 @@ const ROLES: { role: AppRole; label: string; icon: string; color: string }[] = [
   { role: 'super_admin', label: 'Super Admin', icon: 'ShieldCheck', color: 'bg-red-500' },
   { role: 'admin', label: 'Admin', icon: 'Shield', color: 'bg-amber-500' },
   { role: 'lider', label: 'Líder', icon: 'Crown', color: 'bg-indigo-500' },
-  { role: 'funcionario', label: 'Operador', icon: 'HardHat', color: 'bg-emerald-500' },
+  { role: 'funcionario', label: 'Operador', icon: 'HardHat', color: 'bg-primary' },
 ];
 
 export function DevRoleSwitcher() {

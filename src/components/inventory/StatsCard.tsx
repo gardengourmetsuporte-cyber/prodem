@@ -16,8 +16,8 @@ const variantStyles = {
     iconColor: 'text-primary drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]',
   },
   success: {
-    iconBg: 'bg-emerald-500/10 border border-emerald-500/20',
-    iconColor: 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]',
+    iconBg: 'bg-success/10 border border-success/20',
+    iconColor: 'text-success drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]',
   },
   warning: {
     iconBg: 'bg-amber-500/10 border border-amber-500/20',

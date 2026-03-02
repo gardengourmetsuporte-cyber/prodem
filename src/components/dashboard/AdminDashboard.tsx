@@ -113,7 +113,7 @@ export function AdminDashboard() {
 
       {/* Finance Chart */}
       {hasAccess('finance') && isVisible('finance-chart') && (
-        <DashboardSection title="Despesas do mês" icon="BarChart3" iconColor="text-emerald-400" onNavigate={() => navigate('/finance')}>
+        <DashboardSection title="Despesas do mês" icon="BarChart3" iconColor="text-primary" onNavigate={() => navigate('/finance')}>
           <FinanceChartWidget />
         </DashboardSection>
       )}

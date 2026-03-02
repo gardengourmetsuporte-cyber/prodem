@@ -10,7 +10,7 @@ import type { MarketingPost } from '@/types/marketing';
 const statusColors: Record<string, string> = {
   draft: 'bg-muted-foreground/40',
   scheduled: 'bg-primary',
-  published: 'bg-emerald-500',
+  published: 'bg-success',
   failed: 'bg-destructive',
 };
 
@@ -163,7 +163,7 @@ export function MarketingCalendarGrid({ posts, onEdit, onDelete, onPublish, onNe
         {[
           { label: 'Rascunho', color: 'bg-muted-foreground/40' },
           { label: 'Agendado', color: 'bg-primary' },
-          { label: 'Publicado', color: 'bg-emerald-500' },
+          { label: 'Publicado', color: 'bg-success' },
         ].map(s => (
           <div key={s.label} className="flex items-center gap-1.5">
             <div className={`w-2.5 h-2.5 rounded-full ${s.color}`} />

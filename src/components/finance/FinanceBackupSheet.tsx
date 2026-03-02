@@ -147,7 +147,7 @@ export function FinanceBackupSheet({
                                 <span>{formatCurrency(item.currentBalance)}</span>
                                 <span className={
                                   item.difference > 0
-                                    ? 'text-emerald-500 font-medium'
+                                    ? 'text-success font-medium'
                                     : item.difference < 0
                                       ? 'text-red-500 font-medium'
                                       : 'text-muted-foreground'

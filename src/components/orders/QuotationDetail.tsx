@@ -142,7 +142,7 @@ export function QuotationDetail({ quotation: initialQ, onBack }: Props) {
       <div className="space-y-2">
         <p className="text-sm font-semibold text-foreground">Links dos Fornecedores</p>
         {suppliers.map(qs => (
-          <div key={qs.id} className="flex items-center gap-2 p-3 rounded-xl bg-[#0a1a10] border border-emerald-500/10">
+          <div key={qs.id} className="flex items-center gap-2 p-3 rounded-xl bg-card border border-border/30">
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm">{qs.supplier?.name}</p>
               <p className={cn(
@@ -175,10 +175,10 @@ export function QuotationDetail({ quotation: initialQ, onBack }: Props) {
             <AppIcon name="Scale" className="w-4 h-4" />
             Comparação de Preços
           </p>
-           <div className="overflow-x-auto rounded-2xl border border-emerald-500/10 bg-[#0a1a10]">
+           <div className="overflow-x-auto rounded-2xl border border-border/30 bg-card">
              <table className="w-full text-sm">
                <thead>
-                 <tr className="border-b border-emerald-500/10 bg-emerald-500/5">
+                 <tr className="border-b border-border/30 bg-primary/5">
                   <th className="text-left p-3 font-semibold">Item</th>
                   {suppliers.map(qs => (
                     <th key={qs.id} className="text-center p-3 font-semibold whitespace-nowrap">
@@ -262,7 +262,7 @@ export function QuotationDetail({ quotation: initialQ, onBack }: Props) {
             {canResolve && (
               <Button
                 onClick={handleResolve}
-                className="rounded-xl gap-1.5 shadow-lg shadow-emerald-500/20"
+                className="rounded-xl gap-1.5 shadow-lg shadow-primary/20"
               >
                 <AppIcon name="Trophy" className="w-4 h-4" />
                 Gerar Pedidos Otimizados

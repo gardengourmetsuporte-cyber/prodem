@@ -168,13 +168,13 @@ export default function Customers() {
             <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" style={{ fontSize: 18 }}>
               search
             </span>
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cliente..." className="pl-10 h-11 border-emerald-500/10 bg-[#0a1a10]/40 focus:border-emerald-500/30" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cliente..." className="pl-10 h-11 border-border/30 bg-card/40 focus:border-primary/30" />
           </div>
           <Select
             value={segmentFilter || 'all'}
             onValueChange={v => setSegmentFilter(v === 'all' ? null : v as CustomerSegment)}
           >
-            <SelectTrigger className="h-11 min-w-[130px] rounded-xl text-xs font-semibold border-emerald-500/10 bg-[#0a1a10]/40">
+            <SelectTrigger className="h-11 min-w-[130px] rounded-xl text-xs font-semibold border-border/30 bg-card/40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -190,14 +190,14 @@ export default function Customers() {
             </SelectContent>
           </Select>
           {segmentFilter && (
-            <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-emerald-500/10 hover:border-emerald-500/25" onClick={() => setCampaignOpen(true)} title="Enviar mensagem em massa">
+            <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-border/30 hover:border-primary/25" onClick={() => setCampaignOpen(true)} title="Enviar mensagem em massa">
               <span className="material-symbols-rounded" style={{ fontSize: 18 }}>campaign</span>
             </Button>
           )}
-           <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-emerald-500/10 hover:border-emerald-500/25" onClick={() => setCsvOpen(true)} title="Importar clientes">
+           <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-border/30 hover:border-primary/25" onClick={() => setCsvOpen(true)} title="Importar clientes">
             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>upload_file</span>
           </Button>
-          <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-emerald-500/10 hover:border-emerald-500/25" onClick={() => salesFileRef.current?.click()} title="Importar vendas (Colibri)">
+          <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-border/30 hover:border-primary/25" onClick={() => salesFileRef.current?.click()} title="Importar vendas (Colibri)">
             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>point_of_sale</span>
           </Button>
           <input ref={salesFileRef} type="file" accept=".csv" className="hidden" onChange={handleSalesImport} />
@@ -229,7 +229,7 @@ export default function Customers() {
             {visibleCount < filtered.length && (
               <Button
                 variant="outline"
-                className="w-full mt-3 rounded-xl border-emerald-500/10"
+                className="w-full mt-3 rounded-xl border-border/30"
                 onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
               >
                 Mostrar mais ({filtered.length - visibleCount} restantes)

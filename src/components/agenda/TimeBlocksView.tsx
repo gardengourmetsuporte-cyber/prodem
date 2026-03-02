@@ -175,7 +175,7 @@ export function TimeBlocksView({ tasks, onToggleTask, onTaskClick }: TimeBlocksV
               <div className="shrink-0 w-[52px] text-center">
                 <span className={cn(
                   "text-xs font-mono font-medium",
-                  isNow ? "text-emerald-400 font-bold drop-shadow-md" : isPast ? "text-muted-foreground/40" : "text-muted-foreground"
+                  isNow ? "text-primary font-bold drop-shadow-md" : isPast ? "text-muted-foreground/40" : "text-muted-foreground"
                 )}>
                   {String(hour).padStart(2, '0')}:00
                 </span>
@@ -280,7 +280,7 @@ export function TimeBlocksView({ tasks, onToggleTask, onTaskClick }: TimeBlocksV
                           <button
                             key={task.id}
                             onClick={() => pickerHour !== null && allocateTask(pickerHour, task.id)}
-                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 hover:border-emerald-500/25 transition-all text-left mb-1.5"
+                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/25 transition-all text-left mb-1.5"
                           >
                             <div className="min-w-0 flex-1">
                               <span className="text-sm font-medium truncate block">{task.title}</span>
@@ -303,7 +303,7 @@ export function TimeBlocksView({ tasks, onToggleTask, onTaskClick }: TimeBlocksV
                           <button
                             key={task.id}
                             onClick={() => pickerHour !== null && allocateTask(pickerHour, task.id)}
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 hover:border-emerald-500/25 transition-all text-left mb-1.5"
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/25 transition-all text-left mb-1.5"
                           >
                             <div className="min-w-0 flex-1">
                               <span className="text-sm font-medium truncate block">{task.title}</span>

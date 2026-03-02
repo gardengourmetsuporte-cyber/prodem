@@ -10,7 +10,7 @@ import type { MarketingPost } from '@/types/marketing';
 const statusConfig: Record<string, { label: string; className: string }> = {
   draft: { label: 'Rascunho', className: 'bg-muted text-muted-foreground' },
   scheduled: { label: 'Agendado', className: 'bg-primary/20 text-primary' },
-  published: { label: 'Publicado', className: 'bg-emerald-500/20 text-emerald-400' },
+  published: { label: 'Publicado', className: 'bg-success/20 text-success' },
   failed: { label: 'Erro', className: 'bg-destructive/20 text-destructive' },
 };
 
@@ -125,7 +125,7 @@ export function PostCard({ post, onEdit, onDelete, onPublish }: PostCardProps) {
             <AppIcon name="photo_camera" size={14} className="text-pink-400" />
           )}
           {post.channels.includes('whatsapp_status') && (
-            <AppIcon name="MessageCircle" size={14} className="text-emerald-400" />
+            <AppIcon name="MessageCircle" size={14} className="text-success" />
           )}
           {post.scheduled_at && (
             <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 ml-auto">

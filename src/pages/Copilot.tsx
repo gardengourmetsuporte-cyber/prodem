@@ -44,7 +44,7 @@ function BriefingCard({ stats, contextStats, visible }: {
           </div>
         )}
         {pendingTasks > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-500">
+          <div className="flex items-center gap-1.5 text-xs text-primary">
             <AppIcon name="ListChecks" size={12} />
             <span>{pendingTasks} tarefa{pendingTasks > 1 ? 's' : ''} hoje</span>
           </div>
