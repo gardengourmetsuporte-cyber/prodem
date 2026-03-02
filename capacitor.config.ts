@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.c30248f4a7ad426daa9e0a1ee02a913b',
-  appName: 'garden-gestao',
+  appName: 'prodem',
   webDir: 'dist',
   server: {
     url: 'https://c30248f4-a7ad-426d-aa9e-0a1ee02a913b.lovableproject.com?forceHideBadge=true',

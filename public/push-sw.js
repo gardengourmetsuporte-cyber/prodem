@@ -12,15 +12,15 @@ self.addEventListener('push', function(event) {
   } catch (e) {
     console.error('[Push-SW] Error parsing push data:', e);
     try {
-      data = { title: 'Garden Gestão', body: event.data ? event.data.text() : 'Nova notificação' };
+      data = { title: 'Prodem Gestão', body: event.data ? event.data.text() : 'Nova notificação' };
     } catch (e2) {
-      data = { title: 'Garden Gestão', body: 'Nova notificação' };
+      data = { title: 'Prodem Gestão', body: 'Nova notificação' };
     }
   }
   
   console.log('[Push-SW] Push data:', JSON.stringify(data));
   
-  const title = data.title || 'Garden Gestão';
+  const title = data.title || 'Prodem Gestão';
   const options = {
     body: data.body || '',
     icon: '/pwa-192x192.png',
