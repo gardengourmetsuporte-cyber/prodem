@@ -96,7 +96,8 @@ export default function ChecklistsPage() {
     addSector, updateSector, deleteSector, reorderSectors,
     addSubcategory, updateSubcategory, deleteSubcategory, reorderSubcategories,
     addItem, updateItem, deleteItem, reorderItems,
-    toggleCompletion, contestCompletion, splitCompletion, isItemCompleted, getCompletionProgress,
+    toggleCompletion, contestCompletion, splitCompletion, isItemCompleted, getItemStatus, getCompletionProgress,
+    startProduction, finishProduction,
     fetchCompletions,
   } = useChecklists();
 
@@ -313,6 +314,24 @@ export default function ChecklistsPage() {
       await toggleCompletion(itemId, checklistType, currentDate, isAdmin, points, completedByUserId, isSkipped, photoUrl);
     } catch (error: any) {
       toast.error(error.message || 'Erro ao marcar item');
+    }
+  };
+
+  const handleStartProduction = async (itemId: string, completedByUserId?: string) => {
+    try {
+      await startProduction(itemId, checklistType, currentDate, completedByUserId);
+      toast.success('Produção iniciada!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao iniciar produção');
+    }
+  };
+
+  const handleFinishProduction = async (itemId: string, quantityDone: number, points: number, completedByUserId?: string) => {
+    try {
+      await finishProduction(itemId, checklistType, currentDate, quantityDone, points, completedByUserId);
+      toast.success('Produção finalizada!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao finalizar produção');
     }
   };
 
@@ -631,7 +650,10 @@ export default function ChecklistsPage() {
                   date={currentDate}
                   completions={completions}
                   isItemCompleted={isItemCompleted}
+                  getItemStatus={getItemStatus}
                   onToggleItem={handleToggleItem}
+                  onStartProduction={handleStartProduction}
+                  onFinishProduction={handleFinishProduction}
                   getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
                   currentUserId={user?.id}
                   isAdmin={isAdmin}

@@ -21,7 +21,10 @@ interface ChecklistViewProps {
   date: string;
   completions: ChecklistCompletion[];
   isItemCompleted: (itemId: string) => boolean;
+  getItemStatus: (itemId: string) => string;
   onToggleItem: (itemId: string, points: number, completedByUserId?: string, isSkipped?: boolean, photoUrl?: string) => void;
+  onStartProduction: (itemId: string, completedByUserId?: string) => Promise<void>;
+  onFinishProduction: (itemId: string, quantityDone: number, points: number, completedByUserId?: string) => Promise<void>;
   getCompletionProgress: (sectorId: string) => { completed: number; total: number };
   currentUserId?: string;
   isAdmin: boolean;
@@ -74,7 +77,10 @@ export function ChecklistView({
   date,
   completions,
   isItemCompleted,
+  getItemStatus,
   onToggleItem,
+  onStartProduction,
+  onFinishProduction,
   getCompletionProgress,
   onContestCompletion,
   onSplitCompletion,
@@ -110,6 +116,11 @@ export function ChecklistView({
   } | null>(null);
   // Photo viewer
   const [viewingPhotoUrl, setViewingPhotoUrl] = useState<string | null>(null);
+  // Production finish state
+  const [finishingItemId, setFinishingItemId] = useState<string | null>(null);
+  const [finishQuantity, setFinishQuantity] = useState('');
+  const [finishLoading, setFinishLoading] = useState(false);
+  const [startingItemId, setStartingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!activeUnitId) return;
@@ -1114,6 +1125,158 @@ export function ChecklistView({
                             const hasIndustrialData = targetQty > 0;
                             const progressPercent = targetQty > 0 ? Math.min(100, Math.round((totalDone / targetQty) * 100)) : 0;
 
+                            // Check if item is in_progress
+                            const itemStatus = getItemStatus(item.id);
+                            const isInProgress = itemStatus === 'in_progress';
+                            const inProgressCompletion = isInProgress ? completions.find(c => c.item_id === item.id) : null;
+
+                            // ── IN PROGRESS STATE ──
+                            if (isInProgress) {
+                              return (
+                                <div key={item.id} className="space-y-2">
+                                  <div
+                                    className={cn(
+                                      "w-full flex flex-col gap-3 p-4 rounded-xl transition-all duration-300",
+                                      "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border-2 border-amber-500/40",
+                                      "shadow-[0_0_16px_rgba(245,158,11,0.15)]"
+                                    )}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-amber-500 shadow-md shadow-amber-500/30">
+                                        <AppIcon name="Play" className="w-4 h-4 text-white" />
+                                      </div>
+                                      <div className="flex-1 text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <p className="font-semibold text-amber-600 dark:text-amber-400">{item.name}</p>
+                                        </div>
+                                        {dimensions && <p className="text-xs text-primary font-mono mt-0.5">📐 {dimensions}</p>}
+                                        {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
+                                        <div className="flex items-center gap-1.5 mt-1.5">
+                                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse">
+                                            ⚙️ Em Produção
+                                          </span>
+                                          {inProgressCompletion && (
+                                            <span className="text-[11px] text-muted-foreground">
+                                              por {profiles.find(p => p.user_id === inProgressCompletion.completed_by)?.full_name || 'Usuário'} · {format(new Date(inProgressCompletion.completed_at), 'HH:mm')}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      {configuredPoints > 0 && (
+                                        <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shrink-0 border"
+                                          style={{
+                                            backgroundColor: getItemPointsColors(configuredPoints).bg,
+                                            color: getItemPointsColors(configuredPoints).color,
+                                            borderColor: getItemPointsColors(configuredPoints).border,
+                                          }}>
+                                          <AppIcon name="Star" className="w-3 h-3" style={{ color: getItemPointsColors(configuredPoints).color, fill: getItemPointsColors(configuredPoints).color }} />
+                                          <span>+{configuredPoints}</span>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Industrial progress bar */}
+                                    {hasIndustrialData && (
+                                      <div className="w-full space-y-1 pl-11">
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-muted-foreground">{totalDone}/{targetQty} feitas</span>
+                                          <span className={cn("font-bold", remaining === 0 ? "text-success" : "text-muted-foreground")}>
+                                            {remaining > 0 ? `${remaining} restantes` : '✓ Completo'}
+                                          </span>
+                                        </div>
+                                        <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+                                          <div className={cn("h-full rounded-full transition-all duration-700 ease-out", progressPercent === 100 ? "bg-success" : progressPercent > 50 ? "bg-primary" : "bg-amber-500")}
+                                            style={{ width: `${progressPercent}%` }} />
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Finish production section */}
+                                    {finishingItemId === item.id ? (
+                                      <div className="space-y-3 pt-2 pl-11 animate-fade-in">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-success">
+                                          <AppIcon name="CheckCircle" className="w-4 h-4" />
+                                          <span>Finalizar produção</span>
+                                        </div>
+                                        <div>
+                                          <label className="text-xs text-muted-foreground mb-1 block">Quantidade produzida</label>
+                                          <input
+                                            type="number"
+                                            inputMode="numeric"
+                                            value={finishQuantity}
+                                            onChange={(e) => setFinishQuantity(e.target.value)}
+                                            placeholder="Ex: 25"
+                                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-lg font-bold outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-success/40"
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                const qty = parseInt(finishQuantity) || 0;
+                                                if (qty > 0) {
+                                                  setFinishLoading(true);
+                                                  onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by)
+                                                    .then(() => { setFinishingItemId(null); setFinishQuantity(''); })
+                                                    .catch((err: any) => toast.error(err.message))
+                                                    .finally(() => setFinishLoading(false));
+                                                }
+                                              }
+                                              if (e.key === 'Escape') { setFinishingItemId(null); setFinishQuantity(''); }
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <button
+                                            onClick={() => {
+                                              const qty = parseInt(finishQuantity) || 0;
+                                              if (qty <= 0) { toast.error('Informe a quantidade'); return; }
+                                              setFinishLoading(true);
+                                              onFinishProduction(item.id, qty, configuredPoints, inProgressCompletion?.completed_by)
+                                                .then(() => { setFinishingItemId(null); setFinishQuantity(''); })
+                                                .catch((err: any) => toast.error(err.message))
+                                                .finally(() => setFinishLoading(false));
+                                            }}
+                                            disabled={finishLoading || !finishQuantity}
+                                            className="flex-1 p-3 rounded-xl bg-success text-success-foreground text-sm font-bold disabled:opacity-50 hover:bg-success/90 transition-colors shadow-lg shadow-success/20"
+                                          >
+                                            {finishLoading ? 'Finalizando...' : '✓ Confirmar'}
+                                          </button>
+                                          <button
+                                            onClick={() => { setFinishingItemId(null); setFinishQuantity(''); }}
+                                            className="p-3 rounded-xl hover:bg-secondary transition-colors"
+                                          >
+                                            <AppIcon name="X" className="w-5 h-5 text-muted-foreground" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex gap-2 pt-1 pl-11">
+                                        <button
+                                          onClick={() => { setFinishingItemId(item.id); setFinishQuantity(''); setOpenPopover(null); }}
+                                          className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl bg-success/15 hover:bg-success/25 text-success font-semibold text-sm transition-all duration-200 border border-success/30 active:scale-[0.97]"
+                                        >
+                                          <AppIcon name="CheckCircle" className="w-5 h-5" />
+                                          Finalizar Produção
+                                        </button>
+                                        {(isAdmin || inProgressCompletion?.completed_by === currentUserId) && (
+                                          <button
+                                            onClick={() => {
+                                              // Cancel production = delete the completion
+                                              onToggleItem(item.id, 0);
+                                              setOpenPopover(null);
+                                            }}
+                                            className="p-3 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors border border-destructive/20"
+                                            title="Cancelar produção"
+                                          >
+                                            <AppIcon name="X" className="w-5 h-5" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // ── PENDING STATE (not started) ──
                             return (
                               <div key={item.id}>
                                 <button
@@ -1135,9 +1298,7 @@ export function ChecklistView({
                                         <p className="font-medium text-foreground">{item.name}</p>
                                         {(item as any).requires_photo && <AppIcon name="Camera" className="w-3.5 h-3.5 text-primary shrink-0" />}
                                       </div>
-                                      {dimensions && (
-                                        <p className="text-xs text-primary font-mono mt-0.5">📐 {dimensions}</p>
-                                      )}
+                                      {dimensions && <p className="text-xs text-primary font-mono mt-0.5">📐 {dimensions}</p>}
                                       {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
                                     </div>
                                     {configuredPoints > 0 ? (
@@ -1159,52 +1320,58 @@ export function ChecklistView({
                                   {hasIndustrialData && (
                                     <div className="w-full space-y-1 pl-12">
                                       <div className="flex items-center justify-between text-[11px]">
-                                        <span className="text-muted-foreground">
-                                          {totalDone}/{targetQty} feitas
-                                        </span>
-                                        <span className={cn(
-                                          "font-bold",
-                                          remaining === 0 ? "text-success" : remaining <= targetQty * 0.3 ? "text-primary" : "text-muted-foreground"
-                                        )}>
+                                        <span className="text-muted-foreground">{totalDone}/{targetQty} feitas</span>
+                                        <span className={cn("font-bold", remaining === 0 ? "text-success" : remaining <= targetQty * 0.3 ? "text-primary" : "text-muted-foreground")}>
                                           {remaining > 0 ? `${remaining} restantes` : '✓ Completo'}
                                         </span>
                                       </div>
                                       <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-                                        <div
-                                          className={cn(
-                                            "h-full rounded-full transition-all duration-700 ease-out",
-                                            progressPercent === 100 ? "bg-success" : progressPercent > 50 ? "bg-primary" : "bg-amber-500"
-                                          )}
-                                          style={{ width: `${progressPercent}%` }}
-                                        />
+                                        <div className={cn("h-full rounded-full transition-all duration-700 ease-out", progressPercent === 100 ? "bg-success" : progressPercent > 50 ? "bg-primary" : "bg-amber-500")}
+                                          style={{ width: `${progressPercent}%` }} />
                                       </div>
                                     </div>
                                   )}
                                 </button>
                                 {openPopover === item.id && (
                                   <div className="mt-2 rounded-xl border bg-card p-4 shadow-lg animate-fade-in space-y-3">
-                                    {isAdmin && profiles.length > 0 && (
+                                    {/* Iniciar Produção — primary action */}
+                                    {isAdmin && profiles.length > 0 ? (
                                       <>
+                                        {/* Admin: select who starts */}
                                         <button
                                           onClick={() => setExpandedPeopleFor(expandedPeopleFor === item.id ? null : item.id)}
-                                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-primary/5 hover:bg-primary/10 text-left transition-all duration-200 border border-primary/20 active:scale-[0.97]"
+                                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 text-left transition-all duration-200 border border-amber-500/30 active:scale-[0.97]"
                                         >
-                                          <div className="w-10 h-10 bg-primary/15 rounded-xl flex items-center justify-center">
-                                            <AppIcon name="Users" className="w-5 h-5 text-primary" />
+                                          <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                                            <AppIcon name="Play" className="w-5 h-5 text-amber-500" />
                                           </div>
                                           <div className="flex-1">
-                                            <p className="font-semibold text-foreground">Quem realizou?</p>
-                                            <p className="text-xs text-muted-foreground">Selecione quem fez</p>
+                                            <p className="font-semibold text-amber-600 dark:text-amber-400">Iniciar Produção</p>
+                                            <p className="text-xs text-muted-foreground">Selecione quem vai produzir</p>
                                           </div>
                                           <AppIcon name="ChevronDown" className={cn("w-5 h-5 text-muted-foreground transition-transform duration-200", expandedPeopleFor === item.id && "rotate-180")} />
                                         </button>
                                         <div className={cn("overflow-hidden transition-all duration-300 ease-out", expandedPeopleFor === item.id ? "max-h-64 opacity-100" : "max-h-0 opacity-0")}>
                                           <div className="max-h-48 overflow-y-auto space-y-1 pt-1">
                                             {profiles.map((profile) => (
-                                              <button key={profile.user_id} onClick={(e) => handleComplete(item.id, configuredPoints, configuredPoints, profile.user_id, e.currentTarget)}
+                                              <button key={profile.user_id}
+                                                onClick={async () => {
+                                                  setStartingItemId(item.id);
+                                                  try {
+                                                    await onStartProduction(item.id, profile.user_id);
+                                                    setOpenPopover(null);
+                                                    setExpandedPeopleFor(null);
+                                                  } catch (err: any) {
+                                                    toast.error(err.message);
+                                                  } finally {
+                                                    setStartingItemId(null);
+                                                  }
+                                                }}
+                                                disabled={startingItemId === item.id}
                                                 className={cn("w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all duration-200 text-sm",
                                                   profile.user_id === currentUserId ? "bg-primary/10 hover:bg-primary/20 text-primary font-medium" : "hover:bg-secondary text-foreground")}>
-                                                <AppIcon name="User" className="w-4 h-4 shrink-0" /><span className="truncate">{profile.full_name}</span>
+                                                <AppIcon name="User" className="w-4 h-4 shrink-0" />
+                                                <span className="truncate">{profile.full_name}</span>
                                                 {profile.user_id === currentUserId && <span className="text-xs text-muted-foreground ml-auto">(eu)</span>}
                                               </button>
                                             ))}
@@ -1212,57 +1379,61 @@ export function ChecklistView({
                                         </div>
                                         <div className="border-t border-border" />
                                       </>
-                                    )}
-                                    {!isAdmin && (
+                                    ) : (
                                       <>
-                                        <button onClick={(e) => handleComplete(item.id, configuredPoints, configuredPoints, undefined, e.currentTarget)}
-                                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-success/10 hover:bg-success/20 text-left transition-all duration-200 border-2 border-success/30 active:scale-[0.97]">
-                                          <div className="w-10 h-10 bg-success rounded-xl flex items-center justify-center shadow-lg shadow-success/20"><AppIcon name="Check" className="w-5 h-5 text-success-foreground" /></div>
-                                          <div className="flex-1"><p className="font-semibold text-success">Concluí agora</p>
-                                            {configuredPoints > 0 ? (
-                                              <div className="flex items-center gap-0.5 mt-0.5">
-                                                {isBonus ? <AppIcon name="Zap" className="w-3 h-3" style={{ color: getItemPointsColors(configuredPoints).color }} /> : (
-                                                  Array.from({ length: configuredPoints }).map((_, i) => (
-                                                    <AppIcon name="Star" key={i} className="w-3 h-3" style={{ color: getItemPointsColors(configuredPoints).color, fill: getItemPointsColors(configuredPoints).color }} />
-                                                  ))
-                                                )}
-                                                <span className="text-xs font-bold ml-0.5" style={{ color: getItemPointsColors(configuredPoints).color }}>+{configuredPoints}</span>
-                                              </div>
-                                            ) : (<span className="text-xs text-muted-foreground">Tarefa sem pontos</span>)}
+                                        {/* Employee: start production directly */}
+                                        <button
+                                          onClick={async () => {
+                                            setStartingItemId(item.id);
+                                            try {
+                                              await onStartProduction(item.id);
+                                              setOpenPopover(null);
+                                            } catch (err: any) {
+                                              toast.error(err.message);
+                                            } finally {
+                                              setStartingItemId(null);
+                                            }
+                                          }}
+                                          disabled={startingItemId === item.id}
+                                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-left transition-all duration-200 border-2 border-amber-500/30 active:scale-[0.97]"
+                                        >
+                                          <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                            <AppIcon name="Play" className="w-5 h-5 text-white" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="font-semibold text-amber-600 dark:text-amber-400">
+                                              {startingItemId === item.id ? 'Iniciando...' : 'Iniciar Produção'}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">Marcar que comecei esta tarefa</p>
                                           </div>
                                         </button>
                                         <div className="border-t border-border" />
-                                        <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, undefined, e.currentTarget, true)}
-                                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 text-left transition-all duration-200 border border-destructive/20 active:scale-[0.97]">
-                                          <div className="w-10 h-10 bg-destructive/15 rounded-xl flex items-center justify-center"><AppIcon name="X" className="w-5 h-5 text-destructive" /></div>
-                                          <div><p className="font-semibold text-destructive">Não concluído</p><p className="text-xs text-muted-foreground">Sem pontos</p></div>
-                                        </button>
-                                        {configuredPoints > 0 && (
-                                          <>
-                                            <div className="border-t border-border" />
-                                            <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, undefined, e.currentTarget)}
-                                              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary text-left transition-all duration-200 active:scale-[0.97]">
-                                              <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center"><AppIcon name="RefreshCw" className="w-5 h-5 text-muted-foreground" /></div>
-                                              <div><p className="font-semibold text-foreground">Já estava pronto</p><p className="text-xs text-muted-foreground">Sem pontos</p></div>
-                                            </button>
-                                          </>
-                                        )}
                                       </>
                                     )}
-                                    {isAdmin && configuredPoints > 0 && (
-                                      <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, currentUserId, e.currentTarget)}
-                                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary text-left transition-all duration-200 active:scale-[0.97]">
-                                        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center"><AppIcon name="RefreshCw" className="w-5 h-5 text-muted-foreground" /></div>
-                                        <div><p className="font-semibold text-foreground">Já estava pronto</p><p className="text-xs text-muted-foreground">Sem pontos (eu marquei)</p></div>
-                                      </button>
-                                    )}
-                                    {isAdmin && (
+
+                                    {/* Quick complete — for simple tasks or admin override */}
+                                    <button onClick={(e) => handleComplete(item.id, configuredPoints, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget)}
+                                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-success/10 hover:bg-success/20 text-left transition-all duration-200 border border-success/30 active:scale-[0.97]">
+                                      <div className="w-10 h-10 bg-success rounded-xl flex items-center justify-center shadow-lg shadow-success/20"><AppIcon name="Check" className="w-5 h-5 text-success-foreground" /></div>
+                                      <div className="flex-1"><p className="font-semibold text-success">Concluir direto</p>
+                                        <p className="text-xs text-muted-foreground">Já terminei (sem iniciar)</p>
+                                      </div>
+                                    </button>
+
+                                    <div className="border-t border-border" />
+                                    <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget, true)}
+                                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 text-left transition-all duration-200 border border-destructive/20 active:scale-[0.97]">
+                                      <div className="w-10 h-10 bg-destructive/15 rounded-xl flex items-center justify-center"><AppIcon name="X" className="w-5 h-5 text-destructive" /></div>
+                                      <div><p className="font-semibold text-destructive">Não concluído</p><p className="text-xs text-muted-foreground">Sem pontos</p></div>
+                                    </button>
+
+                                    {configuredPoints > 0 && (
                                       <>
                                         <div className="border-t border-border" />
-                                        <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, currentUserId, e.currentTarget, true)}
-                                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-destructive/5 hover:bg-destructive/10 text-left transition-all duration-200 border border-destructive/20 active:scale-[0.97]">
-                                          <div className="w-10 h-10 bg-destructive/15 rounded-xl flex items-center justify-center"><AppIcon name="X" className="w-5 h-5 text-destructive" /></div>
-                                          <div><p className="font-semibold text-destructive">Não concluído</p><p className="text-xs text-muted-foreground">Sem pontos</p></div>
+                                        <button onClick={(e) => handleComplete(item.id, 0, configuredPoints, isAdmin ? currentUserId : undefined, e.currentTarget)}
+                                          className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary text-left transition-all duration-200 active:scale-[0.97]">
+                                          <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center"><AppIcon name="RefreshCw" className="w-5 h-5 text-muted-foreground" /></div>
+                                          <div><p className="font-semibold text-foreground">Já estava pronto</p><p className="text-xs text-muted-foreground">Sem pontos</p></div>
                                         </button>
                                       </>
                                     )}

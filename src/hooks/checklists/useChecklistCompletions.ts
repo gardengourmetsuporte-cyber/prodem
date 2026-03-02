@@ -148,8 +148,63 @@ export function useChecklistCompletions({
   }, [completions, userId, queryClient, activeUnitId]);
 
   const isItemCompleted = useCallback((itemId: string) => {
-    return completions.some(c => c.item_id === itemId);
+    return completions.some(c => c.item_id === itemId && (c as any).status !== 'in_progress');
   }, [completions]);
+
+  const getItemStatus = useCallback((itemId: string) => {
+    const completion = completions.find(c => c.item_id === itemId);
+    if (!completion) return 'pending';
+    return (completion as any).status || 'completed';
+  }, [completions]);
+
+  const startProduction = useCallback(async (
+    itemId: string, checklistType: ChecklistType, date: string,
+    completedByUserId?: string
+  ) => {
+    const targetUserId = completedByUserId || userId;
+    const { error } = await supabase
+      .from('checklist_completions')
+      .upsert({
+        item_id: itemId,
+        checklist_type: checklistType,
+        completed_by: targetUserId,
+        date,
+        awarded_points: false,
+        points_awarded: 0,
+        is_skipped: false,
+        unit_id: activeUnitId,
+        status: 'in_progress',
+        quantity_done: 0,
+      } as any, { onConflict: 'item_id,completed_by,date,checklist_type' });
+    if (error) throw error;
+
+    queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+  }, [userId, queryClient, activeUnitId]);
+
+  const finishProduction = useCallback(async (
+    itemId: string, checklistType: ChecklistType, date: string,
+    quantityDone: number, points: number = 1, completedByUserId?: string
+  ) => {
+    const targetUserId = completedByUserId || userId;
+    const existing = completions.find(
+      c => c.item_id === itemId && c.checklist_type === checklistType && c.date === date
+    );
+    if (!existing) throw new Error('Inicie a produção antes de finalizar');
+
+    const { error } = await supabase
+      .from('checklist_completions')
+      .update({
+        status: 'completed',
+        quantity_done: quantityDone,
+        awarded_points: points > 0,
+        points_awarded: points,
+      } as any)
+      .eq('id', existing.id);
+    if (error) throw error;
+
+    queryClient.invalidateQueries({ queryKey: ['checklist-completions', date, checklistType, activeUnitId] });
+    invalidateGamificationCaches(queryClient);
+  }, [completions, userId, queryClient, activeUnitId]);
 
   const getCompletionProgress = useCallback((sectorId: string, filterType?: ChecklistType) => {
     const sector = sectors.find(s => s.id === sectorId);
@@ -174,6 +229,9 @@ export function useChecklistCompletions({
     splitCompletion,
     contestCompletion,
     isItemCompleted,
+    getItemStatus,
     getCompletionProgress,
+    startProduction,
+    finishProduction,
   };
 }
