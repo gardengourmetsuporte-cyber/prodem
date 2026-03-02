@@ -1,3 +1,4 @@
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { AppIcon } from '@/components/ui/app-icon';
 import { ProductionProject } from '@/hooks/useProductionProjects';
 import { GroupingWithItems } from '@/hooks/useProductionGroupings';
@@ -17,6 +18,32 @@ interface ProductionProjectHeroProps {
 }
 
 export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects, onViewHistory, activeProjects = [], selectedProjectId, onSelectProject, groupings = [], onManageGroupings }: ProductionProjectHeroProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [dropdownOpen]);
+
+  // Group projects by client
+  const groupedByClient = useMemo(() => {
+    const map = new Map<string, ProductionProject[]>();
+    activeProjects.forEach(p => {
+      const client = p.client || 'Sem cliente';
+      if (!map.has(client)) map.set(client, []);
+      map.get(client)!.push(p);
+    });
+    return map;
+  }, [activeProjects]);
+
   if (!project) {
     if (!isAdmin) return null;
     return (
@@ -41,49 +68,75 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
   return (
     <div className="space-y-2">
       {/* Project selector — modern segmented tabs */}
-      {onSelectProject && (
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-1.5 bg-muted/20 rounded-xl p-1.5 ring-1 ring-border/10">
-            {activeProjects.map((p) => {
-              const isActive = selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => onSelectProject(p.id)}
-                  className={cn(
-                    "relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200",
-                    isActive
-                      ? "bg-background text-warning shadow-md shadow-warning/5 ring-1 ring-warning/25"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                  )}
-                >
-                  {isActive && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-warning" />
-                  )}
-                  <span className="font-black text-xs tracking-tight">#{p.project_number}</span>
-                  {p.client && (
-                    <span className={cn(
-                      "text-[9px] font-semibold uppercase tracking-wider",
-                      isActive ? "text-warning/70" : "opacity-50"
-                    )}>
-                      {p.client}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-            {/* History button */}
-            {onViewHistory && (
-              <button
-                onClick={onViewHistory}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold text-muted-foreground/60 hover:text-foreground hover:bg-background/40 transition-all ml-auto"
-                title="Histórico de OS"
-              >
-                <AppIcon name="History" size={14} />
-                <span className="text-[10px]">Todas</span>
-              </button>
+      {onSelectProject && activeProjects.length > 0 && (
+        <div className="flex gap-2 items-center">
+          {/* Dropdown selector */}
+          <div ref={dropdownRef} className="relative flex-1">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/20 ring-1 ring-border/10 hover:ring-warning/30 transition-all"
+            >
+              <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+                <span className="text-xs font-black text-warning">#{project.project_number}</span>
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{project.description}</p>
+                {project.client && (
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{project.client}</p>
+                )}
+              </div>
+              <AppIcon name="ChevronsUpDown" size={16} className="text-muted-foreground/50 shrink-0" />
+            </button>
+
+            {/* Dropdown list */}
+            {dropdownOpen && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1.5 rounded-xl bg-popover border border-border/20 shadow-xl overflow-hidden max-h-[300px] overflow-y-auto">
+                {[...groupedByClient.entries()].map(([client, projects]) => (
+                  <div key={client}>
+                    {/* Client group header */}
+                    <div className="px-3 py-1.5 bg-muted/30 flex items-center gap-1.5 sticky top-0">
+                      <AppIcon name="Building2" size={10} className="text-muted-foreground/50" />
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{client}</span>
+                      <span className="text-[9px] text-muted-foreground/40 ml-auto">{projects.length}</span>
+                    </div>
+                    {/* Project items */}
+                    {projects.map(p => {
+                      const isActive = p.id === project?.id;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => { onSelectProject(p.id); setDropdownOpen(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
+                            isActive
+                              ? "bg-warning/10 text-warning"
+                              : "hover:bg-muted/20 text-foreground"
+                          )}
+                        >
+                          <span className={cn("text-xs font-black", isActive ? "text-warning" : "text-muted-foreground")}>
+                            #{p.project_number}
+                          </span>
+                          <span className="text-xs truncate flex-1">{p.description}</span>
+                          {isActive && <AppIcon name="Check" size={14} className="text-warning shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
+
+          {/* History button */}
+          {onViewHistory && (
+            <button
+              onClick={onViewHistory}
+              className="flex items-center gap-1.5 px-3 py-3 rounded-xl bg-muted/20 ring-1 ring-border/10 hover:ring-warning/30 text-muted-foreground hover:text-foreground transition-all shrink-0"
+              title="Histórico de OS"
+            >
+              <AppIcon name="History" size={16} />
+            </button>
+          )}
         </div>
       )}
 
