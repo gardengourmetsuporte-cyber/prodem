@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 
 function StatusBadge({ status }: { status: ProductionReportItem['status'] }) {
   const config = {
-    complete: { label: 'Concluído', cls: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30' },
-    partial: { label: 'Parcial', cls: 'bg-amber-500/15 text-amber-500 border-amber-500/30' },
+    complete: { label: 'Concluído', cls: 'bg-success/15 text-success border-success/30' },
+    partial: { label: 'Parcial', cls: 'bg-warning/15 text-warning border-warning/30' },
     not_started: { label: 'Pendente', cls: 'bg-muted text-muted-foreground border-border' },
   }[status];
 

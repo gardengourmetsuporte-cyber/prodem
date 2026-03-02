@@ -200,8 +200,8 @@ export default function InventoryPage() {
                   "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium transition-all border",
                   locationFilter === loc.key
                     ? loc.key === 'almoxarifado'
-                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-400'
-                      : 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                      ? 'bg-primary/15 border-primary/30 text-primary'
+                      : 'bg-warning/15 border-warning/30 text-warning'
                     : 'bg-secondary/50 border-transparent text-muted-foreground'
                 )}
               >
