@@ -1,66 +1,55 @@
 import { useState } from 'react';
-import { useScrollToTopOnChange } from '@/components/ScrollToTop';
 import { useAuth } from '@/contexts/AuthContext';
 import { Employee } from '@/types/employee';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { EmployeeList } from '@/components/employees/EmployeeList';
-import { EmployeePayments } from '@/components/employees/EmployeePayments';
-import { MyPayslips } from '@/components/employees/MyPayslips';
-import { EmployeeScheduleRequest } from '@/components/employees/EmployeeScheduleRequest';
-import { ScheduleManagement } from '@/components/employees/ScheduleManagement';
-import { AnimatedTabs } from '@/components/ui/animated-tabs';
-import { AppIcon } from '@/components/ui/app-icon';
+import { EmployeeSheet } from '@/components/employees/EmployeeSheet';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useUsers } from '@/hooks/useUsers';
 
 export default function Employees() {
   const { isAdmin } = useAuth();
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [activeTab, setActiveTab] = useState('employees');
-  useScrollToTopOnChange(activeTab);
+  const { employees, isLoading, deleteEmployee, updateEmployee } = useEmployees();
+  const { users } = useUsers();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  const availableUsers = users.filter(
+    u => !employees.some(e => e.user_id === u.user_id)
+  );
+
+  const handleEdit = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setSheetOpen(true);
+  };
+
+  const handleNew = () => {
+    setEditingEmployee(null);
+    setSheetOpen(true);
+  };
 
   return (
     <AppLayout>
       <div className="min-h-screen bg-background pb-24">
-        <div className="px-4 py-3 lg:px-6 space-y-4">
-          {isAdmin ? (
-            selectedEmployee ? (
-              <EmployeePayments
-                employee={selectedEmployee}
-                onBack={() => setSelectedEmployee(null)}
-              />
-            ) : (
-              <>
-                <AnimatedTabs
-                  tabs={[
-                    { key: 'employees', label: 'Funcionários', icon: <AppIcon name="Users" size={16} /> },
-                    { key: 'schedules', label: 'Folgas', icon: <AppIcon name="Calendar" size={16} /> },
-                  ]}
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                />
-                <div className="animate-fade-in" key={activeTab}>
-                  {activeTab === 'employees' && <EmployeeList onSelectEmployee={setSelectedEmployee} />}
-                  {activeTab === 'schedules' && <ScheduleManagement />}
-                </div>
-              </>
-            )
-          ) : (
-            <>
-              <AnimatedTabs
-                tabs={[
-                  { key: 'payslips', label: 'Holerites', icon: <AppIcon name="Users" size={16} /> },
-                  { key: 'schedules', label: 'Folgas', icon: <AppIcon name="Calendar" size={16} /> },
-                ]}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-              <div className="animate-fade-in" key={activeTab}>
-                {activeTab === 'payslips' && <MyPayslips />}
-                {activeTab === 'schedules' && <EmployeeScheduleRequest />}
-              </div>
-            </>
-          )}
+        <div className="px-4 py-3 lg:px-6">
+          <EmployeeList
+            employees={employees}
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onNew={handleNew}
+            onDelete={deleteEmployee}
+            onToggleActive={(emp) => updateEmployee({ id: emp.id, is_active: !emp.is_active })}
+            isAdmin={isAdmin}
+          />
         </div>
       </div>
+
+      <EmployeeSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        employee={editingEmployee}
+        availableUsers={availableUsers}
+      />
     </AppLayout>
   );
 }
