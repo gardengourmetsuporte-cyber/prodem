@@ -66,6 +66,7 @@ export function useChecklistCompletions({
           points_awarded: isSkipped ? 0 : points,
           is_skipped: isSkipped || false,
           unit_id: activeUnitId,
+          status: isSkipped ? 'skipped' : 'completed',
           ...(photoUrl ? { photo_url: photoUrl } : {}),
         } as any, { onConflict: 'item_id,completed_by,date,checklist_type' });
       if (error) throw error;
