@@ -899,7 +899,7 @@
 
   .action-button-primary {
     @apply action-button gradient-primary;
-    box-shadow: 0 4px 14px hsl(156 60% 35% / 0.12);
+    box-shadow: 0 4px 14px hsl(25 85% 54% / 0.12);
   }
 
   .action-button-success {

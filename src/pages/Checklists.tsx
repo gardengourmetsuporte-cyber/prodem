@@ -63,7 +63,7 @@ function DateStrip({ days, selectedDate, onSelectDate }: {
                 <div className={cn(
                   "w-[38px] h-[38px] rounded-full flex items-center justify-center transition-colors",
                   isSelected
-                    ? "finance-hero-card checklist-gradient-slow shadow-[0_0_12px_rgba(16,185,129,0.4)] border border-primary/30"
+                    ? "finance-hero-card checklist-gradient-slow shadow-glow-primary border border-primary/30"
                     : isDayToday
                       ? "bg-primary/8"
                       : "hover:bg-secondary/60"

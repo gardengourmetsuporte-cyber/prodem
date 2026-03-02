@@ -157,7 +157,7 @@ export function TimeBlocksView({ tasks, onToggleTask, onTaskClick }: TimeBlocksV
                 // Base
                 "card-surface border-white/5",
                 // Now
-                isNow && "border-primary/50 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-primary/20",
+                isNow && "border-primary/50 shadow-glow-primary ring-1 ring-primary/20",
                 // Past empty
                 isPast && !task && "opacity-40",
                 // Filled
