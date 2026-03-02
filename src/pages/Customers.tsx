@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnit } from '@/contexts/UnitContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -44,7 +44,7 @@ export default function Customers() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const salesFileRef = useRef<HTMLInputElement>(null);
+  
 
   const { data: detailEvents = [], isLoading: eventsLoading } = useCustomerEvents(detailCustomer?.id || null);
 
@@ -129,23 +129,6 @@ export default function Customers() {
     }
   };
 
-  const handleSalesImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeUnit) return;
-    try {
-      const csvText = await file.text();
-      const { data, error } = await supabase.functions.invoke('import-daily-sales', {
-        body: { csvText, unitId: activeUnit.id },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(`${data.created} criados, ${data.updated} atualizados!`);
-      qc.invalidateQueries({ queryKey: ['customers'] });
-    } catch (err: any) {
-      toast.error(err.message || 'Erro na importação');
-    }
-    e.target.value = '';
-  };
 
   return (
     <AppLayout>
@@ -197,10 +180,6 @@ export default function Customers() {
            <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-border/30 hover:border-primary/25" onClick={() => setCsvOpen(true)} title="Importar clientes">
             <span className="material-symbols-rounded" style={{ fontSize: 18 }}>upload_file</span>
           </Button>
-          <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 border-border/30 hover:border-primary/25" onClick={() => salesFileRef.current?.click()} title="Importar vendas (Colibri)">
-            <span className="material-symbols-rounded" style={{ fontSize: 18 }}>point_of_sale</span>
-          </Button>
-          <input ref={salesFileRef} type="file" accept=".csv" className="hidden" onChange={handleSalesImport} />
         </div>
 
         {/* List */}
