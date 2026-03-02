@@ -337,6 +337,7 @@ export default function ProductionPage() {
         onOpenChange={setFinishOpen}
         piece={finishPiece}
         elapsedSeconds={finishElapsed}
+        alreadyDone={finishPiece ? (selectedProgressMap.get(finishPiece.id)?.total_done || 0) : 0}
         onFinish={handleFinishConfirm}
       />
     </AppLayout>
