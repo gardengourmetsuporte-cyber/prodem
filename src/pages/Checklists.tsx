@@ -125,6 +125,31 @@ export default function ChecklistsPage() {
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
+  // Build a map of checklist_item_id -> quantity_ordered from production plan
+  const productionQtyMap = useMemo(() => {
+    const map = new Map<string, number>();
+    productionItems.forEach(item => {
+      map.set(item.checklist_item_id, item.quantity_ordered);
+    });
+    return map;
+  }, [productionItems]);
+
+  // Wrap getCrossShiftItemProgress to use production plan quantity when available
+  const getCrossShiftItemProgressWithPlan = useCallback((itemId: string) => {
+    const base = getCrossShiftItemProgress(itemId);
+    const planQty = productionQtyMap.get(itemId);
+    if (planQty != null && planQty > 0) {
+      const remaining = Math.max(0, planQty - base.totalDone);
+      return {
+        ...base,
+        targetQty: planQty,
+        remaining,
+        isFullyComplete: base.totalDone >= planQty,
+      };
+    }
+    return base;
+  }, [getCrossShiftItemProgress, productionQtyMap]);
+
   // The settings type follows the checklist type
   const settingsType = checklistType;
   const setSettingsType = setChecklistType;
@@ -750,7 +775,7 @@ export default function ChecklistsPage() {
                       onFinishProduction={handleFinishProduction}
                       onUpdateProductionQuantity={handleUpdateProductionQuantity}
                       getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
-                      getCrossShiftItemProgress={getCrossShiftItemProgress}
+                      getCrossShiftItemProgress={getCrossShiftItemProgressWithPlan}
                       currentUserId={user?.id}
                       isAdmin={isAdmin}
                       deadlinePassed={deadlinePassed}
