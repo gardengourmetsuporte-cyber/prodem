@@ -79,7 +79,7 @@ export function SupplierSettings() {
                 <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                   <AppIcon name="Phone" size={12} />
                   {supplier.phone}
-                  {hasValidWhatsApp(supplier.phone) && <span className="text-green-500 ml-1">✓ WhatsApp</span>}
+                  {hasValidWhatsApp(supplier.phone) && <span className="text-success ml-1">✓ WhatsApp</span>}
                 </span>
               )}
               {supplier.email && (

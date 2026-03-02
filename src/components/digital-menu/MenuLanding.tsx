@@ -70,10 +70,10 @@ export function MenuLanding({ unit, unitInitials = '?' }: Props) {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
             isOpen
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+              ? 'bg-success/10 text-success'
               : 'bg-destructive/10 text-destructive'
           }`}>
-            <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-destructive'}`} />
+            <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-success animate-pulse' : 'bg-destructive'}`} />
             {isOpen ? 'Atendimento Online' : 'Fora do horário'}
           </div>
 

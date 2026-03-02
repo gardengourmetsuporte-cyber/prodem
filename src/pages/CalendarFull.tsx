@@ -201,7 +201,7 @@ export default function CalendarFull() {
                 <div className="space-y-3">
                   {/* Tasks */}
                   {selectedEvents!.tasks.length > 0 && (
-                    <EventSection icon="CheckCircle2" iconColor="text-emerald-500" title="Tarefas">
+                    <EventSection icon="CheckCircle2" iconColor="text-success" title="Tarefas">
                       {selectedEvents!.tasks.map(ev => <EventRow key={ev.id} event={ev} />)}
                     </EventSection>
                   )}

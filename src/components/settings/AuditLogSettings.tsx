@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const ACTION_ICONS: Record<string, { icon: string; bg: string; text: string }> = {
-  stock_entrada: { icon: 'ArrowDownToLine', bg: 'bg-emerald-500/12', text: 'text-emerald-600 dark:text-emerald-400' },
+  stock_entrada: { icon: 'ArrowDownToLine', bg: 'bg-success/12', text: 'text-success' },
   stock_saida: { icon: 'ArrowUpFromLine', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
   transaction_created: { icon: 'Plus', bg: 'bg-cyan-500/12', text: 'text-cyan-600 dark:text-cyan-400' },
   transaction_deleted: { icon: 'Trash2', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
@@ -19,11 +19,11 @@ const ACTION_ICONS: Record<string, { icon: string; bg: string; text: string }> =
   user_unit_removed: { icon: 'UserMinus', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
   access_level_updated: { icon: 'Shield', bg: 'bg-violet-500/12', text: 'text-violet-600 dark:text-violet-400' },
   access_level_deleted: { icon: 'ShieldOff', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
-  employee_created: { icon: 'UserPlus', bg: 'bg-emerald-500/12', text: 'text-emerald-600 dark:text-emerald-400' },
+  employee_created: { icon: 'UserPlus', bg: 'bg-success/12', text: 'text-success' },
   employee_updated: { icon: 'UserCog', bg: 'bg-amber-500/12', text: 'text-amber-600 dark:text-amber-400' },
   employee_deleted: { icon: 'UserMinus', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
   customer_deleted: { icon: 'UserX', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
-  finance_account_created: { icon: 'Wallet', bg: 'bg-emerald-500/12', text: 'text-emerald-600 dark:text-emerald-400' },
+  finance_account_created: { icon: 'Wallet', bg: 'bg-success/12', text: 'text-success' },
   finance_account_updated: { icon: 'Wallet', bg: 'bg-amber-500/12', text: 'text-amber-600 dark:text-amber-400' },
   finance_account_deleted: { icon: 'Wallet', bg: 'bg-red-500/12', text: 'text-red-600 dark:text-red-400' },
   user_login: { icon: 'LogIn', bg: 'bg-sky-500/12', text: 'text-sky-600 dark:text-sky-400' },
