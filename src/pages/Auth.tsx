@@ -254,7 +254,7 @@ export default function Auth() {
     }
   }, [user, isLoading, navigate, isNewPassword, tokenFromUrl]);
 
-  const canSignUp = !!(planFromUrl || tokenFromUrl);
+  const canSignUp = true; // Prodem: open registration, admin approves
 
   const validate = () => {
     const newErrors: Record<string, string> = {};

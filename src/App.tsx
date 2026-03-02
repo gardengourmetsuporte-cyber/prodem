@@ -78,6 +78,7 @@ const CalendarFull = lazy(() => lazyRetry(() => import("./pages/CalendarFull")))
 const Customers = lazy(() => lazyRetry(() => import("./pages/Customers")));
 const DigitalMenu = lazy(() => lazyRetry(() => import("./pages/DigitalMenu")));
 const Notifications = lazy(() => lazyRetry(() => import("./pages/Notifications")));
+const PendingApproval = lazy(() => lazyRetry(() => import("./pages/PendingApproval")));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,7 +103,7 @@ function RouteErrorBoundary({ children }: { children: React.ReactNode }) {
 }
 
 function ProtectedRoute({ children, skipOnboarding }: { children: React.ReactNode; skipOnboarding?: boolean }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isPending, isSuspended } = useAuth();
   const location = useLocation();
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
   const { units, isLoading: unitsLoading } = useUnit();
@@ -115,8 +116,12 @@ function ProtectedRoute({ children, skipOnboarding }: { children: React.ReactNod
     return <Navigate to="/auth" replace />;
   }
 
+  // Block pending/suspended users
+  if (isPending || isSuspended) {
+    return <PendingApproval />;
+  }
+
   // Do not block forever when auto-provision/recovery cannot attach a unit.
-  // Let downstream screens handle empty-unit states instead of infinite loader.
   if (!skipOnboarding && units.length === 0) {
     console.warn('[ProtectedRoute] No units available after load; continuing without blocking');
   }

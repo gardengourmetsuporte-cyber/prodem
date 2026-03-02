@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, AppRole } from '@/types/database';
+import { Profile, AppRole, UserStatus } from '@/types/database';
 import type { PlanTier } from '@/lib/plans';
 
 interface AuthContextType {
@@ -9,8 +9,12 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
+  userStatus: UserStatus | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isLider: boolean;
+  isPending: boolean;
+  isSuspended: boolean;
   isLoading: boolean;
   plan: PlanTier;
   planStatus: string;
@@ -93,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const p = profileResult.data as any;
 
-        const ROLE_PRIORITY: Record<string, number> = { super_admin: 3, admin: 2, funcionario: 1 };
+        const ROLE_PRIORITY: Record<string, number> = { super_admin: 4, admin: 3, lider: 2, funcionario: 1 };
         const rolesData = (roleResult.data as { role: AppRole }[] | null) ?? [];
         const r: AppRole = rolesData.length > 0
           ? rolesData.reduce((best, cur) => (ROLE_PRIORITY[cur.role] ?? 0) > (ROLE_PRIORITY[best.role] ?? 0) ? cur : best).role
@@ -223,6 +227,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = role === 'admin' || role === 'super_admin';
   const isSuperAdmin = role === 'super_admin';
+  const isLider = role === 'lider';
+  const userStatus = (profile?.status as UserStatus) || null;
+  const isPending = userStatus === 'pending';
+  const isSuspended = userStatus === 'suspended';
 
   return (
     <AuthContext.Provider
@@ -231,8 +239,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         role,
+        userStatus,
         isAdmin,
         isSuperAdmin,
+        isLider,
+        isPending,
+        isSuspended,
         isLoading,
         plan,
         planStatus,
