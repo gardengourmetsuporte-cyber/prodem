@@ -15,6 +15,7 @@ export function useProductionPage() {
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentShift, setCurrentShift] = useState<1 | 2>(1);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const currentDate = format(selectedDate, 'yyyy-MM-dd');
 
   // Production orders for both shifts
@@ -28,7 +29,9 @@ export function useProductionPage() {
   const {
     projects, activeProjects, createProject, updateProject, deleteProject,
   } = useProductionProjects(activeUnitId);
-  const activeProject = activeProjects.length > 0 ? activeProjects[0] : null;
+  const activeProject = selectedProjectId
+    ? activeProjects.find(p => p.id === selectedProjectId) || activeProjects[0] || null
+    : activeProjects[0] || null;
 
   // Checklists (for sectors/items data and production actions)
   const {
@@ -109,6 +112,8 @@ export function useProductionPage() {
     projects,
     activeProjects,
     activeProject,
+    selectedProjectId,
+    setSelectedProjectId,
     createProject,
     updateProject,
     deleteProject,
