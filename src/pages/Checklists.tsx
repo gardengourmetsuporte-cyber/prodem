@@ -184,7 +184,9 @@ export default function ChecklistsPage() {
   const isItemCompletedWithPlan = useCallback((itemId: string) => {
     const planQty = productionQtyMap.get(itemId);
     if (planQty != null && planQty > 0) {
-      return getCrossShiftItemProgressWithPlan(itemId).isFullyComplete;
+      const progress = getCrossShiftItemProgressWithPlan(itemId);
+      // Item counts as "completed" if it has any done quantity OR is fully complete
+      return progress.isFullyComplete || progress.totalDone > 0;
     }
     return isItemCompleted(itemId);
   }, [productionQtyMap, getCrossShiftItemProgressWithPlan, isItemCompleted]);
