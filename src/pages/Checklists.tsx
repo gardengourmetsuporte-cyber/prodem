@@ -22,6 +22,8 @@ import { useProductionOrders } from '@/hooks/useProductionOrders';
 import { ProductionDayCard } from '@/components/production/ProductionDayCard';
 import { ProductionPlanSheet } from '@/components/production/ProductionPlanSheet';
 import { ProductionReportSheet } from '@/components/production/ProductionReportSheet';
+import { useProductionProjects } from '@/hooks/useProductionProjects';
+import { ProjectCard } from '@/components/production/ProjectCard';
 
 function DateStrip({ days, selectedDate, onSelectDate }: {
   days: Date[];
@@ -130,6 +132,10 @@ export default function ChecklistsPage() {
   // Also fetch both shifts independently for card progress
   const shift1Hook = useProductionOrders(activeUnitId, selectedDate, 1);
   const shift2Hook = useProductionOrders(activeUnitId, selectedDate, 2);
+
+  // Production projects
+  const { activeProjects } = useProductionProjects(activeUnitId);
+  const activeProject = activeProjects.length > 0 ? activeProjects[0] : null;
 
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
@@ -484,6 +490,11 @@ export default function ChecklistsPage() {
                   <AppIcon name="X" size={16} className="text-muted-foreground" />
                 </button>
               </div>
+            )}
+
+            {/* Active Project Card */}
+            {!settingsMode && checklistType !== 'bonus' && activeProject && (
+              <ProjectCard project={activeProject} isAdmin={isAdmin} />
             )}
 
             {/* Create plan button — admin only, no plan yet */}

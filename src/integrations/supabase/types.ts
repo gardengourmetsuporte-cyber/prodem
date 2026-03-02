@@ -411,6 +411,7 @@ export type Database = {
           is_contested: boolean
           is_skipped: boolean
           item_id: string
+          machine_ref: string | null
           notes: string | null
           photo_url: string | null
           points_awarded: number
@@ -433,6 +434,7 @@ export type Database = {
           is_contested?: boolean
           is_skipped?: boolean
           item_id: string
+          machine_ref?: string | null
           notes?: string | null
           photo_url?: string | null
           points_awarded?: number
@@ -455,6 +457,7 @@ export type Database = {
           is_contested?: boolean
           is_skipped?: boolean
           item_id?: string
+          machine_ref?: string | null
           notes?: string | null
           photo_url?: string | null
           points_awarded?: number
@@ -2684,6 +2687,7 @@ export type Database = {
           date: string
           id: string
           notes: string | null
+          project_id: string | null
           shift: number
           status: string
           unit_id: string
@@ -2695,6 +2699,7 @@ export type Database = {
           date: string
           id?: string
           notes?: string | null
+          project_id?: string | null
           shift?: number
           status?: string
           unit_id: string
@@ -2706,6 +2711,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
+          project_id?: string | null
           shift?: number
           status?: string
           unit_id?: string
@@ -2713,7 +2719,55 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "production_orders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "production_orders_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_projects: {
+        Row: {
+          client: string | null
+          created_at: string
+          description: string
+          id: string
+          project_number: string
+          status: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          client?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          project_number: string
+          status?: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          client?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          project_number?: string
+          status?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_projects_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
