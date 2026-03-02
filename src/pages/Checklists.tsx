@@ -163,20 +163,26 @@ export default function ChecklistsPage() {
       ...fechamentoCompletions.map(c => c.item_id),
     ]);
 
+    // If there's a production order, only count items in it
+    const orderItemIds = hasProductionOrder && productionItems.length > 0
+      ? new Set(productionItems.map(pi => pi.checklist_item_id))
+      : null;
+
     // Count all standard (non-bonus) active items 
     let total = 0;
-    const validItemIds: string[] = [];
+    let completed = 0;
     sectors.forEach((s: any) => {
       s.subcategories?.forEach((sub: any) => {
         sub.items?.forEach((item: any) => {
           if (item.is_active && item.checklist_type !== 'bonus') {
+            // If we have a production order, only count items in it
+            if (orderItemIds && !orderItemIds.has(item.id)) return;
             total++;
-            if (allCompletedIds.has(item.id)) validItemIds.push(item.id);
+            if (allCompletedIds.has(item.id)) completed++;
           }
         });
       });
     });
-    const completed = validItemIds.length;
     const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     // Both turnos share the same progress
@@ -184,7 +190,7 @@ export default function ChecklistsPage() {
       abertura: { completed, total, percent },
       fechamento: { completed, total, percent },
     };
-  }, [sectors, aberturaCompletions, fechamentoCompletions]);
+  }, [sectors, aberturaCompletions, fechamentoCompletions, hasProductionOrder, productionItems]);
   // ── Deadline logic (centralized) ──
   const [deadlineLabel, setDeadlineLabel] = useState<Record<string, string>>({});
 
@@ -682,26 +688,77 @@ export default function ChecklistsPage() {
                   onReorderItems={reorderItems}
                 />
               ) : (
-                <ChecklistView
-                  sectors={sectors.filter((s: any) => checklistType === 'bonus' ? s.scope === 'bonus' : s.scope !== 'bonus')}
-                  checklistType={checklistType}
-                  date={currentDate}
-                  completions={completions}
-                  allShiftCompletions={allShiftCompletions}
-                  isItemCompleted={isItemCompleted}
-                  getItemStatus={getItemStatus}
-                  onToggleItem={handleToggleItem}
-                  onStartProduction={handleStartProduction}
-                  onFinishProduction={handleFinishProduction}
-                  onUpdateProductionQuantity={handleUpdateProductionQuantity}
-                  getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
-                  getCrossShiftItemProgress={getCrossShiftItemProgress}
-                  currentUserId={user?.id}
-                  isAdmin={isAdmin}
-                  deadlinePassed={deadlinePassed}
-                  onContestCompletion={contestCompletion}
-                  onSplitCompletion={splitCompletion}
-                />
+                (() => {
+                  const isBonus = checklistType === 'bonus';
+                  const baseSectors = sectors.filter((s: any) => isBonus ? s.scope === 'bonus' : s.scope !== 'bonus');
+
+                  // For standard checklists, filter to only show items in the active production order
+                  const filteredSectors = (!isBonus && hasProductionOrder && productionItems.length > 0)
+                    ? (() => {
+                        const orderItemIds = new Set(productionItems.map(pi => pi.checklist_item_id));
+                        return baseSectors
+                          .map((s: any) => ({
+                            ...s,
+                            subcategories: (s.subcategories || [])
+                              .map((sub: any) => ({
+                                ...sub,
+                                items: (sub.items || []).filter((item: any) => orderItemIds.has(item.id)),
+                              }))
+                              .filter((sub: any) => sub.items && sub.items.length > 0),
+                          }))
+                          .filter((s: any) => s.subcategories && s.subcategories.length > 0);
+                      })()
+                    : isBonus ? baseSectors : []; // No order = no items shown
+
+                  // Show empty state if no production order and not bonus
+                  if (!isBonus && filteredSectors.length === 0 && !hasProductionOrder) {
+                    return (
+                      <div className="card-command p-8 text-center space-y-3">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                          <AppIcon name="Factory" size={28} className="text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">Nenhum pedido de produção</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Crie um plano de produção para o dia e os itens aparecerão aqui.
+                          </p>
+                        </div>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setPlanSheetOpen(true)}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm transition-colors hover:bg-primary/90"
+                          >
+                            <AppIcon name="Plus" size={16} />
+                            Criar plano de produção
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <ChecklistView
+                      sectors={filteredSectors}
+                      checklistType={checklistType}
+                      date={currentDate}
+                      completions={completions}
+                      allShiftCompletions={allShiftCompletions}
+                      isItemCompleted={isItemCompleted}
+                      getItemStatus={getItemStatus}
+                      onToggleItem={handleToggleItem}
+                      onStartProduction={handleStartProduction}
+                      onFinishProduction={handleFinishProduction}
+                      onUpdateProductionQuantity={handleUpdateProductionQuantity}
+                      getCompletionProgress={(sectorId) => getCompletionProgress(sectorId, checklistType)}
+                      getCrossShiftItemProgress={getCrossShiftItemProgress}
+                      currentUserId={user?.id}
+                      isAdmin={isAdmin}
+                      deadlinePassed={deadlinePassed}
+                      onContestCompletion={contestCompletion}
+                      onSplitCompletion={splitCompletion}
+                    />
+                  );
+                })()
               )}
             </div>
           </div>
