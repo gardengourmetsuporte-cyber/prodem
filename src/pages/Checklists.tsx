@@ -620,8 +620,8 @@ export default function ChecklistsPage() {
                     toast.error('Feche o Turno 1 antes de acessar o Turno 2');
                     return;
                   }
-                  // If shift 2 is closed, open its report
-                  if (shift2Hook.order?.status === 'closed') {
+                  // If shift 2 has an order, open its report (closed or active)
+                  if (shift2Hook.hasOrder) {
                     setReportShiftView(2);
                     setReportSheetOpen(true);
                     return;
