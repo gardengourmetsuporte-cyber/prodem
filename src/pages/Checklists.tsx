@@ -18,6 +18,10 @@ import { cn } from '@/lib/utils';
 import { getDeadlineInfo, shouldAutoClose } from '@/lib/checklistTiming';
 import { useChecklistDeadlines } from '@/hooks/useChecklistDeadlines';
 import { DeadlineSettingPopover } from '@/components/checklists/DeadlineSettingPopover';
+import { useProductionOrders } from '@/hooks/useProductionOrders';
+import { ProductionDayCard } from '@/components/production/ProductionDayCard';
+import { ProductionPlanSheet } from '@/components/production/ProductionPlanSheet';
+import { ProductionReportSheet } from '@/components/production/ProductionReportSheet';
 
 function DateStrip({ days, selectedDate, onSelectDate }: {
   days: Date[];
@@ -111,6 +115,15 @@ export default function ChecklistsPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const currentDate = format(selectedDate, 'yyyy-MM-dd');
+
+  // Production orders
+  const {
+    order: productionOrder, orderItems: productionItems, report: productionReport,
+    totals: productionTotals, hasOrder: hasProductionOrder,
+    saveOrder, closeOrder, copyFromDate,
+  } = useProductionOrders(activeUnitId, selectedDate);
+  const [planSheetOpen, setPlanSheetOpen] = useState(false);
+  const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
   // The settings type follows the checklist type
   const settingsType = checklistType;
@@ -637,6 +650,17 @@ export default function ChecklistsPage() {
               />
             </button>
 
+            {/* Production Plan Card — visible to all, actionable by admin */}
+            {!settingsMode && checklistType !== 'bonus' && (
+              <ProductionDayCard
+                order={productionOrder}
+                totals={productionTotals}
+                isAdmin={isAdmin}
+                onCreatePlan={() => setPlanSheetOpen(true)}
+                onViewReport={() => setReportSheetOpen(true)}
+              />
+            )}
+
             {/* Content area — either checklist view or settings */}
             <div className="pt-3">
               {settingsMode ? (
@@ -683,6 +707,28 @@ export default function ChecklistsPage() {
           </div>
         </div>
       </div>
+
+      {/* Production Sheets */}
+      <ProductionPlanSheet
+        open={planSheetOpen}
+        onOpenChange={setPlanSheetOpen}
+        sectors={sectors}
+        existingItems={productionItems}
+        date={selectedDate}
+        onSave={saveOrder}
+        onCopyFromDate={copyFromDate}
+      />
+      <ProductionReportSheet
+        open={reportSheetOpen}
+        onOpenChange={setReportSheetOpen}
+        report={productionReport}
+        totals={productionTotals}
+        order={productionOrder}
+        date={selectedDate}
+        isAdmin={isAdmin}
+        onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
+        onClosePlan={async () => { await closeOrder(); setReportSheetOpen(false); toast.success('Plano fechado!'); }}
+      />
     </AppLayout>
   );
 }
