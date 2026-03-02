@@ -1,74 +1,45 @@
 
 
-## Transformar Cardápio Digital em Canal de Vendas / Catálogo de Peças
+## Análise da Situação
 
-### Objetivo
+Atualmente:
+- **Almoxarifado** = matéria-prima (chapas, barras, parafusos) — itens do `inventory_items`
+- **Produção** = peças sendo fabricadas (cortes laser, dobras, soldas) — itens do `checklist_items` com `target_quantity`
+- Não existe ligação direta entre os dois módulos
+- A aba "Todos" soma ambos os estoques e não faz sentido funcional
 
-Converter o módulo "Cardápio Digital" (pensado para restaurante) em um **Catálogo de Peças Industrial** onde clientes da Prodem podem navegar produtos, solicitar orçamentos e fazer pedidos diretamente pelo site público.
+## Proposta de Ligação Produção ↔ Estoque
 
-### Mudanças
+### Modelo conceitual
 
-#### 1. Renomear vocabulário em todo o módulo
+```text
+┌─────────────────────┐       ┌──────────────────────┐
+│  ALMOXARIFADO       │       │  PRODUÇÃO             │
+│  (inventory_items)  │──────▶│  (checklist_items)    │
+│                     │ BOM   │                       │
+│  Chapa 2mm          │       │  Peça 1200x600x2mm    │
+│  Parafuso M8        │       │  Rack 1800x1200       │
+└─────────────────────┘       └──────────────────────┘
+```
 
-| De | Para |
-|---|---|
-| Cardápio Digital | Catálogo de Produtos |
-| Cardápio | Catálogo |
-| Mesa (table_number) | Referência do cliente |
-| Buscar no cardápio | Buscar peça ou produto |
-| Destaques | Produtos em Destaque |
-| Seu Pedido | Sua Cotação |
-| Finalizar Pedido | Solicitar Orçamento |
-| Popular | Destaque |
-| Roleta da Sorte | (remover aba game) |
+A ligação real seria via **BOM (Bill of Materials)** — uma tabela que diz "para produzir a peça X, preciso de Y unidades do material Z". Porém isso é complexo e requer cadastro detalhado.
 
-Arquivos: `modules.ts`, `DigitalMenu.tsx`, `MenuLanding.tsx`, `MenuProductList.tsx`, `MenuProductDetail.tsx`, `MenuCart.tsx`, `MenuSearch.tsx`, `MenuBottomNav.tsx`, `CardapioHub.tsx`
+### Abordagem simplificada (recomendada)
 
-#### 2. Adaptar a landing pública (`MenuLanding.tsx`)
+1. **Remover a aba "Todos"** — só existem "Almoxarifado" e "Produção"
+2. **Almoxarifado** = mostra `inventory_items` (matéria-prima, como já é)
+3. **Produção** = mostra os itens da checklist de produção do dia (do `production_orders` + `checklist_items`), com progresso de execução, **não** itens de estoque
+4. Na aba Produção do estoque, listar os itens do pedido de produção ativo com: nome da peça, quantidade pedida, quantidade feita, % de conclusão
+5. Clicar numa peça na aba Produção redireciona para a checklist daquele setor
 
-- Trocar "cuisine_type" por segmento industrial (ex: "Engenharia Mecânica & Metalúrgica")
-- Trocar "delivery_time" por "Prazo sob consulta"
-- Trocar status "Aberto/Fechado" por "Atendimento Online" / "Fora do horário"
-- Manter logo e banner
+### Mudanças técnicas
 
-#### 3. Adaptar o carrinho/checkout (`MenuCart.tsx`)
-
-- Remover campo "número da mesa"
-- Adicionar campos: **Nome**, **Empresa**, **Telefone**, **E-mail**, **Observações gerais**
-- Trocar "Finalizar Pedido" por "Solicitar Orçamento"
-- Salvar dados do cliente junto com o pedido
-
-#### 4. Adaptar bottom nav (`MenuBottomNav.tsx`)
-
-- Remover aba "Roleta" (game)
-- Renomear: Início → Início, Cardápio → Catálogo, Pedido → Cotação
-- Trocar ícones para contexto industrial
-
-#### 5. Remover lógica de gamificação da página pública (`DigitalMenu.tsx`)
-
-- Remover toda a seção de "game" (roleta) da página pública
-- Simplificar para 3 abas: Início, Catálogo, Cotação
-
-#### 6. Adaptar textos do detalhe do produto (`MenuProductDetail.tsx`)
-
-- Trocar placeholder "sem cebola, bem passado" por "Especificar acabamento, quantidade exata, etc."
-- Manter lógica de opcionais (útil para variações: tipo de aço, acabamento, etc.)
-
-#### 7. Renomear módulo no admin (`modules.ts` e `CardapioHub.tsx`)
-
-- "Cardápio Digital" → "Catálogo de Produtos"
-- Header: "Catálogo de Produtos" com ícone apropriado
-- Link "Ver público" → "Ver catálogo"
-
-### Arquivos a editar
-
-1. `src/lib/modules.ts` — renomear label e children
-2. `src/pages/DigitalMenu.tsx` — remover game, renomear textos
-3. `src/components/digital-menu/MenuLanding.tsx` — adaptar vocabulário industrial
-4. `src/components/digital-menu/MenuProductList.tsx` — renomear textos
-5. `src/components/digital-menu/MenuProductDetail.tsx` — adaptar placeholders
-6. `src/components/digital-menu/MenuCart.tsx` — trocar mesa por dados do cliente
-7. `src/components/digital-menu/MenuSearch.tsx` — renomear placeholders
-8. `src/components/digital-menu/MenuBottomNav.tsx` — remover game, renomear abas
-9. `src/pages/CardapioHub.tsx` — renomear header e labels
+1. **Migração**: nenhuma necessária (dados já existem nas tabelas)
+2. **`src/pages/Inventory.tsx`**:
+   - Remover opção "todos" do `LocationFilter`
+   - Default para "almoxarifado"
+   - Na aba "Produção", renderizar uma lista vinda do hook `useProductionOrders` com o relatório de progresso das peças do dia
+   - Cada item mostra: nome peça, dimensões, qtd pedida vs feita, barra de progresso
+   - Click leva para `/checklists`
+3. **Criar componente `ProductionStockView.tsx`**: lista de peças do pedido de produção ativo com progresso visual
 
