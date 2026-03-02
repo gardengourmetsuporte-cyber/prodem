@@ -15,92 +15,103 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
     return (
       <button
         onClick={onManageProjects}
-        className="w-full rounded-2xl p-5 text-left transition-all bg-card ring-1 ring-border/40 hover:ring-primary/30 group"
+        className="w-full rounded-2xl p-5 text-left transition-all industrial-card hover:ring-warning/40 group"
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <AppIcon name="Briefcase" size={24} className="text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center shrink-0 ring-1 ring-warning/30">
+            <AppIcon name="Briefcase" size={24} className="text-warning" />
           </div>
           <div className="flex-1">
-            <span className="text-base font-bold text-foreground">Cadastrar Projeto / OS</span>
-            <p className="text-xs text-muted-foreground">Vincule peças a um projeto com cliente</p>
+            <span className="text-base font-black text-foreground uppercase tracking-wide">Cadastrar OS / Projeto</span>
+            <p className="text-xs text-muted-foreground">Vincule peças a uma ordem de serviço</p>
           </div>
-          <AppIcon name="Plus" size={20} className="text-primary group-hover:scale-110 transition-transform" />
+          <AppIcon name="Plus" size={20} className="text-warning group-hover:scale-110 transition-transform" />
         </div>
       </button>
     );
   }
 
   return (
-    <div className="production-project-hero relative overflow-hidden rounded-2xl p-5">
-      {/* Glow effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-primary/5 pointer-events-none" />
-      <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+    <div className="production-os-hero relative overflow-hidden rounded-2xl p-5">
+      {/* Industrial pattern overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, currentColor 20px, currentColor 21px)' }}
+      />
       
-      <div className="relative z-10 space-y-3">
+      {/* Corner accent */}
+      <div className="absolute top-0 left-0 w-1 h-full bg-warning rounded-l-2xl" />
+      
+      <div className="relative z-10 space-y-3 pl-3">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-primary/20 backdrop-blur-sm flex items-center justify-center shrink-0 ring-1 ring-primary/30">
-              <AppIcon name="Briefcase" size={22} className="text-primary" />
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-warning/80">Ordem de Serviço</span>
+              <span className={cn(
+                "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
+                progress.percent >= 100
+                  ? "bg-success/20 text-success"
+                  : progress.percent > 0
+                    ? "bg-warning/20 text-warning"
+                    : "bg-muted/40 text-muted-foreground"
+              )}>
+                {progress.percent >= 100 ? '✓ CONCLUÍDO' : progress.percent > 0 ? '● EM PRODUÇÃO' : '○ AGUARDANDO'}
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-black text-primary font-display tracking-tight">
-                  #{project.project_number}
-                </span>
-                <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
-                  progress.percent >= 100
-                    ? "bg-success/20 text-success"
-                    : progress.percent > 0
-                      ? "bg-warning/20 text-warning"
-                      : "bg-muted/40 text-muted-foreground"
-                )}>
-                  {progress.percent >= 100 ? 'Concluído' : progress.percent > 0 ? 'Em produção' : 'Aguardando'}
-                </span>
-              </div>
-              <p className="text-sm font-semibold text-foreground/90 leading-tight">{project.description}</p>
-            </div>
+            <h2 className="text-2xl font-black text-foreground tracking-tight font-display">
+              #{project.project_number}
+            </h2>
+            <p className="text-sm font-semibold text-foreground/80 leading-tight mt-0.5">{project.description}</p>
           </div>
           {isAdmin && (
             <button
               onClick={onManageProjects}
-              className="p-2 rounded-xl hover:bg-white/5 transition-colors"
+              className="p-2 rounded-lg hover:bg-white/5 transition-colors"
             >
               <AppIcon name="Settings" size={16} className="text-muted-foreground" />
             </button>
           )}
         </div>
 
-        {/* Client badge */}
+        {/* Client */}
         {project.client && (
           <div className="flex items-center gap-2">
-            <AppIcon name="Building2" size={12} className="text-muted-foreground/60" />
-            <span className="text-xs font-medium text-muted-foreground">{project.client}</span>
+            <AppIcon name="Building2" size={12} className="text-warning/60" />
+            <span className="text-xs font-bold text-warning/80 uppercase tracking-wider">{project.client}</span>
           </div>
         )}
 
         {/* Progress */}
-        <div className="space-y-2">
-          <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="space-y-2 pt-1">
+          <div className="w-full h-2.5 rounded-sm bg-background/50 overflow-hidden ring-1 ring-border/20">
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
+              className="h-full transition-all duration-700 ease-out"
               style={{
                 width: `${Math.min(progress.percent, 100)}%`,
                 background: progress.percent >= 100
                   ? 'hsl(var(--success))'
-                  : 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))',
+                  : 'linear-gradient(90deg, hsl(var(--warning)), hsl(var(--warning) / 0.7))',
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">
-              {progress.done}/{progress.ordered} peças hoje
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground uppercase">Feito</span>
+                <span className="text-sm font-black text-foreground">{progress.done}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground uppercase">Total</span>
+                <span className="text-sm font-black text-muted-foreground">{progress.ordered}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground uppercase">Falta</span>
+                <span className="text-sm font-black text-warning">{progress.pending}</span>
+              </div>
+            </div>
             <span className={cn(
-              "font-black text-sm",
-              progress.percent >= 100 ? "text-success" : "text-primary"
+              "text-xl font-black font-display",
+              progress.percent >= 100 ? "text-success" : "text-warning"
             )}>
               {progress.percent}%
             </span>

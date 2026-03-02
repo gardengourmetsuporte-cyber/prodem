@@ -30,7 +30,6 @@ export function ProductionCutTable({
 }: ProductionCutTableProps) {
   const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
 
-  // Build a map of item metadata
   const itemMeta = useMemo(() => {
     const meta = new Map<string, { sectorName: string; sectorColor: string; materialCode?: string; dimensions?: string }>();
     sectors.forEach((sector: any) => {
@@ -49,7 +48,6 @@ export function ProductionCutTable({
     return meta;
   }, [sectors]);
 
-  // In-progress items (started but not finished)
   const inProgressIds = useMemo(() => {
     const ids = new Set<string>();
     completions.forEach((c: any) => {
@@ -60,7 +58,6 @@ export function ProductionCutTable({
     return ids;
   }, [completions]);
 
-  // Group report items by sector (process)
   const grouped = useMemo(() => {
     const groups: GroupedRow[] = [];
     const sectorMap = new Map<string, GroupedRow>();
@@ -97,130 +94,158 @@ export function ProductionCutTable({
 
   if (report.length === 0) {
     return (
-      <div className="text-center py-10 space-y-3">
-        <div className="w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto">
-          <AppIcon name="Factory" size={28} className="text-muted-foreground/50" />
+      <div className="text-center py-12 space-y-3">
+        <div className="w-14 h-14 rounded-xl bg-muted/10 flex items-center justify-center mx-auto industrial-border">
+          <AppIcon name="Factory" size={28} className="text-muted-foreground/30" />
         </div>
-        <p className="text-sm font-semibold text-muted-foreground">Nenhuma peça no plano</p>
-        <p className="text-xs text-muted-foreground/70">Crie um plano de produção para este turno</p>
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Nenhuma peça no plano</p>
+        <p className="text-[10px] text-muted-foreground/60">Crie um plano de produção para este turno</p>
       </div>
     );
   }
 
+  // Totals
+  const totalOrdered = report.reduce((s, i) => s + i.quantity_ordered, 0);
+  const totalDone = report.reduce((s, i) => s + i.quantity_done, 0);
+  const totalInProgress = inProgressIds.size;
+
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
+      {/* Table header — industrial style */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <AppIcon name="ClipboardList" size={12} className="text-muted-foreground/50" />
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
+            Tabela de Cortes
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-[9px] font-mono">
+          <span className="text-muted-foreground">{report.length} itens</span>
+          {totalInProgress > 0 && (
+            <span className="text-warning font-bold">{totalInProgress} produzindo</span>
+          )}
+          <span className={cn(
+            "font-bold",
+            totalDone >= totalOrdered ? "text-success" : "text-foreground"
+          )}>
+            {totalDone}/{totalOrdered}
+          </span>
+        </div>
+      </div>
+
       {grouped.map(group => {
         const isCollapsed = collapsedSectors.has(group.sectorName);
         const groupDone = group.items.reduce((s, i) => s + i.quantity_done, 0);
         const groupTotal = group.items.reduce((s, i) => s + i.quantity_ordered, 0);
-        const groupPercent = groupTotal > 0 ? Math.round((groupDone / groupTotal) * 100) : 0;
+        const groupInProg = group.items.filter(i => inProgressIds.has(i.checklist_item_id)).length;
 
         return (
-          <div key={group.sectorName} className="rounded-xl overflow-hidden ring-1 ring-border/30 bg-card/50">
-            {/* Sector header */}
+          <div key={group.sectorName} className="industrial-card rounded-xl overflow-hidden">
+            {/* Sector header — process/machine group */}
             <button
               onClick={() => toggleSector(group.sectorName)}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/[0.02] transition-colors"
             >
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: group.sectorColor }} />
-              <span className="text-xs font-bold text-foreground uppercase tracking-wider flex-1 text-left">
+              <div
+                className="w-3 h-8 rounded-sm shrink-0"
+                style={{ backgroundColor: group.sectorColor }}
+              />
+              <span className="text-[11px] font-black text-foreground uppercase tracking-wider flex-1 text-left">
                 {group.sectorName}
               </span>
+              {groupInProg > 0 && (
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-warning/10">
+                  <div className="w-1 h-1 rounded-full bg-warning animate-pulse" />
+                  <span className="text-[8px] font-bold text-warning">{groupInProg}</span>
+                </div>
+              )}
               <span className={cn(
-                "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                groupPercent >= 100 ? "bg-success/15 text-success" : "bg-muted/40 text-muted-foreground"
+                "text-[10px] font-mono font-bold px-2 py-0.5 rounded",
+                groupDone >= groupTotal ? "bg-success/10 text-success" : "text-muted-foreground"
               )}>
                 {groupDone}/{groupTotal}
               </span>
               <AppIcon
                 name="ChevronRight"
                 size={14}
-                className={cn("text-muted-foreground transition-transform", !isCollapsed && "rotate-90")}
+                className={cn("text-muted-foreground/40 transition-transform", !isCollapsed && "rotate-90")}
               />
             </button>
 
-            {/* Items table */}
+            {/* Items — industrial row format */}
             {!isCollapsed && (
-              <div className="border-t border-border/20">
-                {/* Table header */}
-                <div className="grid grid-cols-[1fr_60px_60px_44px] px-3 py-1.5 bg-muted/10 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
-                  <span>Peça</span>
-                  <span className="text-center">Qtd</span>
-                  <span className="text-center">Feito</span>
-                  <span className="text-center">Ação</span>
+              <div className="border-t border-border/10">
+                {/* Column headers */}
+                <div className="grid grid-cols-[1fr_48px_48px_40px] px-3 py-1 text-[8px] font-black uppercase tracking-[0.15em] text-muted-foreground/40 bg-background/30">
+                  <span className="pl-1">PEÇA / CÓD</span>
+                  <span className="text-center">PED</span>
+                  <span className="text-center">FEITO</span>
+                  <span className="text-center">AÇÃo</span>
                 </div>
 
-                {/* Rows */}
                 {group.items.map((item, idx) => {
                   const isInProgress = inProgressIds.has(item.checklist_item_id);
                   const isComplete = item.status === 'complete';
-                  const isPartial = item.status === 'partial';
 
                   return (
                     <div
                       key={item.checklist_item_id}
                       className={cn(
-                        "grid grid-cols-[1fr_60px_60px_44px] items-center px-3 py-2.5 transition-all",
-                        idx < group.items.length - 1 && "border-b border-border/10",
-                        isInProgress && "production-highlight-amber",
-                        isComplete && "production-strikethrough",
+                        "grid grid-cols-[1fr_48px_48px_40px] items-center px-3 py-2.5 transition-all",
+                        idx < group.items.length - 1 && "border-b border-border/5",
+                        isInProgress && "bg-warning/[0.06] border-l-2 border-l-warning",
+                        isComplete && "opacity-50",
                       )}
                     >
                       {/* Item info */}
-                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left min-w-0">
+                      <button onClick={() => onTapItem(item.checklist_item_id)} className="text-left min-w-0 pl-1">
                         <p className={cn(
-                          "text-[13px] font-medium leading-tight truncate",
-                          isComplete && "line-through text-muted-foreground/60",
-                          isInProgress && "text-warning font-semibold",
+                          "text-[12px] font-bold leading-tight truncate",
+                          isComplete && "line-through text-muted-foreground/40",
+                          isInProgress && "text-warning font-black",
                         )}>
                           {item.item_name}
                         </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {item.materialCode && (
-                            <span className="text-[9px] font-mono text-primary/70 bg-primary/5 px-1 py-0.5 rounded">
-                              {item.materialCode}
-                            </span>
-                          )}
-                          {item.dimensions && (
-                            <span className="text-[9px] text-muted-foreground/50">
-                              {item.dimensions}
-                            </span>
-                          )}
-                        </div>
+                        {item.materialCode && (
+                          <span className="text-[8px] font-mono text-muted-foreground/60">
+                            {item.materialCode}
+                            {item.dimensions && ` · ${item.dimensions}`}
+                          </span>
+                        )}
                       </button>
 
                       {/* Qty ordered */}
-                      <span className="text-center text-xs font-bold text-foreground/80">
+                      <span className="text-center text-[11px] font-mono font-bold text-foreground/60">
                         {item.quantity_ordered}
                       </span>
 
                       {/* Qty done */}
                       <span className={cn(
-                        "text-center text-xs font-black",
-                        isComplete ? "text-success" : isPartial ? "text-warning" : "text-muted-foreground/50"
+                        "text-center text-[11px] font-mono font-black",
+                        isComplete ? "text-success" : item.quantity_done > 0 ? "text-warning" : "text-muted-foreground/30"
                       )}>
                         {item.quantity_done}
                       </span>
 
-                      {/* Action button */}
+                      {/* Action */}
                       <div className="flex justify-center">
                         {isClosed ? (
-                          <AppIcon name="Lock" size={14} className="text-muted-foreground/30" />
+                          <AppIcon name="Lock" size={12} className="text-muted-foreground/20" />
                         ) : isComplete ? (
-                          <AppIcon name="check_circle" size={18} fill={1} className="text-success" />
+                          <AppIcon name="CheckCircle" size={16} className="text-success" />
                         ) : isInProgress ? (
                           <button
                             onClick={() => onFinishItem(item.checklist_item_id)}
-                            className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center active:scale-95 transition-transform"
+                            className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center active:scale-90 transition-transform ring-1 ring-warning/30"
                           >
-                            <AppIcon name="Square" size={14} className="text-warning" />
+                            <AppIcon name="Square" size={12} className="text-warning" />
                           </button>
                         ) : (
                           <button
                             onClick={() => onStartItem(item.checklist_item_id)}
-                            className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center active:scale-95 transition-transform hover:bg-primary/20"
+                            className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center active:scale-90 transition-transform hover:bg-success/20 ring-1 ring-success/20"
                           >
-                            <AppIcon name="Play" size={14} className="text-primary" />
+                            <AppIcon name="Play" size={12} className="text-success" />
                           </button>
                         )}
                       </div>
