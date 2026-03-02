@@ -900,6 +900,13 @@ export function ChecklistView({
                             if (completed) {
                               const isContested = (completion as any)?.is_contested === true;
                               const contestedReason = (completion as any)?.contested_reason;
+                              
+                              // Detect partial production completion
+                              const csProgress = getCrossShiftItemProgress ? getCrossShiftItemProgress(item.id) : null;
+                              const prodDone = csProgress?.totalDone || (completion as any)?.quantity_done || 0;
+                              const prodTarget = csProgress?.targetQty || (item as any).target_quantity || 0;
+                              const isPartialProduction = prodTarget > 0 && prodDone < prodTarget && !wasSkipped && !isContested;
+                              
                               return (
                                 <div key={item.id} className="space-y-1.5">
                                   <button
@@ -922,11 +929,14 @@ export function ChecklistView({
                                       "w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-300",
                                       isContested
                                         ? "bg-gradient-to-r from-amber-500/15 to-amber-500/5 border-2 border-amber-500/30"
+                                        : isPartialProduction
+                                        ? "bg-gradient-to-r from-orange-500/15 to-orange-500/5 border-2 border-orange-500/30"
                                         : !canToggle && !isAdmin && "cursor-not-allowed opacity-80",
-                                      !isContested && (canToggle || isAdmin) && "active:scale-[0.97] hover:shadow-md",
-                                      !isContested && wasSkipped
+                                      !isContested && !isPartialProduction && (canToggle || isAdmin) && "active:scale-[0.97] hover:shadow-md",
+                                      isPartialProduction && "active:scale-[0.97] hover:shadow-md",
+                                      !isContested && !isPartialProduction && wasSkipped
                                         ? "bg-gradient-to-r from-destructive/15 to-destructive/5 border-2 border-destructive/30"
-                                        : !isContested && "bg-gradient-to-r from-success/15 to-success/5 border-2 border-success/30",
+                                        : !isContested && !isPartialProduction && "bg-gradient-to-r from-success/15 to-success/5 border-2 border-success/30",
                                       isJustCompleted && "animate-scale-in",
                                       openPopover === item.id && !isContested && "ring-2 ring-primary/30"
                                     )}
@@ -935,31 +945,42 @@ export function ChecklistView({
                                     <div className={cn(
                                       "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-white shadow-md transition-all duration-300 mt-0.5",
                                       isContested ? "bg-amber-500 shadow-amber-500/30"
+                                        : isPartialProduction ? "bg-orange-500 shadow-orange-500/30"
                                         : wasSkipped ? "bg-destructive shadow-destructive/30" : "bg-success shadow-success/30",
                                       isJustCompleted && "scale-125"
                                     )}>
-                                      {isContested ? <AppIcon name="AlertTriangle" className="w-4 h-4" /> : wasSkipped ? <AppIcon name="X" className="w-4 h-4" /> : <AppIcon name="Check" className="w-4 h-4" />}
+                                      {isContested ? <AppIcon name="AlertTriangle" className="w-4 h-4" /> 
+                                        : isPartialProduction ? <AppIcon name="Clock" className="w-4 h-4" />
+                                        : wasSkipped ? <AppIcon name="X" className="w-4 h-4" /> 
+                                        : <AppIcon name="Check" className="w-4 h-4" />}
                                     </div>
                                     <div className="flex-1 min-w-0 text-left">
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
-                                          <p className={cn("font-medium line-through text-sm leading-tight", isContested ? "text-amber-600 dark:text-amber-400" : wasSkipped ? "text-destructive" : "text-success")}>{item.name}</p>
+                                          <p className={cn("font-medium text-sm leading-tight", 
+                                            isPartialProduction ? "text-orange-500 dark:text-orange-400" 
+                                            : isContested ? "text-amber-600 dark:text-amber-400" 
+                                            : wasSkipped ? "text-destructive line-through" 
+                                            : "text-success line-through"
+                                          )}>{item.name}</p>
                                           {(item as any).piece_dimensions && (item as any).piece_dimensions !== item.name && (
                                             <p className="text-[10px] text-muted-foreground font-mono mt-0.5">📐 {(item as any).piece_dimensions}</p>
                                           )}
                                         </div>
                                         <div className={cn(
                                           "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0 border transition-all duration-300",
-                                          isContested ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                                          isPartialProduction ? "bg-orange-500/10 text-orange-500 dark:text-orange-400 border-orange-500/20"
+                                            : isContested ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                             : wasSkipped ? "bg-destructive/10 text-destructive border-destructive/20"
                                             : !wasAwardedPoints ? "bg-primary/10 text-primary border-primary/20" : "border-border"
                                         )}
-                                        style={!isContested && !wasSkipped && wasAwardedPoints && pointsAwarded > 0 ? {
+                                        style={!isPartialProduction && !isContested && !wasSkipped && wasAwardedPoints && pointsAwarded > 0 ? {
                                           backgroundColor: getItemPointsColors(pointsAwarded).bg,
                                           color: getItemPointsColors(pointsAwarded).color,
                                           borderColor: getItemPointsColors(pointsAwarded).border,
                                         } : undefined}>
-                                          {isContested ? (<><AppIcon name="AlertTriangle" className="w-3 h-3" /><span>contestado</span></>)
+                                          {isPartialProduction ? (<><AppIcon name="Clock" className="w-3 h-3" /><span>parcial ({prodDone}/{prodTarget})</span></>)
+                                            : isContested ? (<><AppIcon name="AlertTriangle" className="w-3 h-3" /><span>contestado</span></>)
                                             : wasSkipped ? (<><AppIcon name="X" className="w-3 h-3" /><span>não concluído</span></>) 
                                             : !wasAwardedPoints ? (<><AppIcon name="RefreshCw" className="w-3 h-3" /><span>pronto</span></>) 
                                             : (<div className="flex items-center gap-0.5">
@@ -984,9 +1005,14 @@ export function ChecklistView({
                                         return (
                                           <div className="mt-2 space-y-1.5">
                                             <div className="flex items-center gap-2 text-[11px] flex-wrap">
-                                              <span className="text-success font-semibold">
-                                                ✓ {done}/{target} peças
+                                              <span className={cn("font-semibold", isPartialProduction ? "text-orange-500 dark:text-orange-400" : "text-success")}>
+                                                {isPartialProduction ? `⏳ ${done}/${target} peças` : `✓ ${done}/${target} peças`}
                                               </span>
+                                              {isPartialProduction && (
+                                                <span className="text-orange-500/80 dark:text-orange-400/80">
+                                                  ({target - done} restantes)
+                                                </span>
+                                              )}
                                               {duration && duration > 0 && (
                                                 <span className="font-mono text-muted-foreground px-1.5 py-0.5 rounded bg-muted/50">
                                                   ⏱ {formatDuration(duration)}
@@ -994,7 +1020,8 @@ export function ChecklistView({
                                               )}
                                             </div>
                                             <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
-                                              <div className={cn("h-full rounded-full transition-all duration-700", progressPct >= 100 ? "bg-success" : "bg-primary")}
+                                              <div className={cn("h-full rounded-full transition-all duration-700", 
+                                                progressPct >= 100 ? "bg-success" : isPartialProduction ? "bg-orange-500" : "bg-primary")}
                                                 style={{ width: `${progressPct}%` }} />
                                             </div>
                                           </div>
