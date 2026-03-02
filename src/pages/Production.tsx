@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useProductionPage } from '@/hooks/useProductionPage';
+import { useProductionGroupings } from '@/hooks/useProductionGroupings';
 import { ProductionProjectHero } from '@/components/production/ProductionProjectHero';
 import { ProductionShiftPanel } from '@/components/production/ProductionShiftPanel';
 import { ProductionCutTable } from '@/components/production/ProductionCutTable';
@@ -10,6 +11,7 @@ import { ProductionFinishDialog } from '@/components/production/ProductionFinish
 import { ProductionPlanSheet } from '@/components/production/ProductionPlanSheet';
 import { ProductionReportSheet } from '@/components/production/ProductionReportSheet';
 import { ProjectSheet } from '@/components/production/ProjectSheet';
+import { GroupingSheet } from '@/components/production/GroupingSheet';
 import { AppIcon } from '@/components/ui/app-icon';
 import { toast } from 'sonner';
 import { useFabAction } from '@/contexts/FabActionContext';
@@ -30,8 +32,18 @@ export default function ProductionPage() {
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [projectSheetOpen, setProjectSheetOpen] = useState(false);
+  const [groupingSheetOpen, setGroupingSheetOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [finishingItemId, setFinishingItemId] = useState<string | null>(null);
+
+  // Groupings
+  const {
+    groupingsWithItems,
+    itemGroupingMap,
+    createGrouping,
+    updateGrouping,
+    deleteGrouping,
+  } = useProductionGroupings(activeProject?.id || null, activeUnitId);
 
   useFabAction(isAdmin ? {
     icon: 'ClipboardList',
@@ -147,6 +159,8 @@ export default function ProductionPage() {
             progress={projectProgress}
             isAdmin={isAdmin}
             onManageProjects={() => setProjectSheetOpen(true)}
+            groupings={groupingsWithItems}
+            onManageGroupings={() => setGroupingSheetOpen(true)}
           />
 
           {/* Shift Panel */}
@@ -181,6 +195,7 @@ export default function ProductionPage() {
               onTapItem={(itemId) => setSelectedItemId(itemId)}
               isAdmin={isAdmin}
               isClosed={activeShift.order?.status === 'closed'}
+              itemGroupingMap={itemGroupingMap}
             />
           )}
 
@@ -247,6 +262,15 @@ export default function ProductionPage() {
         onCreateProject={createProject}
         onUpdateProject={updateProject}
         onDeleteProject={deleteProject}
+      />
+
+      <GroupingSheet
+        open={groupingSheetOpen}
+        onOpenChange={setGroupingSheetOpen}
+        groupings={groupingsWithItems}
+        onCreateGrouping={createGrouping}
+        onUpdateGrouping={updateGrouping}
+        onDeleteGrouping={deleteGrouping}
       />
 
       <ProductionItemSheet
