@@ -30,6 +30,8 @@ export const ICON_MAP: Record<string, string> = {
   Filter: 'filter_list',
   Sort: 'swap_vert',
   RefreshCw: 'sync',
+  RefreshCcw: 'sync',
+  RotateCcw: 'restart_alt',
   Download: 'download',
   Upload: 'upload',
   Send: 'send',
