@@ -62,7 +62,7 @@ export function ProductionPlanSheet({
             name: item.name,
             target_quantity: item.target_quantity || 0,
             piece_dimensions: item.piece_dimensions || null,
-            quantity_ordered: item.target_quantity || 0,
+            quantity_ordered: 0,
             sectorName: sector.name,
             sectorColor: sector.color || '#64748b',
             subcategoryName: sub.name,
@@ -219,7 +219,7 @@ export function ProductionPlanSheet({
             variant="outline"
             size="sm"
             onClick={() => {
-              setPlanItems(availableItems.map(a => ({ ...a })));
+              setPlanItems(availableItems.map(a => ({ ...a, quantity_ordered: 0 })));
               setCollapsedSectors(new Set());
             }}
             className="text-xs"
