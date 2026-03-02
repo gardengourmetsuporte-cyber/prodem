@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUnit } from '@/contexts/UnitContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUserModules } from '@/hooks/useAccessLevels';
-import { useProductionOrders, ProductionReportItem } from '@/hooks/useProductionOrders';
+import type { ProductionReportItem } from '@/hooks/useProductionOrders';
 import { AppIcon } from '@/components/ui/app-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
@@ -26,8 +26,77 @@ export function AdminDashboard() {
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
   const { stats, isLoading: statsLoading } = useDashboardStats();
   const { closings } = useCashClosing();
-  const activeProd = useProductionOrders(activeUnitId, new Date(), '__all__');
-  const { report, totals, isLoading: prodLoading } = activeProd;
+  const { data: productionRealtime, isLoading: prodLoading } = useQuery({
+    queryKey: ['dashboard-production-realtime', activeUnitId],
+    queryFn: async () => {
+      const empty = { report: [] as ProductionReportItem[], totals: { done: 0, ordered: 0, percent: 0 } };
+      if (!activeUnitId) return empty;
+
+      const { data: activeProjects, error: projectsError } = await supabase
+        .from('production_projects')
+        .select('id')
+        .eq('unit_id', activeUnitId)
+        .eq('status', 'active');
+      if (projectsError) throw projectsError;
+
+      const projectIds = (activeProjects || []).map((p: any) => p.id);
+      if (projectIds.length === 0) return empty;
+
+      const { data: pieces, error: piecesError } = await supabase
+        .from('production_pieces')
+        .select('id, description, cut_length_mm, qty_total')
+        .in('project_id', projectIds);
+      if (piecesError) throw piecesError;
+      if (!pieces || pieces.length === 0) return empty;
+
+      const pieceIds = pieces.map((p: any) => p.id);
+      const { data: logs, error: logsError } = await (supabase.from('production_logs') as any)
+        .select('piece_id, quantity_done, started_at, finished_at')
+        .in('piece_id', pieceIds);
+      if (logsError) throw logsError;
+
+      const doneMap = new Map<string, number>();
+      const inProgressMap = new Map<string, boolean>();
+      (logs || []).forEach((log: any) => {
+        doneMap.set(log.piece_id, (doneMap.get(log.piece_id) || 0) + Number(log.quantity_done || 0));
+        if (log.started_at && !log.finished_at) inProgressMap.set(log.piece_id, true);
+      });
+
+      const report: ProductionReportItem[] = (pieces || []).map((piece: any) => {
+        const quantity_done = doneMap.get(piece.id) || 0;
+        const quantity_ordered = Number(piece.qty_total || 0);
+        const quantity_pending = Math.max(0, quantity_ordered - quantity_done);
+        const percent = quantity_ordered > 0 ? Math.min(100, Math.round((quantity_done / quantity_ordered) * 100)) : 0;
+        const status: ProductionReportItem['status'] =
+          percent >= 100 ? 'complete' :
+          quantity_done > 0 ? 'partial' :
+          inProgressMap.get(piece.id) ? 'in_progress' : 'not_started';
+
+        return {
+          checklist_item_id: piece.id,
+          item_name: piece.description || 'Peça',
+          piece_dimensions: piece.cut_length_mm ? `${piece.cut_length_mm}mm` : null,
+          quantity_ordered,
+          quantity_done,
+          quantity_pending,
+          percent,
+          status,
+          duration_ms: null,
+        };
+      });
+
+      const ordered = report.reduce((sum, item) => sum + item.quantity_ordered, 0);
+      const done = report.reduce((sum, item) => sum + item.quantity_done, 0);
+      const percent = ordered > 0 ? Math.round((done / ordered) * 100) : 0;
+
+      return { report, totals: { done, ordered, percent } };
+    },
+    enabled: !!activeUnitId,
+    refetchInterval: 10_000,
+  });
+
+  const report = productionRealtime?.report || [];
+  const totals = productionRealtime?.totals || { done: 0, ordered: 0, percent: 0 };
   const hasOrder = report.length > 0;
 
   const isReady = !statsLoading && !modulesLoading && !!profile;

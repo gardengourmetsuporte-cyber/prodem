@@ -57,17 +57,61 @@ export default function ProductionPage() {
   const { pieces, isLoading: piecesLoading } = useProductionPieces(selectedProjectId, activeUnitId);
 
   // Logs & shipments for selected project
-  const { progressMap, addLog, updateLog } = useProductionLogs(selectedProjectId, activeUnitId);
+  const { progressMap: selectedProgressMap, addLog, updateLog } = useProductionLogs(selectedProjectId, activeUnitId);
   const { shipments, shippedByPiece, addShipment } = useProductionShipments(selectedProjectId, activeUnitId);
 
-  // Build pieces map for OS list
-  const piecesMap = useMemo(() => {
+  // OS List needs ALL projects data (not only selected project)
+  const { data: allPieces = [] } = useQuery<ProductionPiece[]>({
+    queryKey: ['production-pieces-all', activeUnitId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('production_pieces')
+        .select('*')
+        .eq('unit_id', activeUnitId!)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data as ProductionPiece[];
+    },
+    enabled: !!activeUnitId,
+    refetchInterval: 10_000,
+  });
+
+  const { data: allLogs = [] } = useQuery<any[]>({
+    queryKey: ['production-logs-all', activeUnitId],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('production_logs') as any)
+        .select('piece_id, quantity_done, started_at, finished_at')
+        .eq('unit_id', activeUnitId!);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!activeUnitId,
+    refetchInterval: 10_000,
+  });
+
+  const osPiecesMap = useMemo(() => {
     const map = new Map<string, ProductionPiece[]>();
-    if (selectedProjectId) {
-      map.set(selectedProjectId, pieces);
-    }
+    allPieces.forEach((piece) => {
+      const arr = map.get(piece.project_id) || [];
+      arr.push(piece);
+      map.set(piece.project_id, arr);
+    });
     return map;
-  }, [selectedProjectId, pieces]);
+  }, [allPieces]);
+
+  const osProgressMap = useMemo(() => {
+    const map = new Map<string, { piece_id: string; total_done: number; in_progress: boolean; logs: any[] }>();
+    allLogs.forEach((log: any) => {
+      if (!map.has(log.piece_id)) {
+        map.set(log.piece_id, { piece_id: log.piece_id, total_done: 0, in_progress: false, logs: [] });
+      }
+      const current = map.get(log.piece_id)!;
+      current.total_done += Number(log.quantity_done || 0);
+      if (log.started_at && !log.finished_at) current.in_progress = true;
+      current.logs.push(log);
+    });
+    return map;
+  }, [allLogs]);
 
   const selectedProject = projects.find(p => p.id === selectedProjectId) || null;
 
@@ -209,8 +253,8 @@ export default function ProductionPage() {
           {!selectedProjectId ? (
             <ProductionOSList
               projects={projects}
-              pieces={piecesMap}
-              progressMap={progressMap}
+              pieces={osPiecesMap}
+              progressMap={osProgressMap as any}
               onSelect={handleSelectProject}
               onCreateProject={() => setProjectSheetOpen(true)}
               isAdmin={isAdmin}
@@ -219,7 +263,7 @@ export default function ProductionPage() {
             <ProductionCutTableNew
               project={selectedProject}
               pieces={pieces}
-              progressMap={progressMap}
+              progressMap={selectedProgressMap}
               shippedByPiece={shippedByPiece}
               onTapPiece={(p) => setSelectedPiece(p)}
               onStartPiece={handleStartPiece}
@@ -239,7 +283,7 @@ export default function ProductionPage() {
         open={!!selectedPiece}
         onOpenChange={(v) => { if (!v) setSelectedPiece(null); }}
         piece={selectedPiece}
-        progress={selectedPiece ? progressMap.get(selectedPiece.id) || null : null}
+        progress={selectedPiece ? selectedProgressMap.get(selectedPiece.id) || null : null}
         shipments={shipments}
         shippedTotal={selectedPiece ? (shippedByPiece.get(selectedPiece.id) || 0) : 0}
         userId={user?.id || ''}
