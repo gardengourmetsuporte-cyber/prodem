@@ -37,7 +37,7 @@ interface ProductionPlanSheetProps {
   existingItems: ProductionOrderItem[];
   date: Date;
   onSave: (items: { checklist_item_id: string; quantity_ordered: number }[], notes?: string) => Promise<any>;
-  onCopyFromDate: (sourceDate: string) => Promise<{ checklist_item_id: string; quantity_ordered: number }[] | null>;
+  onPullPendingFromYesterday: () => Promise<{ checklist_item_id: string; quantity_ordered: number }[] | null>;
   /** Whether a plan already exists (editing mode) */
   hasExistingPlan?: boolean;
   currentShift?: number;
@@ -47,7 +47,7 @@ interface ProductionPlanSheetProps {
 }
 
 export function ProductionPlanSheet({
-  open, onOpenChange, sectors, existingItems, date, onSave, onCopyFromDate,
+  open, onOpenChange, sectors, existingItems, date, onSave, onPullPendingFromYesterday,
   hasExistingPlan, currentShift, isShift1Closed, onCloseShift, onDeletePlan,
 }: ProductionPlanSheetProps) {
   const [planItems, setPlanItems] = useState<PlanItem[]>([]);
@@ -163,22 +163,28 @@ export function ProductionPlanSheet({
     });
   };
 
-  const handleCopyYesterday = async () => {
-    const yesterday = format(subDays(date, 1), 'yyyy-MM-dd');
-    const items = await onCopyFromDate(yesterday);
+  const handlePullPending = async () => {
+    const items = await onPullPendingFromYesterday();
     if (!items || items.length === 0) {
-      toast.error('Nenhum plano encontrado no dia anterior');
+      toast.info('Nenhum item pendente no dia anterior — tudo foi concluído! 🎉');
       return;
     }
     const nameMap = new Map(availableItems.map(a => [a.checklist_item_id, a]));
-    const mapped = items
-      .filter(i => nameMap.has(i.checklist_item_id))
-      .map(i => ({
-        ...nameMap.get(i.checklist_item_id)!,
-        quantity_ordered: i.quantity_ordered,
-      }));
-    setPlanItems(mapped);
-    toast.success('Plano copiado do dia anterior');
+    // Merge pending with current plan: add pending quantities to existing items
+    const currentMap = new Map(planItems.map(p => [p.checklist_item_id, p]));
+    const merged = [...planItems];
+    items.forEach(i => {
+      if (!nameMap.has(i.checklist_item_id)) return;
+      const existing = currentMap.get(i.checklist_item_id);
+      if (existing) {
+        // Add pending qty on top of current
+        existing.quantity_ordered = existing.quantity_ordered + i.quantity_ordered;
+      } else {
+        merged.push({ ...nameMap.get(i.checklist_item_id)!, quantity_ordered: i.quantity_ordered });
+      }
+    });
+    setPlanItems([...merged]);
+    toast.success(`${items.length} itens pendentes puxados do dia anterior`);
   };
 
   const handleSave = async () => {
@@ -217,9 +223,9 @@ export function ProductionPlanSheet({
 
         {/* Actions */}
         <div className="flex gap-2 mb-3 flex-wrap">
-          <Button variant="outline" size="sm" onClick={handleCopyYesterday} className="text-xs">
-            <AppIcon name="Copy" size={14} />
-            Copiar de ontem
+          <Button variant="outline" size="sm" onClick={handlePullPending} className="text-xs">
+            <AppIcon name="ArrowDownToLine" size={14} />
+            Puxar pendentes de ontem
           </Button>
           <Button
             variant="outline"

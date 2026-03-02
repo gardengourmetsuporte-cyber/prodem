@@ -124,7 +124,7 @@ export default function ChecklistsPage() {
     order: productionOrder, orderItems: productionItems, report: productionReport,
     totals: productionTotals, hasOrder: hasProductionOrder,
     isShift1Closed,
-    saveOrder, closeOrder, deleteOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate,
+    saveOrder, closeOrder, deleteOrder, reopenOrder, closeShiftAndCreateNext, copyFromDate, getPendingFromDate,
   } = useProductionOrders(activeUnitId, selectedDate, currentShift);
 
   // Also fetch both shifts independently for card progress
@@ -812,7 +812,10 @@ export default function ChecklistsPage() {
         existingItems={productionItems}
         date={selectedDate}
         onSave={saveOrder}
-        onCopyFromDate={copyFromDate}
+        onPullPendingFromYesterday={async () => {
+          const yesterday = format(subDays(selectedDate, 1), 'yyyy-MM-dd');
+          return getPendingFromDate(yesterday);
+        }}
         hasExistingPlan={hasProductionOrder}
         currentShift={currentShift}
         isShift1Closed={isShift1Closed}

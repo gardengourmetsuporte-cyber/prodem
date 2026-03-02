@@ -350,7 +350,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       .select('id')
       .eq('unit_id', unitId)
       .eq('date', sourceDate)
-      .eq('shift', 1) // Always copy from shift 1
+      .eq('shift', 1)
       .maybeSingle();
     if (!sourceOrder) return null;
 
@@ -361,6 +361,63 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     if (!sourceItems || sourceItems.length === 0) return null;
 
     return sourceItems as { checklist_item_id: string; quantity_ordered: number }[];
+  }, [unitId]);
+
+  // Get pending (unfinished) items from a given date
+  const getPendingFromDate = useCallback(async (sourceDate: string) => {
+    if (!unitId) return null;
+
+    // Get all orders for that date (both shifts)
+    const { data: sourceOrders } = await supabase
+      .from('production_orders')
+      .select('id')
+      .eq('unit_id', unitId)
+      .eq('date', sourceDate);
+    if (!sourceOrders || sourceOrders.length === 0) return null;
+
+    const orderIds = sourceOrders.map(o => o.id);
+
+    // Get all order items
+    const { data: sourceItems } = await supabase
+      .from('production_order_items')
+      .select('checklist_item_id, quantity_ordered')
+      .in('order_id', orderIds);
+    if (!sourceItems || sourceItems.length === 0) return null;
+
+    // Aggregate ordered quantities per item (across shifts)
+    const orderedMap = new Map<string, number>();
+    sourceItems.forEach(si => {
+      orderedMap.set(si.checklist_item_id, (orderedMap.get(si.checklist_item_id) || 0) + si.quantity_ordered);
+    });
+
+    // Get completions for that date
+    const itemIds = Array.from(orderedMap.keys());
+    const { data: completionsData } = await supabase
+      .from('checklist_completions')
+      .select('item_id, quantity_done, is_skipped, status')
+      .eq('date', sourceDate)
+      .eq('unit_id', unitId)
+      .in('status', ['completed', 'done'])
+      .in('item_id', itemIds);
+
+    const doneMap = new Map<string, number>();
+    (completionsData || []).forEach(c => {
+      if (!c.is_skipped && c.quantity_done > 0) {
+        doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + c.quantity_done);
+      }
+    });
+
+    // Build pending items
+    const pendingItems: { checklist_item_id: string; quantity_ordered: number }[] = [];
+    orderedMap.forEach((ordered, itemId) => {
+      const done = doneMap.get(itemId) || 0;
+      const pending = ordered - done;
+      if (pending > 0) {
+        pendingItems.push({ checklist_item_id: itemId, quantity_ordered: pending });
+      }
+    });
+
+    return pendingItems.length > 0 ? pendingItems : null;
   }, [unitId]);
 
   return {
@@ -379,6 +436,7 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     reopenOrder,
     closeShiftAndCreateNext,
     copyFromDate,
+    getPendingFromDate,
     invalidate,
   };
 }
