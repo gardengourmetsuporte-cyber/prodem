@@ -482,8 +482,8 @@ export default function ChecklistsPage() {
               </div>
             )}
 
-            {/* Production Plan Card — visible to all, actionable by admin */}
-            {!settingsMode && checklistType !== 'bonus' && (
+            {/* Production Plan Card — admin only */}
+            {!settingsMode && checklistType !== 'bonus' && isAdmin && (
               <ProductionDayCard
                 order={productionOrder}
                 totals={productionTotals}
