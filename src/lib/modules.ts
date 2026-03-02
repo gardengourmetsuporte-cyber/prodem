@@ -31,9 +31,6 @@ export const ALL_MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'checklists', label: 'Checklists', icon: 'ClipboardCheck', route: '/checklists', routes: ['/checklists'], group: 'Produção',
-  },
-  {
     key: 'inventory', label: 'Estoque', icon: 'Package', route: '/inventory', routes: ['/inventory'], group: 'Produção',
     children: [
       { key: 'inventory.view', label: 'Ver itens', icon: 'Eye' },
