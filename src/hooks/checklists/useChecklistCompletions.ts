@@ -31,6 +31,11 @@ export function useChecklistCompletions({
 }: UseChecklistCompletionsOptions) {
   const queryClient = useQueryClient();
 
+  // Helper to also invalidate production report caches
+  const invalidateProductionCaches = useCallback((date: string) => {
+    queryClient.invalidateQueries({ queryKey: ['production-completions', activeUnitId, date] });
+  }, [queryClient, activeUnitId]);
+
   const toggleCompletion = useCallback(async (
     itemId: string, checklistType: ChecklistType, date: string,
     isAdmin?: boolean, points: number = 1, completedByUserId?: string,
@@ -78,7 +83,8 @@ export function useChecklistCompletions({
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['dashboard-checklist-completions'] });
     invalidateGamificationCaches(queryClient);
-  }, [completions, userId, queryClient, activeUnitId]);
+    invalidateProductionCaches(date);
+  }, [completions, userId, queryClient, activeUnitId, invalidateProductionCaches]);
 
   const splitCompletion = useCallback(async (
     itemId: string, date: string, checklistType: ChecklistType, userIds: string[]
@@ -125,7 +131,8 @@ export function useChecklistCompletions({
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
     invalidateGamificationCaches(queryClient);
-  }, [completions, sectors, queryClient, activeUnitId]);
+    invalidateProductionCaches(date);
+  }, [completions, sectors, queryClient, activeUnitId, invalidateProductionCaches]);
 
   const contestCompletion = useCallback(async (completionId: string, reason: string) => {
     if (!userId) throw new Error('Usuário não autenticado');
@@ -149,6 +156,7 @@ export function useChecklistCompletions({
 
     queryClient.invalidateQueries({ queryKey: ['checklist-completions'] });
     invalidateGamificationCaches(queryClient);
+    invalidateProductionCaches(new Date().toISOString().slice(0, 10));
 
     // Notify (fire-and-forget)
     supabase.from('notifications').insert({
@@ -261,7 +269,8 @@ export function useChecklistCompletions({
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
-  }, [userId, queryClient, activeUnitId]);
+    invalidateProductionCaches(date);
+  }, [userId, queryClient, activeUnitId, invalidateProductionCaches]);
 
   const finishProduction = useCallback(async (
     itemId: string, checklistType: ChecklistType, date: string,
@@ -290,7 +299,8 @@ export function useChecklistCompletions({
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
     invalidateGamificationCaches(queryClient);
-  }, [completions, userId, queryClient, activeUnitId]);
+    invalidateProductionCaches(date);
+  }, [completions, userId, queryClient, activeUnitId, invalidateProductionCaches]);
 
   const updateProductionQuantity = useCallback(async (
     completionId: string, date: string, checklistType: ChecklistType, newQuantity: number
@@ -305,7 +315,8 @@ export function useChecklistCompletions({
     queryClient.invalidateQueries({ queryKey: ['checklist-all-shift-completions', date, activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'abertura', activeUnitId] });
     queryClient.invalidateQueries({ queryKey: ['card-completions', date, 'fechamento', activeUnitId] });
-  }, [queryClient, activeUnitId]);
+    invalidateProductionCaches(date);
+  }, [queryClient, activeUnitId, invalidateProductionCaches]);
 
   return {
     toggleCompletion,
