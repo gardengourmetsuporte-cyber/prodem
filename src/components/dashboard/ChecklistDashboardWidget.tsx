@@ -8,10 +8,9 @@ import { cn } from '@/lib/utils';
 export function ChecklistDashboardWidget() {
   const navigate = useNavigate();
   const { activeUnitId } = useUnit();
-  const shift1 = useProductionOrders(activeUnitId, new Date(), 1);
-  const shift2 = useProductionOrders(activeUnitId, new Date(), 2);
-  const activeProd = (shift1.order?.status === 'closed' && shift2.hasOrder) ? shift2 : shift1;
-  const { totals, report, isLoading, hasOrder, invalidate } = activeProd;
+  const activeProd = useProductionOrders(activeUnitId, new Date());
+  const { totals, report, isLoading, invalidate } = activeProd;
+  const hasOrder = report.length > 0;
 
   // Poll for updates every 15 seconds so dashboard stays fresh
   useEffect(() => {
