@@ -20,12 +20,12 @@ const variantStyles = {
     iconColor: 'text-success drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]',
   },
   warning: {
-    iconBg: 'bg-amber-500/10 border border-amber-500/20',
-    iconColor: 'text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+    iconBg: 'bg-warning/10 border border-warning/20',
+    iconColor: 'text-warning drop-shadow-[0_0_8px_hsl(var(--warning)/0.5)]',
   },
   destructive: {
-    iconBg: 'bg-rose-500/10 border border-rose-500/20',
-    iconColor: 'text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]',
+    iconBg: 'bg-destructive/10 border border-destructive/20',
+    iconColor: 'text-destructive drop-shadow-[0_0_8px_hsl(var(--destructive)/0.5)]',
   },
 };
 

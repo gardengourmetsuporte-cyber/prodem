@@ -57,11 +57,11 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
           <SheetTitle className="text-xl text-center">{item.name}</SheetTitle>
           <div className="flex justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <AppIcon name="Warehouse" size={14} className="text-blue-400" />
+              <AppIcon name="Warehouse" size={14} className="text-primary" />
               Almox: <span className="font-semibold text-foreground">{warehouseStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}</span>
             </span>
             <span className="flex items-center gap-1">
-              <AppIcon name="Factory" size={14} className="text-amber-400" />
+              <AppIcon name="Factory" size={14} className="text-warning" />
               Prod: <span className="font-semibold text-foreground">{productionStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}</span>
             </span>
           </div>
@@ -112,7 +112,7 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
                 onClick={() => setEntradaLocation('almoxarifado')}
                 className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
                   entradaLocation === 'almoxarifado'
-                    ? 'bg-blue-500/20 border border-blue-500/40 text-blue-400'
+                    ? 'bg-primary/20 border border-primary/40 text-primary'
                     : 'bg-secondary text-muted-foreground'
                 }`}
               >
@@ -123,7 +123,7 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
                 onClick={() => setEntradaLocation('producao')}
                 className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
                   entradaLocation === 'producao'
-                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                    ? 'bg-warning/20 border border-warning/40 text-warning'
                     : 'bg-secondary text-muted-foreground'
                 }`}
               >
@@ -139,7 +139,7 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
                 onClick={() => setSaidaLocation('almoxarifado')}
                 className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
                   saidaLocation === 'almoxarifado'
-                    ? 'bg-blue-500/20 border border-blue-500/40 text-blue-400'
+                    ? 'bg-primary/20 border border-primary/40 text-primary'
                     : 'bg-secondary text-muted-foreground'
                 }`}
               >
@@ -150,7 +150,7 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
                 onClick={() => setSaidaLocation('producao')}
                 className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
                   saidaLocation === 'producao'
-                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
+                    ? 'bg-warning/20 border border-warning/40 text-warning'
                     : 'bg-secondary text-muted-foreground'
                 }`}
               >

@@ -84,8 +84,8 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
             <p className={cn(
               "text-base font-bold leading-tight drop-shadow-md",
               status === 'ok' && "text-foreground",
-              status === 'low' && "text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]",
-              status === 'out' && "text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]"
+              status === 'low' && "text-warning drop-shadow-[0_0_8px_hsl(var(--warning)/0.4)]",
+              status === 'out' && "text-destructive drop-shadow-[0_0_8px_hsl(var(--destructive)/0.4)]"
             )}>
               {item.current_stock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}
               <span className="text-xs font-normal text-muted-foreground ml-0.5">{unitLabel}</span>
@@ -93,8 +93,8 @@ export function ItemCard({ item, onClick, onEdit }: ItemCardProps) {
             <span className={cn(
               "text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded inline-block mt-0.5 shadow-sm border",
               status === 'ok' && "bg-success/10 border-success/20 text-success",
-              status === 'low' && "bg-amber-500/10 border-amber-500/20 text-amber-400",
-              status === 'out' && "bg-rose-500/10 border-rose-500/20 text-rose-400"
+              status === 'low' && "bg-warning/10 border-warning/20 text-warning",
+              status === 'out' && "bg-destructive/10 border-destructive/20 text-destructive"
             )}>
               {status === 'ok' ? 'OK' : status === 'low' ? 'BAIXO' : 'ZERADO'}
             </span>
