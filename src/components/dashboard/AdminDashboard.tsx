@@ -26,8 +26,8 @@ export function AdminDashboard() {
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
   const { stats, isLoading: statsLoading } = useDashboardStats();
   const { closings } = useCashClosing();
-  const shift1 = useProductionOrders(activeUnitId, new Date(), 1);
-  const shift2 = useProductionOrders(activeUnitId, new Date(), 2);
+  const shift1 = useProductionOrders(activeUnitId, new Date(), 1, '__all__');
+  const shift2 = useProductionOrders(activeUnitId, new Date(), 2, '__all__');
   const activeProd = (shift1.order?.status === 'closed' && shift2.hasOrder) ? shift2 : shift1;
   const { report, totals, isLoading: prodLoading, hasOrder } = activeProd;
 
@@ -174,7 +174,7 @@ export function AdminDashboard() {
             totals={totals}
             hasOrder={hasOrder}
             isLoading={prodLoading}
-            onNavigate={() => navigate('/checklists')}
+            onNavigate={() => navigate('/production')}
           />
         </div>
       )}
