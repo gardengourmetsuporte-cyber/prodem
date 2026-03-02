@@ -394,7 +394,7 @@ export default function ChecklistsPage() {
                 </div>
                 <div className="flex-1">
                   <h2 className="font-semibold text-sm text-foreground">Modo Configuração</h2>
-                  <p className="text-[11px] text-muted-foreground">Editando {checklistType === 'bonus' ? 'Bônus' : checklistType === 'abertura' ? 'Abertura' : 'Fechamento'}</p>
+                  <p className="text-[11px] text-muted-foreground">Editando {checklistType === 'bonus' ? 'Bônus' : checklistType === 'abertura' ? 'Turno 1' : 'Turno 2'}</p>
                 </div>
                 <button
                   onClick={() => setSettingsMode(false)}
@@ -428,7 +428,7 @@ export default function ChecklistsPage() {
                 )}
                 <div className="flex items-center gap-3 mb-3">
                   <AppIcon
-                    name={getTypeProgress.abertura.percent === 100 ? 'check_circle' : 'Sun'}
+                    name={getTypeProgress.abertura.percent === 100 ? 'check_circle' : 'Factory'}
                     size={22}
                     fill={getTypeProgress.abertura.percent === 100 ? 1 : 0}
                     className={cn(
@@ -436,7 +436,7 @@ export default function ChecklistsPage() {
                       getTypeProgress.abertura.percent === 100 ? "text-success" : checklistType === 'abertura' ? "text-foreground" : "text-muted-foreground"
                     )}
                   />
-                  <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Abertura</h3>
+                  <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Turno 1</h3>
                 </div>
                 {!settingsMode && (
                   <div className="space-y-1.5">
@@ -495,7 +495,7 @@ export default function ChecklistsPage() {
                 )}
                 <div className="flex items-center gap-3 mb-3">
                   <AppIcon
-                    name={getTypeProgress.fechamento.percent === 100 ? 'check_circle' : 'Moon'}
+                    name={getTypeProgress.fechamento.percent === 100 ? 'check_circle' : 'Wrench'}
                     size={22}
                     fill={getTypeProgress.fechamento.percent === 100 ? 1 : 0}
                     className={cn(
@@ -503,7 +503,7 @@ export default function ChecklistsPage() {
                       getTypeProgress.fechamento.percent === 100 ? "text-success" : checklistType === 'fechamento' ? "text-foreground" : "text-muted-foreground"
                     )}
                   />
-                  <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Fechamento</h3>
+                  <h3 className="text-base font-bold font-display text-foreground" style={{ letterSpacing: '-0.02em' }}>Turno 2</h3>
                 </div>
                 {!settingsMode && (
                   <div className="space-y-1.5">

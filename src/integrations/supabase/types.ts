@@ -413,6 +413,8 @@ export type Database = {
           notes: string | null
           photo_url: string | null
           points_awarded: number
+          quantity_done: number
+          status: string
           unit_id: string | null
         }
         Insert: {
@@ -431,6 +433,8 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           points_awarded?: number
+          quantity_done?: number
+          status?: string
           unit_id?: string | null
         }
         Update: {
@@ -449,6 +453,8 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           points_awarded?: number
+          quantity_done?: number
+          status?: string
           unit_id?: string | null
         }
         Relationships: [
@@ -519,10 +525,12 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          piece_dimensions: string | null
           points: number
           requires_photo: boolean
           sort_order: number
           subcategory_id: string
+          target_quantity: number
           unit_id: string | null
           updated_at: string
         }
@@ -535,10 +543,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          piece_dimensions?: string | null
           points?: number
           requires_photo?: boolean
           sort_order?: number
           subcategory_id: string
+          target_quantity?: number
           unit_id?: string | null
           updated_at?: string
         }
@@ -551,10 +561,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          piece_dimensions?: string | null
           points?: number
           requires_photo?: boolean
           sort_order?: number
           subcategory_id?: string
+          target_quantity?: number
           unit_id?: string | null
           updated_at?: string
         }
