@@ -2,6 +2,7 @@ import { AppIcon } from '@/components/ui/app-icon';
 import { Badge } from '@/components/ui/badge';
 import { RewardProduct } from '@/hooks/useRewards';
 import { cn } from '@/lib/utils';
+import { getRewardFallbackImage } from '@/lib/rewardImages';
 
 interface ProductCardProps {
   product: RewardProduct;
@@ -14,6 +15,7 @@ export function ProductCard({ product, userBalance, onRedeem, isRedeeming }: Pro
   const canAfford = userBalance >= product.points_cost;
   const isOutOfStock = product.stock !== null && product.stock <= 0;
   const isDisabled = !canAfford || isOutOfStock || isRedeeming;
+  const imageSrc = product.image_url || getRewardFallbackImage(product.name);
 
   return (
     <button
@@ -28,9 +30,9 @@ export function ProductCard({ product, userBalance, onRedeem, isRedeeming }: Pro
     >
       {/* Image */}
       <div className="w-20 h-20 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-        {product.image_url ? (
+        {imageSrc ? (
           <img 
-            src={product.image_url} 
+            src={imageSrc} 
             alt={product.name}
             className="w-full h-full object-cover"
           />
