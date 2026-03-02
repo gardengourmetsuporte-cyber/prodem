@@ -22,12 +22,18 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
   const [projectNumber, setProjectNumber] = useState('');
   const [description, setDescription] = useState('');
   const [client, setClient] = useState('');
+  const [materialField, setMaterialField] = useState('');
+  const [thicknessField, setThicknessField] = useState('');
+  const [plateSizeField, setPlateSizeField] = useState('');
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
     setProjectNumber('');
     setDescription('');
     setClient('');
+    setMaterialField('');
+    setThicknessField('');
+    setPlateSizeField('');
     setEditingProject(null);
   };
 
@@ -38,7 +44,7 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
     }
     setSaving(true);
     try {
-      await onCreateProject({ project_number: projectNumber.trim(), description: description.trim(), client: client.trim() || undefined });
+      await onCreateProject({ project_number: projectNumber.trim(), description: description.trim(), client: client.trim() || undefined, material: materialField.trim() || undefined, thickness: thicknessField.trim() || undefined, plate_size: plateSizeField.trim() || undefined } as any);
       toast.success('Projeto criado!');
       resetForm();
       setMode('list');
@@ -57,7 +63,10 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
         project_number: projectNumber.trim(),
         description: description.trim(),
         client: client.trim() || undefined,
-      });
+        material: materialField.trim() || undefined,
+        thickness: thicknessField.trim() || undefined,
+        plate_size: plateSizeField.trim() || undefined,
+      } as any);
       toast.success('Projeto atualizado!');
       resetForm();
       setMode('list');
@@ -93,6 +102,9 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
     setProjectNumber(project.project_number);
     setDescription(project.description);
     setClient(project.client || '');
+    setMaterialField((project as any).material || '');
+    setThicknessField((project as any).thickness || '');
+    setPlateSizeField((project as any).plate_size || '');
     setMode('edit');
   };
 
@@ -214,6 +226,25 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
                   value={client}
                   onChange={e => setClient(e.target.value)}
                 />
+              </div>
+              <div className="pt-2">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Dados Técnicos (opcional)</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Material</label>
+                    <Input placeholder="Ex: Aço laminado a frio" value={materialField} onChange={e => setMaterialField(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Espessura</label>
+                      <Input placeholder="Ex: 4,75 mm" value={thicknessField} onChange={e => setThicknessField(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Tamanho da Chapa</label>
+                      <Input placeholder="Ex: 1200x3000 mm" value={plateSizeField} onChange={e => setPlateSizeField(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
               </div>
               <Button
                 className="w-full"

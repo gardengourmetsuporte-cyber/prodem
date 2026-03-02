@@ -1,5 +1,6 @@
 import { AppIcon } from '@/components/ui/app-icon';
 import { ProductionProject } from '@/hooks/useProductionProjects';
+import { GroupingWithItems } from '@/hooks/useProductionGroupings';
 import { cn } from '@/lib/utils';
 
 interface ProductionProjectHeroProps {
@@ -7,9 +8,11 @@ interface ProductionProjectHeroProps {
   progress: { ordered: number; done: number; pending: number; percent: number };
   isAdmin: boolean;
   onManageProjects: () => void;
+  groupings?: GroupingWithItems[];
+  onManageGroupings?: () => void;
 }
 
-export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects }: ProductionProjectHeroProps) {
+export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects, groupings = [], onManageGroupings }: ProductionProjectHeroProps) {
   if (!project) {
     if (!isAdmin) return null;
     return (
@@ -73,12 +76,60 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
           )}
         </div>
 
-        {/* Client */}
-        {project.client && (
-          <div className="flex items-center gap-2">
-            <AppIcon name="Building2" size={12} className="text-warning/60" />
-            <span className="text-xs font-bold text-warning/80 uppercase tracking-wider">{project.client}</span>
+        {/* Client & Technical Specs */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {project.client && (
+            <div className="flex items-center gap-1.5">
+              <AppIcon name="Building2" size={12} className="text-warning/60" />
+              <span className="text-xs font-bold text-warning/80 uppercase tracking-wider">{project.client}</span>
+            </div>
+          )}
+          {(project as any).material && (
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-background/40 ring-1 ring-border/20 text-foreground/70">
+              {(project as any).material}
+            </span>
+          )}
+          {(project as any).thickness && (
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-background/40 ring-1 ring-border/20 text-foreground/70">
+              ⌀ {(project as any).thickness}
+            </span>
+          )}
+          {(project as any).plate_size && (
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-background/40 ring-1 ring-border/20 text-foreground/70">
+              📐 {(project as any).plate_size}
+            </span>
+          )}
+        </div>
+
+        {/* Groupings summary */}
+        {groupings.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {groupings.map(g => (
+              <button
+                key={g.id}
+                onClick={onManageGroupings}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-warning/10 ring-1 ring-warning/20 hover:ring-warning/40 transition-colors"
+              >
+                <span className="text-[9px] font-black text-warning">AG{g.grouping_number}</span>
+                <span className="text-[8px] text-muted-foreground">{g.total_pieces}pç</span>
+                {g.thickness && <span className="text-[8px] font-mono text-foreground/50">{g.thickness}</span>}
+              </button>
+            ))}
+            {isAdmin && (
+              <button onClick={onManageGroupings} className="p-1 rounded-lg hover:bg-warning/10 transition-colors">
+                <AppIcon name="Plus" size={12} className="text-warning/60" />
+              </button>
+            )}
           </div>
+        )}
+        {groupings.length === 0 && isAdmin && onManageGroupings && (
+          <button
+            onClick={onManageGroupings}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warning/5 ring-1 ring-warning/15 hover:ring-warning/30 transition-colors text-left"
+          >
+            <AppIcon name="Layers" size={14} className="text-warning/50" />
+            <span className="text-[10px] text-muted-foreground">Cadastrar agrupamentos CNC</span>
+          </button>
         )}
 
         {/* Progress */}

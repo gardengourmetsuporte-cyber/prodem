@@ -15,6 +15,7 @@ interface ProductionCutTableProps {
   onTapItem: (itemId: string) => void;
   isAdmin: boolean;
   isClosed: boolean;
+  itemGroupingMap?: Map<string, { groupingNumber: number; quantity: number; material?: string; thickness?: string }>;
 }
 
 interface GroupedRow {
@@ -26,7 +27,7 @@ interface GroupedRow {
 export function ProductionCutTable({
   report, orderItems, sectors, completions,
   onStartItem, onFinishItem, onTapItem,
-  isAdmin, isClosed,
+  isAdmin, isClosed, itemGroupingMap,
 }: ProductionCutTableProps) {
   const [collapsedSectors, setCollapsedSectors] = useState<Set<string>>(new Set());
 
@@ -210,6 +211,14 @@ export function ProductionCutTable({
                           <span className="text-[8px] font-mono text-muted-foreground/60">
                             {item.materialCode}
                             {item.dimensions && ` · ${item.dimensions}`}
+                          </span>
+                        )}
+                        {itemGroupingMap?.has(item.checklist_item_id) && (
+                          <span className="inline-flex items-center gap-0.5 text-[7px] font-black text-warning bg-warning/10 px-1.5 py-0.5 rounded mt-0.5">
+                            AG{itemGroupingMap.get(item.checklist_item_id)!.groupingNumber}
+                            <span className="text-muted-foreground font-normal ml-0.5">
+                              ×{itemGroupingMap.get(item.checklist_item_id)!.quantity}
+                            </span>
                           </span>
                         )}
                       </button>

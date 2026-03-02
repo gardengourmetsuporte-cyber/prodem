@@ -2640,6 +2640,123 @@ export type Database = {
           },
         ]
       }
+      production_grouping_items: {
+        Row: {
+          checklist_item_id: string
+          created_at: string
+          grouping_id: string
+          id: string
+          quantity: number
+          sort_order: number
+        }
+        Insert: {
+          checklist_item_id: string
+          created_at?: string
+          grouping_id: string
+          id?: string
+          quantity?: number
+          sort_order?: number
+        }
+        Update: {
+          checklist_item_id?: string
+          created_at?: string
+          grouping_id?: string
+          id?: string
+          quantity?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_grouping_items_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_grouping_items_grouping_id_fkey"
+            columns: ["grouping_id"]
+            isOneToOne: false
+            referencedRelation: "production_groupings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_groupings: {
+        Row: {
+          created_at: string
+          cut_time: string | null
+          grouping_number: number
+          id: string
+          material: string | null
+          movement_time: string | null
+          notes: string | null
+          perforation_time: string | null
+          plate_size: string | null
+          processing_time: string | null
+          project_id: string
+          thickness: string | null
+          total_cut_length: string | null
+          total_pieces: number
+          unique_pieces: number
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cut_time?: string | null
+          grouping_number?: number
+          id?: string
+          material?: string | null
+          movement_time?: string | null
+          notes?: string | null
+          perforation_time?: string | null
+          plate_size?: string | null
+          processing_time?: string | null
+          project_id: string
+          thickness?: string | null
+          total_cut_length?: string | null
+          total_pieces?: number
+          unique_pieces?: number
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cut_time?: string | null
+          grouping_number?: number
+          id?: string
+          material?: string | null
+          movement_time?: string | null
+          notes?: string | null
+          perforation_time?: string | null
+          plate_size?: string | null
+          processing_time?: string | null
+          project_id?: string
+          thickness?: string | null
+          total_cut_length?: string | null
+          total_pieces?: number
+          unique_pieces?: number
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_groupings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_groupings_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       production_order_items: {
         Row: {
           checklist_item_id: string
@@ -2749,8 +2866,11 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          material: string | null
+          plate_size: string | null
           project_number: string
           status: string
+          thickness: string | null
           unit_id: string
           updated_at: string
         }
@@ -2759,8 +2879,11 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          material?: string | null
+          plate_size?: string | null
           project_number: string
           status?: string
+          thickness?: string | null
           unit_id: string
           updated_at?: string
         }
@@ -2769,8 +2892,11 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          material?: string | null
+          plate_size?: string | null
           project_number?: string
           status?: string
+          thickness?: string | null
           unit_id?: string
           updated_at?: string
         }
