@@ -149,21 +149,44 @@ export default function ChecklistsPage() {
     return map;
   }, [productionItems]);
 
-  // Wrap getCrossShiftItemProgress to use production plan quantity when available
+  // Progress for plan items must be shift-aware (avoid carrying completed state from another shift)
   const getCrossShiftItemProgressWithPlan = useCallback((itemId: string) => {
     const base = getCrossShiftItemProgress(itemId);
     const planQty = productionQtyMap.get(itemId);
+
     if (planQty != null && planQty > 0) {
-      const remaining = Math.max(0, planQty - base.totalDone);
+      const shiftDone = completions
+        .filter(c => c.item_id === itemId && !c.is_skipped && (((c as any).status ?? 'completed') !== 'in_progress'))
+        .reduce((sum, c) => sum + ((c as any).quantity_done ?? 0), 0);
+
+      const hasCompletedWithoutQty = completions.some(c => {
+        if (c.item_id !== itemId || c.is_skipped) return false;
+        const status = ((c as any).status ?? 'completed');
+        return (status === 'completed' || status === 'done') && ((c as any).quantity_done ?? 0) === 0;
+      });
+
+      const effectiveDone = hasCompletedWithoutQty ? Math.max(shiftDone, planQty) : shiftDone;
+      const remaining = Math.max(0, planQty - effectiveDone);
+
       return {
         ...base,
         targetQty: planQty,
+        totalDone: effectiveDone,
         remaining,
-        isFullyComplete: base.totalDone >= planQty,
+        isFullyComplete: effectiveDone >= planQty,
       };
     }
+
     return base;
-  }, [getCrossShiftItemProgress, productionQtyMap]);
+  }, [getCrossShiftItemProgress, productionQtyMap, completions]);
+
+  const isItemCompletedWithPlan = useCallback((itemId: string) => {
+    const planQty = productionQtyMap.get(itemId);
+    if (planQty != null && planQty > 0) {
+      return getCrossShiftItemProgressWithPlan(itemId).isFullyComplete;
+    }
+    return isItemCompleted(itemId);
+  }, [productionQtyMap, getCrossShiftItemProgressWithPlan, isItemCompleted]);
 
   // The settings type follows the checklist type
   const settingsType = checklistType;
@@ -777,7 +800,7 @@ export default function ChecklistsPage() {
                       date={currentDate}
                       completions={completions}
                       allShiftCompletions={allShiftCompletions}
-                      isItemCompleted={isItemCompleted}
+                      isItemCompleted={isItemCompletedWithPlan}
                       getItemStatus={getItemStatus}
                       onToggleItem={handleToggleItem}
                       onStartProduction={handleStartProduction}
@@ -795,7 +818,7 @@ export default function ChecklistsPage() {
                             sub.items?.forEach(item => {
                               if (item.is_active && productionQtyMap.has(item.id)) {
                                 total++;
-                                if (isItemCompleted(item.id)) completed++;
+                                if (isItemCompletedWithPlan(item.id)) completed++;
                               }
                             });
                           });
