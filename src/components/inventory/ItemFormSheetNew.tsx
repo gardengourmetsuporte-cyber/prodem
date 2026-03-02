@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ListPicker } from '@/components/ui/list-picker';
-import { InventoryItem, Category, Supplier } from '@/types/database';
+import { InventoryItem, Category, Supplier, UnitType } from '@/types/database';
 import { AppIcon } from '@/components/ui/app-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -20,16 +20,34 @@ interface ItemFormSheetProps {
     name: string;
     category_id: string | null;
     supplier_id: string | null;
-    unit_type: 'unidade' | 'kg' | 'litro';
+    unit_type: UnitType;
     current_stock: number;
     min_stock: number;
     unit_price: number | null;
     recipe_unit_type: string | null;
     recipe_unit_price: number | null;
+    material_type: string | null;
+    dimensions: string | null;
+    thickness: string | null;
+    technical_spec: string | null;
+    internal_code: string | null;
+    location: string | null;
+    weight_per_unit: number | null;
   }) => void;
   onDelete?: (id: string) => void;
   isAdmin?: boolean;
 }
+
+const MATERIAL_OPTIONS = [
+  'Aço carbono',
+  'Aço galvanizado',
+  'Inox 304',
+  'Inox 316',
+  'Alumínio',
+  'Latão',
+  'Cobre',
+  'Polímero',
+];
 
 export function ItemFormSheetNew({ 
   item, 
@@ -44,15 +62,23 @@ export function ItemFormSheetNew({
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [supplierId, setSupplierId] = useState<string>('');
-  const [unitType, setUnitType] = useState<'unidade' | 'kg' | 'litro'>('unidade');
+  const [unitType, setUnitType] = useState<UnitType>('unidade');
   const [currentStock, setCurrentStock] = useState('');
   const [minStock, setMinStock] = useState('');
   const [unitPrice, setUnitPrice] = useState('');
-  const [recipeUnitType, setRecipeUnitType] = useState<string>('');
-  const [recipeUnitPrice, setRecipeUnitPrice] = useState('');
-  const [showRecipeSection, setShowRecipeSection] = useState(false);
+  const [showTechSection, setShowTechSection] = useState(false);
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [supplierPickerOpen, setSupplierPickerOpen] = useState(false);
+
+  // Industrial fields
+  const [internalCode, setInternalCode] = useState('');
+  const [materialType, setMaterialType] = useState('');
+  const [customMaterial, setCustomMaterial] = useState('');
+  const [thickness, setThickness] = useState('');
+  const [dimensions, setDimensions] = useState('');
+  const [technicalSpec, setTechnicalSpec] = useState('');
+  const [weightPerUnit, setWeightPerUnit] = useState('');
+  const [location, setLocation] = useState('');
 
   useEffect(() => {
     if (item) {
@@ -63,9 +89,21 @@ export function ItemFormSheetNew({
       setCurrentStock(item.current_stock.toString());
       setMinStock(item.min_stock.toString());
       setUnitPrice(item.unit_price?.toString() || '');
-      setRecipeUnitType(item.recipe_unit_type || '');
-      setRecipeUnitPrice(item.recipe_unit_price?.toString() || '');
-      setShowRecipeSection(!!item.recipe_unit_type || !!item.recipe_unit_price);
+      setInternalCode(item.internal_code || '');
+      const mat = item.material_type || '';
+      if (mat && !MATERIAL_OPTIONS.includes(mat)) {
+        setMaterialType('__custom__');
+        setCustomMaterial(mat);
+      } else {
+        setMaterialType(mat);
+        setCustomMaterial('');
+      }
+      setThickness(item.thickness || '');
+      setDimensions(item.dimensions || '');
+      setTechnicalSpec(item.technical_spec || '');
+      setWeightPerUnit(item.weight_per_unit?.toString() || '');
+      setLocation(item.location || '');
+      setShowTechSection(!!(item.internal_code || item.material_type || item.thickness || item.dimensions || item.technical_spec || item.weight_per_unit || item.location));
     } else {
       setName('');
       setCategoryId('');
@@ -74,11 +112,19 @@ export function ItemFormSheetNew({
       setCurrentStock('');
       setMinStock('');
       setUnitPrice('');
-      setRecipeUnitType('');
-      setRecipeUnitPrice('');
-      setShowRecipeSection(false);
+      setInternalCode('');
+      setMaterialType('');
+      setCustomMaterial('');
+      setThickness('');
+      setDimensions('');
+      setTechnicalSpec('');
+      setWeightPerUnit('');
+      setLocation('');
+      setShowTechSection(false);
     }
   }, [item, open]);
+
+  const resolvedMaterial = materialType === '__custom__' ? customMaterial : materialType;
 
   const handleSave = () => {
     if (!name.trim()) return;
@@ -91,8 +137,15 @@ export function ItemFormSheetNew({
       current_stock: parseFloat(currentStock) || 0,
       min_stock: parseFloat(minStock) || 0,
       unit_price: unitPrice ? parseFloat(unitPrice) : null,
-      recipe_unit_type: recipeUnitType && recipeUnitType !== '__same__' ? recipeUnitType : null,
-      recipe_unit_price: recipeUnitPrice ? parseFloat(recipeUnitPrice) : null,
+      recipe_unit_type: null,
+      recipe_unit_price: null,
+      internal_code: internalCode.trim() || null,
+      material_type: resolvedMaterial.trim() || null,
+      thickness: thickness.trim() || null,
+      dimensions: dimensions.trim() || null,
+      technical_spec: technicalSpec.trim() || null,
+      weight_per_unit: weightPerUnit ? parseFloat(weightPerUnit) : null,
+      location: location.trim() || null,
     });
     
     onOpenChange(false);
@@ -105,21 +158,14 @@ export function ItemFormSheetNew({
     }
   };
 
-  // Get recipe unit options based on stock unit type
-  const getRecipeUnitOptions = () => {
-    if (unitType === 'kg') return [
-      { value: 'kg', label: 'Quilos (kg)' },
-      { value: 'g', label: 'Gramas (g)' },
-    ];
-    if (unitType === 'litro') return [
-      { value: 'litro', label: 'Litros (L)' },
-      { value: 'ml', label: 'Mililitros (ml)' },
-    ];
-    return [
-      { value: 'unidade', label: 'Unidade' },
-      { value: 'kg', label: 'Quilos (kg)' },
-      { value: 'g', label: 'Gramas (g)' },
-    ];
+  const getUnitLabel = () => {
+    switch (unitType) {
+      case 'kg': return 'kg';
+      case 'litro': return 'litro';
+      case 'metro': return 'metro';
+      case 'metro_quadrado': return 'm²';
+      default: return 'unidade';
+    }
   };
 
   const isValid = name.trim();
@@ -186,15 +232,34 @@ export function ItemFormSheetNew({
           <div className="space-y-2">
             <Label className="text-base font-medium">Tipo de Controle *</Label>
             <div className="grid grid-cols-3 gap-2">
-              {[
+              {([
                 { value: 'unidade', label: 'Unidades' },
                 { value: 'kg', label: 'Quilos (kg)' },
                 { value: 'litro', label: 'Litros (L)' },
-              ].map((option) => (
+              ] as { value: UnitType; label: string }[]).map((option) => (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setUnitType(option.value as 'unidade' | 'kg' | 'litro')}
+                  onClick={() => setUnitType(option.value)}
+                  className={`h-14 rounded-xl font-medium transition-all ${
+                    unitType === option.value
+                      ? 'gradient-primary text-white'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {([
+                { value: 'metro', label: 'Metros (m)' },
+                { value: 'metro_quadrado', label: 'Metros² (m²)' },
+              ] as { value: UnitType; label: string }[]).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setUnitType(option.value)}
                   className={`h-14 rounded-xl font-medium transition-all ${
                     unitType === option.value
                       ? 'gradient-primary text-white'
@@ -210,9 +275,7 @@ export function ItemFormSheetNew({
           {/* Stock fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="currentStock" className="text-base font-medium">
-                Estoque Atual
-              </Label>
+              <Label htmlFor="currentStock" className="text-base font-medium">Estoque Atual</Label>
               <Input
                 id="currentStock"
                 type="number"
@@ -225,9 +288,7 @@ export function ItemFormSheetNew({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minStock" className="text-base font-medium">
-                Estoque Mínimo
-              </Label>
+              <Label htmlFor="minStock" className="text-base font-medium">Estoque Mínimo</Label>
               <Input
                 id="minStock"
                 type="number"
@@ -244,7 +305,7 @@ export function ItemFormSheetNew({
           {/* Unit Price */}
           <div className="space-y-2">
             <Label htmlFor="unitPrice" className="text-base font-medium">
-              Preço por {unitType === 'kg' ? 'kg' : unitType === 'litro' ? 'litro' : 'unidade'}
+              Preço por {getUnitLabel()}
             </Label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
@@ -261,61 +322,122 @@ export function ItemFormSheetNew({
             </div>
           </div>
 
-          {/* Recipe-specific pricing section */}
-          <Collapsible open={showRecipeSection} onOpenChange={setShowRecipeSection}>
+          {/* Industrial Technical Sheet */}
+          <Collapsible open={showTechSection} onOpenChange={setShowTechSection}>
             <CollapsibleTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full h-12 justify-between text-base font-medium"
               >
-                <span>⚙️ Configurar para Fichas Técnicas</span>
-                {showRecipeSection ? <AppIcon name="ExpandLess" size={20} /> : <AppIcon name="ExpandMore" size={20} />}
+                <span>🔩 Ficha Técnica</span>
+                {showTechSection ? <AppIcon name="ExpandLess" size={20} /> : <AppIcon name="ExpandMore" size={20} />}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-4 space-y-4">
               <p className="text-sm text-muted-foreground">
-                Configure uma unidade e preço diferente para usar nas fichas técnicas. 
-                Ex: Estoque conta "pacotes", mas ficha usa "kg".
+                Informações técnicas do material: código, tipo, dimensões, norma e localização no galpão.
               </p>
-              
+
+              {/* Internal Code */}
               <div className="space-y-2">
-                <Label className="text-base font-medium">Unidade para Fichas</Label>
-                <Select value={recipeUnitType} onValueChange={setRecipeUnitType}>
-                  <SelectTrigger className="h-14 text-lg rounded-xl">
-                    <SelectValue placeholder="Mesma do estoque" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__same__" className="text-base py-3">Mesma do estoque</SelectItem>
-                    {getRecipeUnitOptions().map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-base py-3">
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="internalCode" className="text-base font-medium">Código Interno</Label>
+                <Input
+                  id="internalCode"
+                  value={internalCode}
+                  onChange={(e) => setInternalCode(e.target.value)}
+                  placeholder="Ex: CHP-001, TUB-045"
+                  className="input-large font-mono"
+                />
               </div>
 
-              {recipeUnitType && recipeUnitType !== '__same__' && (
-                <div className="space-y-2">
-                  <Label htmlFor="recipeUnitPrice" className="text-base font-medium">
-                    Preço por {recipeUnitType === 'kg' ? 'kg' : recipeUnitType === 'g' ? 'g' : recipeUnitType === 'litro' ? 'L' : recipeUnitType === 'ml' ? 'ml' : 'un'}
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-                    <Input
-                      id="recipeUnitPrice"
-                      type="number"
-                      value={recipeUnitPrice}
-                      onChange={(e) => setRecipeUnitPrice(e.target.value)}
-                      placeholder="0,00"
-                      className="input-large pl-12"
-                      step={0.01}
-                      min={0}
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Material Type */}
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Material</Label>
+                <Select value={materialType} onValueChange={(v) => { setMaterialType(v); if (v !== '__custom__') setCustomMaterial(''); }}>
+                  <SelectTrigger className="h-14 text-lg rounded-xl">
+                    <SelectValue placeholder="Selecione o material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__" className="text-base py-3">Não informado</SelectItem>
+                    {MATERIAL_OPTIONS.map((mat) => (
+                      <SelectItem key={mat} value={mat} className="text-base py-3">{mat}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom__" className="text-base py-3">Outro (digitar)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {materialType === '__custom__' && (
+                  <Input
+                    value={customMaterial}
+                    onChange={(e) => setCustomMaterial(e.target.value)}
+                    placeholder="Digite o tipo do material"
+                    className="input-large mt-2"
+                  />
+                )}
+              </div>
+
+              {/* Thickness */}
+              <div className="space-y-2">
+                <Label htmlFor="thickness" className="text-base font-medium">Espessura</Label>
+                <Input
+                  id="thickness"
+                  value={thickness}
+                  onChange={(e) => setThickness(e.target.value)}
+                  placeholder='Ex: 3mm, 1/4", #12'
+                  className="input-large"
+                />
+              </div>
+
+              {/* Dimensions */}
+              <div className="space-y-2">
+                <Label htmlFor="dimensions" className="text-base font-medium">Dimensões</Label>
+                <Input
+                  id="dimensions"
+                  value={dimensions}
+                  onChange={(e) => setDimensions(e.target.value)}
+                  placeholder='Ex: 1200x3000mm, Ø 2"'
+                  className="input-large"
+                />
+              </div>
+
+              {/* Technical Spec */}
+              <div className="space-y-2">
+                <Label htmlFor="technicalSpec" className="text-base font-medium">Especificação Técnica</Label>
+                <Input
+                  id="technicalSpec"
+                  value={technicalSpec}
+                  onChange={(e) => setTechnicalSpec(e.target.value)}
+                  placeholder="Ex: ASTM A36, NBR 8800"
+                  className="input-large"
+                />
+              </div>
+
+              {/* Weight per unit */}
+              <div className="space-y-2">
+                <Label htmlFor="weightPerUnit" className="text-base font-medium">Peso por unidade (kg)</Label>
+                <Input
+                  id="weightPerUnit"
+                  type="number"
+                  value={weightPerUnit}
+                  onChange={(e) => setWeightPerUnit(e.target.value)}
+                  placeholder="Ex: 85.2"
+                  className="input-large"
+                  step={0.1}
+                  min={0}
+                />
+              </div>
+
+              {/* Location */}
+              <div className="space-y-2">
+                <Label htmlFor="location" className="text-base font-medium">Localização</Label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ex: Prateleira A3, Galpão 2"
+                  className="input-large"
+                />
+              </div>
             </CollapsibleContent>
           </Collapsible>
 

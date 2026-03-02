@@ -117,13 +117,10 @@ export default function InventoryPage() {
 
   useFabAction(isAdmin ? { icon: 'Plus', label: 'Novo Item', onClick: () => { setEditingItem(null); setItemFormOpen(true); } } : null, [isAdmin]);
 
-  const handleSaveItem = async (data: {
-    name: string; category_id: string | null; supplier_id: string | null;
-    unit_type: 'unidade' | 'kg' | 'litro'; current_stock: number; min_stock: number;
-  }) => {
+  const handleSaveItem = async (data: Record<string, any>) => {
     try {
       if (editingItem) await updateItem(editingItem.id, data);
-      else await addItem(data);
+      else await addItem(data as any);
     } catch { toast.error('Erro ao salvar item'); }
   };
 
