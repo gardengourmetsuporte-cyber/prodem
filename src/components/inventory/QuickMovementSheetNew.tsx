@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { InventoryItem } from '@/types/database';
 import { AppIcon } from '@/components/ui/app-icon';
 
-type MovementMode = 'entrada' | 'saida' | 'transferencia';
+type MovementMode = 'entrada' | 'saida';
 
 interface QuickMovementSheetProps {
   item: InventoryItem | null;
@@ -20,19 +20,10 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
   const [type, setType] = useState<MovementMode>('entrada');
   const [quantity, setQuantity] = useState<number>(0);
   const [notes, setNotes] = useState('');
-  const [entradaLocation, setEntradaLocation] = useState<'almoxarifado' | 'producao'>('almoxarifado');
-  const [saidaLocation, setSaidaLocation] = useState<'almoxarifado' | 'producao'>('almoxarifado');
-  const [transferDirection, setTransferDirection] = useState<'almoxarifado_to_producao' | 'producao_to_almoxarifado'>('almoxarifado_to_producao');
 
   const handleConfirm = () => {
     if (!item || quantity <= 0) return;
-    
-    let location = 'almoxarifado';
-    if (type === 'entrada') location = entradaLocation;
-    else if (type === 'saida') location = saidaLocation;
-    else if (type === 'transferencia') location = transferDirection;
-
-    onConfirm(item.id, type, quantity, notes || undefined, location);
+    onConfirm(item.id, type, quantity, notes || undefined, 'almoxarifado');
     setQuantity(0);
     setNotes('');
     onOpenChange(false);
@@ -45,10 +36,7 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
   if (!item) return null;
 
   const unitLabel = item.unit_type === 'unidade' ? 'un' : item.unit_type === 'kg' ? 'kg' : 'L';
-  const warehouseStock = (item as any).warehouse_stock ?? item.current_stock;
-  const productionStock = (item as any).production_stock ?? 0;
-
-  const maxTransfer = transferDirection === 'almoxarifado_to_producao' ? warehouseStock : productionStock;
+  const currentStock = item.current_stock;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -57,19 +45,15 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
           <SheetTitle className="text-xl text-center">{item.name}</SheetTitle>
           <div className="flex justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <AppIcon name="Warehouse" size={14} className="text-primary" />
-              Almox: <span className="font-semibold text-foreground">{warehouseStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <AppIcon name="Factory" size={14} className="text-warning" />
-              Prod: <span className="font-semibold text-foreground">{productionStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}</span>
+              <AppIcon name="Package" size={14} className="text-primary" />
+              Estoque: <span className="font-semibold text-foreground">{currentStock.toFixed(item.unit_type === 'unidade' ? 0 : 2)}</span>
             </span>
           </div>
         </SheetHeader>
 
         <div className="space-y-5">
           {/* Type Selection */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setType('entrada')}
               className={`flex flex-col items-center justify-center gap-1 p-3 rounded-xl font-semibold transition-all text-sm ${
@@ -92,110 +76,7 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
               <AppIcon name="ArrowUpCircle" size={20} />
               Saída
             </button>
-            <button
-              onClick={() => setType('transferencia')}
-              className={`flex flex-col items-center justify-center gap-1 p-3 rounded-xl font-semibold transition-all text-sm ${
-                type === 'transferencia'
-                  ? 'bg-primary text-primary-foreground shadow-lg'
-                  : 'bg-secondary text-secondary-foreground'
-              }`}
-            >
-              <AppIcon name="ArrowRightLeft" size={20} />
-              Transfer
-            </button>
           </div>
-
-          {/* Location selector for entrada/saida */}
-          {type === 'entrada' && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEntradaLocation('almoxarifado')}
-                className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
-                  entradaLocation === 'almoxarifado'
-                    ? 'bg-primary/20 border border-primary/40 text-primary'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <AppIcon name="Warehouse" size={16} />
-                Almoxarifado
-              </button>
-              <button
-                onClick={() => setEntradaLocation('producao')}
-                className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
-                  entradaLocation === 'producao'
-                    ? 'bg-warning/20 border border-warning/40 text-warning'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <AppIcon name="Factory" size={16} />
-                Produção
-              </button>
-            </div>
-          )}
-
-          {type === 'saida' && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSaidaLocation('almoxarifado')}
-                className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
-                  saidaLocation === 'almoxarifado'
-                    ? 'bg-primary/20 border border-primary/40 text-primary'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <AppIcon name="Warehouse" size={16} />
-                Almoxarifado
-              </button>
-              <button
-                onClick={() => setSaidaLocation('producao')}
-                className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium transition-all ${
-                  saidaLocation === 'producao'
-                    ? 'bg-warning/20 border border-warning/40 text-warning'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <AppIcon name="Factory" size={16} />
-                Produção
-              </button>
-            </div>
-          )}
-
-          {/* Transfer direction */}
-          {type === 'transferencia' && (
-            <div className="space-y-2">
-              <button
-                onClick={() => setTransferDirection('almoxarifado_to_producao')}
-                className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
-                  transferDirection === 'almoxarifado_to_producao'
-                    ? 'bg-primary/20 border border-primary/40 text-primary'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <AppIcon name="Warehouse" size={16} />
-                Almoxarifado
-                <AppIcon name="ArrowRight" size={16} />
-                <AppIcon name="Factory" size={16} />
-                Produção
-              </button>
-              <button
-                onClick={() => setTransferDirection('producao_to_almoxarifado')}
-                className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
-                  transferDirection === 'producao_to_almoxarifado'
-                    ? 'bg-primary/20 border border-primary/40 text-primary'
-                    : 'bg-secondary text-muted-foreground'
-                }`}
-              >
-                <AppIcon name="Factory" size={16} />
-                Produção
-                <AppIcon name="ArrowRight" size={16} />
-                <AppIcon name="Warehouse" size={16} />
-                Almoxarifado
-              </button>
-              <p className="text-xs text-muted-foreground text-center">
-                Disponível: {maxTransfer.toFixed(item.unit_type === 'unidade' ? 0 : 2)} {unitLabel}
-              </p>
-            </div>
-          )}
 
           {/* Quick Values */}
           <div className="grid grid-cols-4 gap-2">
@@ -250,16 +131,14 @@ export function QuickMovementSheetNew({ item, open, onOpenChange, onConfirm }: Q
           {/* Confirm Button */}
           <Button
             onClick={handleConfirm}
-            disabled={quantity <= 0 || (type === 'transferencia' && quantity > maxTransfer)}
+            disabled={quantity <= 0}
             className={`w-full h-14 text-lg font-semibold rounded-xl ${
               type === 'entrada' 
                 ? 'bg-success hover:bg-success/90' 
-                : type === 'saida'
-                ? 'bg-destructive hover:bg-destructive/90'
-                : 'bg-primary hover:bg-primary/90'
+                : 'bg-destructive hover:bg-destructive/90'
             }`}
           >
-            {type === 'entrada' ? 'Confirmar Entrada' : type === 'saida' ? 'Confirmar Saída' : 'Confirmar Transferência'}
+            {type === 'entrada' ? 'Confirmar Entrada' : 'Confirmar Saída'}
           </Button>
         </div>
       </SheetContent>
