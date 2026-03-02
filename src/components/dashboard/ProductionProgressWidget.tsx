@@ -90,7 +90,7 @@ export function ProductionProgressWidget({ variant, userId }: ProductionProgress
             <div key={item.checklist_item_id} className={cn("card-surface px-3.5 py-2.5 flex items-center gap-3", item.status === 'in_progress' && "ring-1 ring-blue-500/30 bg-blue-500/5")}>
               <StatusIcon status={item.status} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{item.item_name}</p>
+                <p className={cn("text-sm font-medium truncate", item.status === 'in_progress' ? 'text-blue-500' : item.status === 'complete' ? 'text-emerald-500' : 'text-foreground')}>{item.item_name}</p>
                 {item.piece_dimensions && (
                   <p className="text-[10px] text-muted-foreground">{item.piece_dimensions}</p>
                 )}
