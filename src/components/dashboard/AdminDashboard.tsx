@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCashClosing } from '@/hooks/useCashClosing';
 import { WeeklySummary } from '@/components/cashClosing/WeeklySummary';
@@ -26,6 +26,22 @@ export function AdminDashboard() {
   const { hasAccess, isLoading: modulesLoading } = useUserModules();
   const { stats, isLoading: statsLoading } = useDashboardStats();
   const { closings } = useCashClosing();
+  const qc = useQueryClient();
+
+  // Realtime: invalidate dashboard production data on any log change
+  useEffect(() => {
+    if (!activeUnitId) return;
+    const channel = supabase
+      .channel('dashboard-prod-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_logs' }, () => {
+        qc.invalidateQueries({ queryKey: ['dashboard-production-realtime', activeUnitId] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_projects' }, () => {
+        qc.invalidateQueries({ queryKey: ['dashboard-production-realtime', activeUnitId] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeUnitId, qc]);
   const { data: productionRealtime, isLoading: prodLoading } = useQuery({
     queryKey: ['dashboard-production-realtime', activeUnitId],
     queryFn: async () => {
@@ -89,7 +105,8 @@ export function AdminDashboard() {
       return { osList, totals: { done: totalDone, ordered: totalOrdered, percent: totalPercent } };
     },
     enabled: !!activeUnitId,
-    refetchInterval: 10_000,
+    refetchInterval: 5_000,
+    staleTime: 2_000,
   });
 
   const osList = productionRealtime?.osList || [];
