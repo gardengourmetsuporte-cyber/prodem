@@ -23,6 +23,7 @@ export default function ProductionPage() {
     currentShift, setCurrentShift,
     shift1, shift2, activeShift, checklistType,
     projects, activeProjects, activeProject,
+    selectedProjectId, setSelectedProjectId,
     createProject, updateProject, deleteProject,
     projectProgress,
     sectors, completions, checklistsLoading,
@@ -159,6 +160,9 @@ export default function ProductionPage() {
             progress={projectProgress}
             isAdmin={isAdmin}
             onManageProjects={() => setProjectSheetOpen(true)}
+            activeProjects={activeProjects}
+            selectedProjectId={selectedProjectId}
+            onSelectProject={setSelectedProjectId}
             groupings={groupingsWithItems}
             onManageGroupings={() => {
               if (!activeProject) {

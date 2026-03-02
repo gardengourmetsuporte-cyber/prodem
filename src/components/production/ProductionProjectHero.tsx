@@ -8,11 +8,14 @@ interface ProductionProjectHeroProps {
   progress: { ordered: number; done: number; pending: number; percent: number };
   isAdmin: boolean;
   onManageProjects: () => void;
+  activeProjects?: ProductionProject[];
+  selectedProjectId?: string | null;
+  onSelectProject?: (id: string) => void;
   groupings?: GroupingWithItems[];
   onManageGroupings?: () => void;
 }
 
-export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects, groupings = [], onManageGroupings }: ProductionProjectHeroProps) {
+export function ProductionProjectHero({ project, progress, isAdmin, onManageProjects, activeProjects = [], selectedProjectId, onSelectProject, groupings = [], onManageGroupings }: ProductionProjectHeroProps) {
   if (!project) {
     if (!isAdmin) return null;
     return (
@@ -35,6 +38,29 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
   }
 
   return (
+    <div className="space-y-2">
+      {/* Project selector chips */}
+      {activeProjects.length > 1 && onSelectProject && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {activeProjects.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => onSelectProject(p.id)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all ring-1 min-h-[40px]",
+                (selectedProjectId === p.id || (!selectedProjectId && p.id === project?.id))
+                  ? "bg-warning/15 text-warning ring-warning/40 shadow-sm shadow-warning/10"
+                  : "bg-muted/30 text-muted-foreground ring-border/30 hover:ring-warning/20"
+              )}
+            >
+              <AppIcon name="Briefcase" size={14} />
+              <span>#{p.project_number}</span>
+              {p.client && <span className="text-[10px] font-semibold opacity-60 normal-case">· {p.client}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+
     <div className="production-os-hero relative overflow-hidden rounded-2xl p-5">
       {/* Industrial pattern overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
@@ -169,6 +195,7 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
