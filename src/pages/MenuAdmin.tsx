@@ -108,14 +108,14 @@ export default function MenuAdmin() {
             onClick={() => setActiveTab('menu')}
           >
             <AppIcon name="BookOpen" size={16} />
-            <span>Cardápio</span>
+            <span>Catálogo</span>
           </button>
           <button
             className={`tab-command-item ${activeTab === 'options' ? 'tab-command-item-active' : 'tab-command-inactive'}`}
             onClick={() => setActiveTab('options')}
           >
             <AppIcon name="Settings" size={16} />
-            <span>Opcionais</span>
+            <span>Variações</span>
           </button>
         </div>
       </div>

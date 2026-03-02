@@ -86,9 +86,7 @@ export function CardapioSettings({ initialTab = null }: CardapioSettingsProps) {
 
   const TABS: { id: SettingsTab; label: string; icon: string; description: string }[] = [
     { id: 'pdv', label: 'Integração ERP', icon: 'Zap', description: 'Conexão com ERP Prodem e envio automático' },
-    { id: 'mesas', label: 'Mesas & QR Codes', icon: 'QrCode', description: 'Cadastrar mesas e gerar QR codes' },
-    { id: 'roleta', label: 'Roleta / Gamificação', icon: 'Dices', description: 'Prêmios, probabilidades e métricas' },
-    { id: 'config', label: 'Geral', icon: 'Cog', description: 'Delivery, retirada e horários' },
+    { id: 'config', label: 'Geral', icon: 'Cog', description: 'Configurações gerais do catálogo' },
   ];
 
   // Hub menu view — matches Settings page pattern
