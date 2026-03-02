@@ -67,54 +67,90 @@ export function useProductionPage() {
     queryFn: async () => {
       if (projectsToCheck.length === 0) return [];
 
-      // For each project, get all order items and all completions, then check if fully done
-      const { data: allOrderItems, error: oiErr } = await supabase
-        .from('production_order_items')
-        .select('checklist_item_id, quantity_ordered, production_orders!inner(project_id)')
+      // Get all orders for candidate projects
+      const { data: projectOrders, error: poErr } = await supabase
+        .from('production_orders')
+        .select('id, project_id, date')
         .eq('unit_id', activeUnitId!)
-        .in('production_orders.project_id', projectsToCheck);
-      if (oiErr) throw oiErr;
+        .in('project_id', projectsToCheck);
+      if (poErr) throw poErr;
+      if (!projectOrders || projectOrders.length === 0) return [];
 
-      if (!allOrderItems || allOrderItems.length === 0) return [];
+      // Latest production date per project
+      const latestDateByProject = new Map<string, string>();
+      projectOrders.forEach(o => {
+        if (!o.project_id) return;
+        const prev = latestDateByProject.get(o.project_id);
+        if (!prev || o.date > prev) latestDateByProject.set(o.project_id, o.date);
+      });
 
-      // Aggregate ordered quantities per project per item
-      const projectItemOrdered = new Map<string, Map<string, number>>();
+      // Keep only orders from each project's latest date
+      const latestOrderIds: string[] = [];
+      const orderIdToProject = new Map<string, string>();
+      projectOrders.forEach(o => {
+        if (!o.project_id) return;
+        const latestDate = latestDateByProject.get(o.project_id);
+        if (latestDate && o.date === latestDate) {
+          latestOrderIds.push(o.id);
+          orderIdToProject.set(o.id, o.project_id);
+        }
+      });
+
+      if (latestOrderIds.length === 0) return [];
+
+      const { data: latestItems, error: liErr } = await supabase
+        .from('production_order_items')
+        .select('order_id, checklist_item_id, quantity_ordered')
+        .in('order_id', latestOrderIds);
+      if (liErr) throw liErr;
+      if (!latestItems || latestItems.length === 0) return [];
+
+      // Aggregate ordered qty for latest day per project
+      const orderedByProjectItem = new Map<string, Map<string, number>>();
       const allItemIds = new Set<string>();
-      allOrderItems.forEach((oi: any) => {
-        const pid = oi.production_orders?.project_id;
+      latestItems.forEach(item => {
+        const pid = orderIdToProject.get(item.order_id);
         if (!pid) return;
-        if (!projectItemOrdered.has(pid)) projectItemOrdered.set(pid, new Map());
-        const m = projectItemOrdered.get(pid)!;
-        m.set(oi.checklist_item_id, Math.max(m.get(oi.checklist_item_id) || 0, oi.quantity_ordered));
-        allItemIds.add(oi.checklist_item_id);
+
+        if (!orderedByProjectItem.has(pid)) orderedByProjectItem.set(pid, new Map());
+        const itemMap = orderedByProjectItem.get(pid)!;
+        itemMap.set(item.checklist_item_id, (itemMap.get(item.checklist_item_id) || 0) + item.quantity_ordered);
+        allItemIds.add(item.checklist_item_id);
       });
 
       if (allItemIds.size === 0) return [];
 
-      // Fetch ALL completions for these items across ALL dates
+      const latestDates = [...new Set([...latestDateByProject.values()])];
       const { data: completionsData, error: cErr } = await supabase
         .from('checklist_completions')
-        .select('item_id, quantity_done, is_skipped, status')
+        .select('item_id, quantity_done, is_skipped, status, date')
         .eq('unit_id', activeUnitId!)
         .in('status', ['completed', 'done'])
+        .in('date', latestDates)
         .in('item_id', [...allItemIds]);
       if (cErr) throw cErr;
 
-      const doneMap = new Map<string, number>();
+      // Sum done by (date + item)
+      const doneByDateItem = new Map<string, number>();
       (completionsData || []).forEach(c => {
         if (!c.is_skipped && c.quantity_done > 0) {
-          doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + c.quantity_done);
+          const key = `${c.date}::${c.item_id}`;
+          doneByDateItem.set(key, (doneByDateItem.get(key) || 0) + c.quantity_done);
         }
       });
 
-      // Determine which projects are fully completed
+      // Completed project = latest production date has no pending items
       const completed: string[] = [];
-      projectItemOrdered.forEach((itemMap, pid) => {
+      orderedByProjectItem.forEach((itemMap, pid) => {
+        const latestDate = latestDateByProject.get(pid);
+        if (!latestDate) return;
+
         let allDone = true;
         itemMap.forEach((ordered, itemId) => {
-          const done = doneMap.get(itemId) || 0;
+          const done = doneByDateItem.get(`${latestDate}::${itemId}`) || 0;
           if (done < ordered) allDone = false;
         });
+
         if (allDone) completed.push(pid);
       });
 
@@ -127,11 +163,11 @@ export function useProductionPage() {
     return allActiveProjects.filter(p => {
       // Already has order on selected date → always show
       if (dateProjectIds.includes(p.id)) return true;
-      // Never had any order → show (new project)
-      if (!projectsWithOrders.includes(p.id)) return true;
-      // Had orders before but fully completed → hide
+      // Never had any order yet → hide from timeline selector (appears only when scheduled)
+      if (!projectsWithOrders.includes(p.id)) return false;
+      // Had orders before but fully completed on latest date → hide
       if (completedProjectIds.includes(p.id)) return false;
-      // Has pending items → show
+      // Has pending from latest production date → show
       return true;
     });
   }, [allActiveProjects, dateProjectIds, projectsWithOrders, completedProjectIds]);

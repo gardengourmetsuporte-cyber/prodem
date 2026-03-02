@@ -266,7 +266,7 @@ export default function ProductionPage() {
         isShift1Closed={shift1.order?.status === 'closed'}
         onCloseShift={currentShift === 1 ? shift1.closeShiftAndCreateNext : undefined}
         onDeletePlan={activeShift.resetDayOrders}
-        activeProjects={activeProjects}
+        activeProjects={allActiveProjects}
         selectedProjectId={activeShift.order?.project_id}
       />
 

@@ -284,41 +284,55 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     let orderId = (order?.id && order.id !== '__aggregate__') ? order.id : undefined;
 
     if (!orderId) {
-      // Guard: if project already has all items completed globally, block creation
+      // Guard: if project latest production date is fully completed, block new order creation
       if (effectiveProjectId) {
-        const { data: allOI } = await supabase
-          .from('production_order_items')
-          .select('checklist_item_id, quantity_ordered, production_orders!inner(project_id)')
+        const { data: projectOrders } = await supabase
+          .from('production_orders')
+          .select('id, date')
           .eq('unit_id', unitId!)
-          .eq('production_orders.project_id', effectiveProjectId);
+          .eq('project_id', effectiveProjectId);
 
-        if (allOI && allOI.length > 0) {
-          const orderedMap = new Map<string, number>();
-          allOI.forEach((oi: any) => {
-            orderedMap.set(oi.checklist_item_id, Math.max(orderedMap.get(oi.checklist_item_id) || 0, oi.quantity_ordered));
-          });
-          const itemIds = [...orderedMap.keys()];
-          const { data: comps } = await supabase
-            .from('checklist_completions')
-            .select('item_id, quantity_done, is_skipped, status')
-            .eq('unit_id', unitId!)
-            .in('status', ['completed', 'done'])
-            .in('item_id', itemIds);
+        if (projectOrders && projectOrders.length > 0) {
+          const latestDate = projectOrders.reduce((max, row) => (row.date > max ? row.date : max), projectOrders[0].date);
+          const latestOrderIds = projectOrders.filter(o => o.date === latestDate).map(o => o.id);
 
-          const doneMap = new Map<string, number>();
-          (comps || []).forEach(c => {
-            if (!c.is_skipped && c.quantity_done > 0) {
-              doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + c.quantity_done);
+          if (latestOrderIds.length > 0) {
+            const { data: latestItems } = await supabase
+              .from('production_order_items')
+              .select('checklist_item_id, quantity_ordered')
+              .in('order_id', latestOrderIds);
+
+            if (latestItems && latestItems.length > 0) {
+              const orderedMap = new Map<string, number>();
+              latestItems.forEach(oi => {
+                orderedMap.set(oi.checklist_item_id, (orderedMap.get(oi.checklist_item_id) || 0) + oi.quantity_ordered);
+              });
+
+              const itemIds = [...orderedMap.keys()];
+              const { data: comps } = await supabase
+                .from('checklist_completions')
+                .select('item_id, quantity_done, is_skipped, status')
+                .eq('unit_id', unitId!)
+                .eq('date', latestDate)
+                .in('status', ['completed', 'done'])
+                .in('item_id', itemIds);
+
+              const doneMap = new Map<string, number>();
+              (comps || []).forEach(c => {
+                if (!c.is_skipped && c.quantity_done > 0) {
+                  doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + c.quantity_done);
+                }
+              });
+
+              let allComplete = true;
+              orderedMap.forEach((ordered, itemId) => {
+                if ((doneMap.get(itemId) || 0) < ordered) allComplete = false;
+              });
+
+              if (allComplete) {
+                throw new Error('Esta OS já foi concluída. Não há pendências.');
+              }
             }
-          });
-
-          let allComplete = true;
-          orderedMap.forEach((ordered, itemId) => {
-            if ((doneMap.get(itemId) || 0) < ordered) allComplete = false;
-          });
-
-          if (allComplete) {
-            throw new Error('Esta OS já foi concluída. Não há pendências.');
           }
         }
       }
