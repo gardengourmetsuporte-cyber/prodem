@@ -173,7 +173,7 @@ export default function TabletAdmin() {
           <div className="flex items-center gap-2 p-3 rounded-xl bg-warning/10 border border-warning/20">
             <AppIcon name="AlertCircle" className="w-4 h-4 text-warning shrink-0" />
             <p className="text-xs text-warning">
-              {productsWithoutPDV.length} produto(s) sem código PDV — não serão enviados ao Colibri
+              {productsWithoutPDV.length} produto(s) sem código ERP — não serão enviados ao sistema
             </p>
           </div>
         )}
@@ -410,7 +410,7 @@ export default function TabletAdmin() {
             >
               <AppIcon name="Info" className="w-4 h-4 shrink-0" />
               <span className="flex-1 text-left font-medium">
-                {showGuide ? 'Ocultar guia' : 'Como configurar o Gestor de Pedidos Colibri'}
+                {showGuide ? 'Ocultar guia' : 'Como configurar a Integração ERP Prodem'}
               </span>
               <AppIcon name="ArrowRight" className={`w-4 h-4 transition-transform ${showGuide ? 'rotate-90' : ''}`} />
             </button>
@@ -421,7 +421,7 @@ export default function TabletAdmin() {
                 <ol className="space-y-2 text-xs text-muted-foreground">
                   <li className="flex gap-2">
                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">1</span>
-                    <span>No servidor Colibri, abra o <strong>Gestor de Pedidos</strong> (ou instale o <strong>DeliveryTunnel</strong>)</span>
+                    <span>No servidor ERP, abra o <strong>Gestor de Pedidos</strong> (ou instale o <strong>DeliveryTunnel</strong>)</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">2</span>
@@ -437,12 +437,12 @@ export default function TabletAdmin() {
                   </li>
                   <li className="flex gap-2">
                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">5</span>
-                    <span>Cadastre os produtos com o <strong>Código PDV</strong> correspondente ao código ERP do Colibri. Para combos, use o prefixo <strong>CMB-</strong> (ex: <code className="bg-secondary px-1 rounded">CMB-001</code>)</span>
+                    <span>Cadastre os produtos com o <strong>Código ERP</strong> correspondente ao código do sistema Prodem. Para combos, use o prefixo <strong>CMB-</strong> (ex: <code className="bg-secondary px-1 rounded">CMB-001</code>)</span>
                   </li>
                 </ol>
                 <div className="p-2.5 rounded-lg bg-warning/10 border border-warning/20">
                   <p className="text-[11px] text-warning">
-                    <strong>⚡ Dica:</strong> Para acesso fora da rede local, configure um DDNS ou use o DeliveryTunnel da Colibri que cria um túnel seguro automaticamente.
+                    <strong>⚡ Dica:</strong> Para acesso fora da rede local, configure um DDNS ou use um túnel seguro para conexão remota.
                   </p>
                 </div>
               </div>
@@ -452,7 +452,7 @@ export default function TabletAdmin() {
             <div className="card-base p-4 space-y-4">
               <h3 className="font-bold text-foreground flex items-center gap-2">
                 <AppIcon name="Settings2" className="w-4 h-4" />
-                Configuração Colibri PDV
+                Configuração ERP Prodem
                 {pdvConfig?.is_active && (
                   <Badge variant="outline" className="text-success border-success/30 text-[10px]">
                     <AppIcon name="Wifi" className="w-3 h-3 mr-1" /> Ativo
@@ -461,7 +461,7 @@ export default function TabletAdmin() {
               </h3>
               <div className="space-y-3">
                 <div>
-                  <Label>URL do Hub Colibri</Label>
+                  <Label>URL do Hub ERP</Label>
                   <Input
                     placeholder="http://192.168.1.100:8080/api/orders"
                     value={hubUrl}
@@ -478,14 +478,14 @@ export default function TabletAdmin() {
                   />
                 </div>
                 <div>
-                  <Label>Código de Pagamento (Colibri)</Label>
+                  <Label>Código de Pagamento (ERP)</Label>
                   <Input
                     placeholder="1"
                     value={paymentCode}
                     onChange={e => setPaymentCode(e.target.value)}
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Código da forma de pagamento no Colibri (ex: 1 = Dinheiro, 2 = Cartão)
+                    Código da forma de pagamento no ERP (ex: 1 = Dinheiro, 2 = Cartão)
                   </p>
                 </div>
                 <div className="flex items-center justify-between">
