@@ -41,6 +41,7 @@ interface FormData {
   is_active: boolean;
   notes: string;
   user_id: string;
+  pin_code: string;
 }
 
 interface EmployeeSheetProps {
@@ -56,7 +57,7 @@ export function EmployeeSheet({ open, onOpenChange, employee, availableUsers }: 
   const [showDelete, setShowDelete] = useState(false);
 
   const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: { full_name: '', cpf: '', role: '', department: '', admission_date: '', base_salary: 0, is_active: true, notes: '', user_id: '' },
+    defaultValues: { full_name: '', cpf: '', role: '', department: '', admission_date: '', base_salary: 0, is_active: true, notes: '', user_id: '', pin_code: '' },
   });
 
   const selectedUserId = watch('user_id');
@@ -75,9 +76,10 @@ export function EmployeeSheet({ open, onOpenChange, employee, availableUsers }: 
         is_active: employee.is_active,
         notes: employee.notes || '',
         user_id: employee.user_id || '',
+        pin_code: (employee as any).pin_code || '',
       });
     } else {
-      reset({ full_name: '', cpf: '', role: '', department: '', admission_date: '', base_salary: 0, is_active: true, notes: '', user_id: '' });
+      reset({ full_name: '', cpf: '', role: '', department: '', admission_date: '', base_salary: 0, is_active: true, notes: '', user_id: '', pin_code: '' });
     }
   }, [employee, reset]);
 
@@ -101,6 +103,7 @@ export function EmployeeSheet({ open, onOpenChange, employee, availableUsers }: 
         notes: data.notes || null,
         user_id: data.user_id || null,
         unit_id: activeUnitId || null,
+        pin_code: data.pin_code || null,
       };
       if (employee) {
         await updateEmployee({ id: employee.id, ...payload });
@@ -155,6 +158,21 @@ export function EmployeeSheet({ open, onOpenChange, employee, availableUsers }: 
             <div className="space-y-1.5">
               <Label htmlFor="cpf">CPF</Label>
               <Input id="cpf" {...register('cpf')} placeholder="000.000.000-00" />
+            </div>
+
+            {/* Senha de Produção (PIN) */}
+            <div className="space-y-1.5">
+              <Label htmlFor="pin_code">Senha de Produção (4 dígitos)</Label>
+              <Input
+                id="pin_code"
+                {...register('pin_code', { maxLength: 4 })}
+                placeholder="Ex: 1234"
+                maxLength={4}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="text-lg font-mono tracking-[0.5em] text-center"
+              />
+              <p className="text-[11px] text-muted-foreground">Senha usada para iniciar tarefas na produção</p>
             </div>
 
             {/* Setor (Department) */}
