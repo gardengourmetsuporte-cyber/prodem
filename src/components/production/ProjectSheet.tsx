@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,9 @@ import { AppIcon } from '@/components/ui/app-icon';
 import { ProductionProject } from '@/hooks/useProductionProjects';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useUnit } from '@/contexts/UnitContext';
 
 interface ProjectSheetProps {
   open: boolean;
@@ -17,20 +20,49 @@ interface ProjectSheetProps {
 }
 
 export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, onUpdateProject, onDeleteProject }: ProjectSheetProps) {
+  const { activeUnit } = useUnit();
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list');
   const [editingProject, setEditingProject] = useState<ProductionProject | null>(null);
   const [projectNumber, setProjectNumber] = useState('');
   const [description, setDescription] = useState('');
   const [client, setClient] = useState('');
+  const [clientSearch, setClientSearch] = useState('');
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [materialField, setMaterialField] = useState('');
   const [thicknessField, setThicknessField] = useState('');
   const [plateSizeField, setPlateSizeField] = useState('');
+
+  // Fetch customers for client picker
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers-list', activeUnit?.id],
+    queryFn: async () => {
+      if (!activeUnit?.id) return [];
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, name')
+        .eq('unit_id', activeUnit.id)
+        .is('deleted_at' as any, null)
+        .order('name')
+        .limit(500);
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+    enabled: !!activeUnit?.id && open,
+  });
+
+  const filteredCustomers = useMemo(() => {
+    if (!clientSearch.trim()) return customers;
+    const q = clientSearch.toLowerCase();
+    return customers.filter(c => c.name.toLowerCase().includes(q));
+  }, [customers, clientSearch]);
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
     setProjectNumber('');
     setDescription('');
     setClient('');
+    setClientSearch('');
+    setShowClientDropdown(false);
     setMaterialField('');
     setThicknessField('');
     setPlateSizeField('');
@@ -219,13 +251,55 @@ export function ProjectSheet({ open, onOpenChange, projects, onCreateProject, on
                   onChange={e => setDescription(e.target.value)}
                 />
               </div>
-              <div>
+              <div className="relative">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Cliente</label>
-                <Input
-                  placeholder="Ex: VALEO"
-                  value={client}
-                  onChange={e => setClient(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="Buscar cliente..."
+                    value={showClientDropdown ? clientSearch : client}
+                    onChange={e => {
+                      setClientSearch(e.target.value);
+                      setClient(e.target.value);
+                      setShowClientDropdown(true);
+                    }}
+                    onFocus={() => {
+                      setClientSearch(client);
+                      setShowClientDropdown(true);
+                    }}
+                    onBlur={() => setTimeout(() => setShowClientDropdown(false), 200)}
+                  />
+                  {client && (
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-secondary/60"
+                      onClick={() => { setClient(''); setClientSearch(''); }}
+                    >
+                      <AppIcon name="X" size={14} className="text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+                {showClientDropdown && filteredCustomers.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 max-h-40 overflow-y-auto rounded-xl border border-border bg-popover shadow-lg">
+                    {filteredCustomers.slice(0, 20).map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm hover:bg-secondary/60 transition-colors",
+                          c.name === client && "bg-primary/10 font-semibold"
+                        )}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          setClient(c.name);
+                          setClientSearch('');
+                          setShowClientDropdown(false);
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="pt-2">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Dados Técnicos (opcional)</p>
