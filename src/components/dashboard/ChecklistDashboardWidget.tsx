@@ -124,9 +124,9 @@ export function ChecklistDashboardWidget() {
       label: 'Fechamento',
       iconName: 'Moon',
       progress: fechamento,
-      accentColor: 'text-emerald-400',
-      accentBg: 'bg-emerald-600/40',
-      textColor: 'text-emerald-400',
+      accentColor: 'text-primary',
+      accentBg: 'bg-primary/40',
+      textColor: 'text-primary',
     },
   ];
 

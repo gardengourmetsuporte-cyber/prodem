@@ -193,7 +193,7 @@ export function PostSheet({ open, onOpenChange, post, onSave, onPublish, uploadM
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox checked={channels.includes('whatsapp_status')} onCheckedChange={() => toggleChannel('whatsapp_status')} />
-                <AppIcon name="MessageCircle" size={16} className="text-emerald-400" />
+                <AppIcon name="MessageCircle" size={16} className="text-success" />
                 <span className="text-sm">WhatsApp</span>
               </label>
             </div>

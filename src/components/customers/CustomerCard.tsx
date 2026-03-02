@@ -21,7 +21,7 @@ export const CustomerCard = forwardRef<HTMLDivElement, Props>(function CustomerC
   return (
     <div
       ref={ref}
-      className="rounded-xl border border-emerald-500/10 bg-[#0a1a10]/60 p-4 space-y-3 hover:border-emerald-500/25 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+      className="rounded-xl border border-border/30 bg-card/60 p-4 space-y-3 hover:border-primary/25 active:scale-[0.98] transition-all duration-200 cursor-pointer"
       onClick={onEdit}
     >
       {/* Header */}

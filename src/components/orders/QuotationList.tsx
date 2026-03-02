@@ -31,7 +31,7 @@ export function QuotationList() {
 
   return (
     <div className="space-y-4">
-      <Button onClick={() => setSheetOpen(true)} className="w-full gap-2 rounded-xl h-12 shadow-lg shadow-emerald-500/20">
+      <Button onClick={() => setSheetOpen(true)} className="w-full gap-2 rounded-xl h-12 shadow-lg shadow-primary/20">
         <AppIcon name="Plus" className="w-4 h-4" />
         Nova Cotação
       </Button>
@@ -54,13 +54,13 @@ export function QuotationList() {
               <div
                 key={q.id}
                 onClick={() => setSelectedQuotation(q)}
-                className="bg-[#0a1a10] rounded-2xl border border-emerald-500/10 p-4 cursor-pointer transition-all hover:border-emerald-500/25 animate-fade-in"
+                className="bg-card rounded-2xl border border-border/30 p-4 cursor-pointer transition-all hover:border-primary/25 animate-fade-in"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                       <AppIcon name="Scale" className="w-5 h-5 text-emerald-400" />
+                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                       <AppIcon name="Scale" className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground truncate">

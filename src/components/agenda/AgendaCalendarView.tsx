@@ -111,7 +111,7 @@ export function AgendaCalendarView({ tasks, onTaskClick, onToggleTask }: AgendaC
             >
               <span className={cn(
                 'text-sm font-medium',
-                isToday(day) && 'text-emerald-400 font-bold drop-shadow-md',
+                isToday(day) && 'text-primary font-bold drop-shadow-md',
                 isOverdue && 'text-rose-400 font-bold drop-shadow-md',
                 !isToday(day) && !isOverdue && 'text-foreground'
               )}>

@@ -344,7 +344,7 @@ export function RewardSettings() {
                     <div className="flex items-center gap-1">
                       {redemption.status === 'pending' && (
                         <>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600" onClick={() => handleApprove(redemption)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-success" onClick={() => handleApprove(redemption)}>
                             <AppIcon name="Check" size={15} />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleReject(redemption)}>

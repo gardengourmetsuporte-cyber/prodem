@@ -170,7 +170,7 @@ export function UnifiedCalendarWidget() {
 
             {/* Tasks */}
             {selectedEvents.tasks.length > 0 && (
-              <EventSection icon={<AppIcon name="CheckCircle2" size={14} className="text-emerald-500" />} title="Tarefas">
+              <EventSection icon={<AppIcon name="CheckCircle2" size={14} className="text-primary" />} title="Tarefas">
                 {selectedEvents.tasks.map(ev => (
                   <EventRow key={ev.id} event={ev} />
                 ))}

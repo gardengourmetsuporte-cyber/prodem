@@ -83,7 +83,7 @@ export function Podium({ entries, currentUserId, compact = false }: PodiumProps)
             <p className={cn(
               "font-semibold text-center truncate max-w-[70px]",
               compact ? "text-[11px]" : "text-xs",
-              isCurrentUser ? "text-emerald-400" : "text-foreground"
+              isCurrentUser ? "text-primary" : "text-foreground"
             )}>
               {entry.full_name?.split(' ')[0]}
             </p>

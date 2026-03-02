@@ -142,7 +142,7 @@ export function TaskItem({ task, onToggle, onDelete, onClick, onInlineUpdate, on
                     : dueLabel.includes('Hoje')
                       ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-sm'
                       : dueLabel.includes('Amanhã')
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-sm'
+                        ? 'bg-success/10 text-success border-success/20 shadow-sm'
                         : 'bg-secondary/40 text-muted-foreground border-white/5'
                 )}>
                   <AppIcon name="Clock" size={9} className={cn(clockUrgency.colorClass, clockUrgency.pulse && 'animate-pulse')} />

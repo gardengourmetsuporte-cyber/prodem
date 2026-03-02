@@ -17,8 +17,8 @@ export interface CalendarDayEvents {
 }
 
 export const calendarEventColors: Record<CalendarEventType, string> = {
-  task_pending: 'bg-emerald-500',
-  task_done: 'bg-emerald-500',
+  task_pending: 'bg-primary',
+  task_done: 'bg-primary',
   finance_peak: 'bg-orange-500',
   finance_income: 'bg-green-500',
   marketing: 'bg-violet-500',

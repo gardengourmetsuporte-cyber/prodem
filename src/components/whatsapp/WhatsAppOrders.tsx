@@ -34,7 +34,7 @@ export function WhatsAppOrders() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+          className="h-8 gap-2 border-primary/30 text-primary hover:bg-primary/10 transition-colors"
           onClick={() => recoverCarts.mutate()}
           disabled={recoverCarts.isPending}
         >

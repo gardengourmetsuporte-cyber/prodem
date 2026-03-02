@@ -102,7 +102,7 @@ SheetOverlay.displayName = "SheetOverlay";
 
 // ── Content variants (desktop only) ──
 const sheetVariants = cva(
-  "fixed z-[90] gap-4 bg-[#061210] border-emerald-500/10 p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "fixed z-[90] gap-4 bg-background border-primary/10 p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
@@ -135,12 +135,12 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           <DrawerPrimitive.Content
             ref={ref as React.Ref<HTMLDivElement>}
             className={cn(
-              "fixed inset-x-0 bottom-0 z-[90] mt-24 flex h-auto min-h-[55vh] max-h-[96vh] flex-col rounded-t-3xl border border-emerald-500/10 bg-[#061210]",
+              "fixed inset-x-0 bottom-0 z-[90] mt-24 flex h-auto min-h-[55vh] max-h-[96vh] flex-col rounded-t-3xl border border-primary/10 bg-background",
               className,
             )}
             {...(props as any)}
           >
-            <div className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-emerald-500/20" />
+            <div className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-primary/20" />
             <div className="flex flex-1 flex-col overflow-y-auto p-6">{children}</div>
           </DrawerPrimitive.Content>
         </DrawerPrimitive.Portal>
