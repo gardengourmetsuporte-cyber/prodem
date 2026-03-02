@@ -7,6 +7,22 @@ import { GroupingWithItems, ProductionGrouping } from '@/hooks/useProductionGrou
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+interface FieldRowProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}
+
+function FieldRow({ label, value, onChange, placeholder }: FieldRowProps) {
+  return (
+    <div>
+      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{label}</label>
+      <Input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="h-10 text-sm" />
+    </div>
+  );
+}
+
 interface GroupingSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -111,12 +127,6 @@ export function GroupingSheet({ open, onOpenChange, groupings, onCreateGrouping,
     }
   };
 
-  const FieldRow = ({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) => (
-    <div>
-      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 block">{label}</label>
-      <Input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="h-10 text-sm" />
-    </div>
-  );
 
   return (
     <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setMode('list'); resetForm(); } }}>
