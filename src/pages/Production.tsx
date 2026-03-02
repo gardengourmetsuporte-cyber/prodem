@@ -199,7 +199,6 @@ export default function ProductionPage() {
               report={activeShift.report}
               orderItems={activeShift.orderItems}
               sectors={sectors}
-              completions={completions}
               onStartItem={handleStartItem}
               onFinishItem={(itemId) => setFinishingItemId(itemId)}
               onTapItem={(itemId) => setSelectedItemId(itemId)}
