@@ -421,70 +421,67 @@ export function ChecklistSettings({
               <SortableItem key={sector.id} id={sector.id} className="bg-card rounded-xl border overflow-hidden mb-4">
                 <div className="flex-1">
                   {/* Sector Header */}
-                  <div className="flex items-center gap-2 p-3 bg-secondary/30">
+                  <div className="flex items-center gap-1 p-3 bg-secondary/30 overflow-hidden">
                     <button
                       onClick={() => toggleSector(sector.id)}
-                      className="flex-1 flex items-center gap-3"
+                      className="flex-1 flex items-center gap-2 min-w-0"
                     >
                       <div
                         className="w-[3px] self-stretch rounded-full shrink-0"
                         style={{ backgroundColor: sector.color }}
                       />
-                      <AppIcon name={getSectorIcon(sector)} size={18} fill={0} className="text-muted-foreground" />
-                      <span className="font-semibold text-foreground">{sector.name}</span>
-                      {!isBonusMode && (
-                        <span className="text-xs text-muted-foreground">
-                          ({sector.subcategories?.length || 0} subcategorias)
-                        </span>
-                      )}
-                      {isBonusMode && (
-                        <span className="text-xs text-muted-foreground">
-                          ({sector.subcategories?.flatMap(s => s.items || []).filter(i => i.checklist_type === 'bonus').length || 0} tarefas)
-                        </span>
-                      )}
+                      <AppIcon name={getSectorIcon(sector)} size={16} fill={0} className="text-muted-foreground shrink-0" />
+                      <span className="font-semibold text-foreground truncate text-sm">{sector.name}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 whitespace-nowrap">
+                        {!isBonusMode
+                          ? `(${sector.subcategories?.length || 0})`
+                          : `(${sector.subcategories?.flatMap(s => s.items || []).filter(i => i.checklist_type === 'bonus').length || 0})`
+                        }
+                      </span>
                     </button>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center shrink-0">
                       {!isBonusMode && (
                         <button
                           onClick={() => handleOpenSubcategorySheet(sector.id)}
-                          className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
+                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
                           title="Adicionar subcategoria"
                         >
-                          <AppIcon name="add" size={16} />
+                          <AppIcon name="add" size={14} />
                         </button>
                       )}
                       {isBonusMode && (
                         <button
                           onClick={() => {
-                            // For bonus, add item to the first (or auto) subcategory
                             const defaultSub = sector.subcategories?.[0];
                             if (defaultSub) {
                               handleOpenItemSheet(defaultSub.id);
                             }
                           }}
-                          className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
+                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
                           title="Adicionar tarefa"
                         >
-                          <AppIcon name="add" size={16} />
+                          <AppIcon name="add" size={14} />
                         </button>
                       )}
                       <button
                         onClick={() => handleOpenSectorSheet(sector)}
-                        className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground"
+                        className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground"
                       >
-                        <AppIcon name="edit" size={16} />
+                        <AppIcon name="edit" size={14} />
                       </button>
                       <button
                         onClick={() => onDeleteSector(sector.id)}
-                        className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                       >
-                        <AppIcon name="delete" size={16} />
+                        <AppIcon name="delete" size={14} />
                       </button>
-                      {isExpanded ? (
-                        <AppIcon name="expand_more" size={16} className="text-muted-foreground" />
-                      ) : (
-                        <AppIcon name="chevron_right" size={16} className="text-muted-foreground" />
-                      )}
+                      <button onClick={() => toggleSector(sector.id)} className="p-1">
+                        {isExpanded ? (
+                          <AppIcon name="expand_more" size={14} className="text-muted-foreground" />
+                        ) : (
+                          <AppIcon name="chevron_right" size={14} className="text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
@@ -602,21 +599,23 @@ export function ChecklistSettings({
                                     className="bg-secondary/20 rounded-lg overflow-hidden"
                                   >
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-2 p-2">
+                                      <div className="flex items-center gap-1 p-2 overflow-hidden">
                                         <button
                                           onClick={() => toggleSubcategory(subcategory.id)}
-                                          className="flex-1 flex items-center gap-2"
+                                          className="flex-1 flex items-center gap-1.5 min-w-0"
                                         >
-                                          <span className="font-medium text-foreground">{subcategory.name}</span>
-                                          <span className="text-xs text-muted-foreground">
-                                            ({(subcategory.items || []).filter(i => i.checklist_type === selectedType).length} itens de {selectedType})
+                                          <span className="font-medium text-foreground text-sm truncate">{subcategory.name}</span>
+                                          <span className="text-[10px] text-muted-foreground shrink-0 whitespace-nowrap">
+                                            ({(subcategory.items || []).filter(i => i.checklist_type === selectedType).length})
                                           </span>
                                         </button>
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center shrink-0">
                                           <button onClick={() => handleOpenItemSheet(subcategory.id)} className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-primary" title="Adicionar item"><AppIcon name="add" size={12} /></button>
                                           <button onClick={() => handleOpenSubcategorySheet(sector.id, subcategory)} className="p-1.5 rounded hover:bg-secondary text-muted-foreground"><AppIcon name="edit" size={12} /></button>
                                           <button onClick={() => onDeleteSubcategory(subcategory.id)} className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><AppIcon name="delete" size={12} /></button>
-                                          {isSubExpanded ? <AppIcon name="expand_more" size={12} className="text-muted-foreground" /> : <AppIcon name="chevron_right" size={12} className="text-muted-foreground" />}
+                                          <button onClick={() => toggleSubcategory(subcategory.id)} className="p-1">
+                                            {isSubExpanded ? <AppIcon name="expand_more" size={12} className="text-muted-foreground" /> : <AppIcon name="chevron_right" size={12} className="text-muted-foreground" />}
+                                          </button>
                                         </div>
                                       </div>
 
