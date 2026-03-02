@@ -69,35 +69,37 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
     <div className="space-y-2">
       {/* Project selector — modern segmented tabs */}
       {onSelectProject && activeProjects.length > 0 && (
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center mb-6">
           {/* Dropdown selector */}
           <div ref={dropdownRef} className="relative flex-1">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/20 ring-1 ring-border/10 hover:ring-warning/30 transition-all"
+              className="w-full flex items-center justify-between px-5 py-4 rounded-[24px] bg-card border-none hover:ring-1 hover:ring-warning/30 transition-all text-left group gap-3"
             >
-              <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
-                <span className="text-xs font-black text-warning">#{project.project_number}</span>
+              <div className="flex items-center gap-3 w-full">
+                <span className="text-sm font-black text-warning">#{project.project_number}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[15px] font-black text-foreground uppercase truncate tracking-wide leading-tight">
+                    {project.description}
+                  </span>
+                  {project.client && (
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest truncate">
+                      {project.client}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{project.description}</p>
-                {project.client && (
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{project.client}</p>
-                )}
-              </div>
-              <AppIcon name="ChevronsUpDown" size={16} className="text-muted-foreground/50 shrink-0" />
+              <AppIcon name="ChevronsUpDown" size={16} className="text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground/70 transition-colors" />
             </button>
 
             {/* Dropdown list */}
             {dropdownOpen && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1.5 rounded-xl bg-popover border border-border/20 shadow-xl overflow-hidden max-h-[300px] overflow-y-auto">
+              <div className="absolute z-50 top-full left-0 right-0 mt-2 rounded-[20px] bg-popover border border-border/10 shadow-xl overflow-hidden max-h-[300px] overflow-y-auto">
                 {[...groupedByClient.entries()].map(([client, projects]) => (
                   <div key={client}>
                     {/* Client group header */}
-                    <div className="px-3 py-1.5 bg-muted/30 flex items-center gap-1.5 sticky top-0">
-                      <AppIcon name="Building2" size={10} className="text-muted-foreground/50" />
-                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{client}</span>
-                      <span className="text-[9px] text-muted-foreground/40 ml-auto">{projects.length}</span>
+                    <div className="px-4 py-2 bg-muted/10 flex items-center gap-1.5 sticky top-0 backdrop-blur-sm z-10 border-b border-border/5">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{client}</span>
                     </div>
                     {/* Project items */}
                     {projects.map(p => {
@@ -107,17 +109,17 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
                           key={p.id}
                           onClick={() => { onSelectProject(p.id); setDropdownOpen(false); }}
                           className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
+                            "w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors",
                             isActive
                               ? "bg-warning/10 text-warning"
-                              : "hover:bg-muted/20 text-foreground"
+                              : "hover:bg-muted/10 text-foreground"
                           )}
                         >
-                          <span className={cn("text-xs font-black", isActive ? "text-warning" : "text-muted-foreground")}>
+                          <span className={cn("text-[13px] font-black w-14", isActive ? "text-warning" : "text-muted-foreground")}>
                             #{p.project_number}
                           </span>
-                          <span className="text-xs truncate flex-1">{p.description}</span>
-                          {isActive && <AppIcon name="Check" size={14} className="text-warning shrink-0" />}
+                          <span className="text-[13px] font-bold uppercase truncate flex-1">{p.description}</span>
+                          {isActive && <AppIcon name="Check" size={16} className="text-warning shrink-0" />}
                         </button>
                       );
                     })}
@@ -131,24 +133,24 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
           {onViewHistory && (
             <button
               onClick={onViewHistory}
-              className="flex items-center gap-1.5 px-3 py-3 rounded-xl bg-muted/20 ring-1 ring-border/10 hover:ring-warning/30 text-muted-foreground hover:text-foreground transition-all shrink-0"
+              className="flex items-center justify-center w-[54px] h-[54px] rounded-full bg-card border-none hover:ring-1 hover:ring-warning/30 text-muted-foreground hover:text-foreground transition-all shrink-0"
               title="Histórico de OS"
             >
-              <AppIcon name="History" size={16} />
+              <AppIcon name="History" size={20} />
             </button>
           )}
         </div>
       )}
 
-      <div className="relative overflow-hidden rounded-2xl bg-card/60 ring-1 ring-border/15 p-5">
-        <div className="space-y-3">
+      <div className="relative overflow-hidden rounded-[32px] bg-card/60 ring-1 ring-border/5 p-6 shadow-sm">
+        <div className="space-y-4">
           {/* Header */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between relative">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-warning">Ordem de Serviço</span>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-warning">Ordem de Serviço</span>
                 <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-muted/40",
+                  "text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md bg-white/[0.03]",
                   progress.percent >= 100
                     ? "text-success"
                     : progress.percent > 0
@@ -158,17 +160,17 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
                   {progress.percent >= 100 ? '○ CONCLUÍDO' : progress.percent > 0 ? '● EM PRODUÇÃO' : '○ AGUARDANDO'}
                 </span>
               </div>
-              <h2 className="text-4xl font-black text-foreground tracking-tight font-display leading-[0.9] mb-1">
+              <h2 className="text-[44px] font-black text-foreground tracking-tight font-display leading-[0.9] mb-1.5">
                 #{project.project_number}
               </h2>
-              <p className="text-lg font-bold text-foreground/80 uppercase tracking-wide">{project.description}</p>
+              <p className="text-[17px] font-bold text-foreground/80 uppercase tracking-widest">{project.description}</p>
             </div>
             {isAdmin && (
               <button
                 onClick={onManageProjects}
-                className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                className="w-12 h-12 rounded-full border border-blue-400/30 flex items-center justify-center bg-card shadow-sm hover:scale-105 transition-all text-muted-foreground hover:text-foreground absolute right-0 top-0"
               >
-                <AppIcon name="Settings" size={16} className="text-muted-foreground" />
+                <AppIcon name="Settings" size={20} />
               </button>
             )}
           </div>
@@ -201,60 +203,62 @@ export function ProductionProjectHero({ project, progress, isAdmin, onManageProj
 
           {/* Groupings summary */}
           {groupings.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap pt-2">
+            <div className="flex items-center gap-3 flex-wrap pt-3">
               {groupings.map(g => (
                 <button
                   key={g.id}
                   onClick={onManageGroupings}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-warning/20 bg-warning/5 hover:border-warning/40 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-[20px] border border-warning/20 bg-warning/[0.08] hover:border-warning/40 transition-colors"
                 >
-                  <span className="text-[10px] font-black text-warning">AG{g.grouping_number}</span>
-                  <span className="text-[10px] font-medium text-muted-foreground">{g.total_pieces}pç</span>
-                  {g.thickness && <span className="text-[10px] font-mono text-foreground/60 ml-0.5">{g.thickness}</span>}
+                  <span className="text-[11px] font-black text-warning">AG{g.grouping_number}</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">{g.total_pieces}pç</span>
+                  {g.thickness && <span className="text-[11px] font-mono text-foreground/60">{g.thickness}</span>}
                 </button>
               ))}
               {isAdmin && (
-                <button onClick={onManageGroupings} className="text-warning hover:scale-110 transition-transform p-1">
-                  <AppIcon name="Plus" size={16} />
+                <button onClick={onManageGroupings} className="text-warning hover:scale-110 transition-transform p-1.5 flex items-center justify-center">
+                  <AppIcon name="Plus" size={20} />
                 </button>
               )}
             </div>
           )}
           {groupings.length === 0 && isAdmin && onManageGroupings && (
-            <button
-              onClick={onManageGroupings}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-warning/20 bg-warning/5 hover:bg-warning/10 transition-colors text-left mt-2"
-            >
-              <AppIcon name="Plus" size={14} className="text-warning" />
-              <span className="text-[10px] font-bold text-warning uppercase">Adicionar agrupamento CNC</span>
-            </button>
+            <div className="pt-2">
+              <button
+                onClick={onManageGroupings}
+                className="flex items-center gap-2 px-4 py-2 rounded-[20px] border border-warning/20 bg-warning/[0.08] hover:bg-warning/15 transition-colors text-left"
+              >
+                <AppIcon name="Plus" size={16} className="text-warning" />
+                <span className="text-[11px] font-black text-warning uppercase">Adicionar agrupamento CNC</span>
+              </button>
+            </div>
           )}
 
           {/* Progress */}
-          <div className="space-y-4 pt-6">
-            <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden relative">
+          <div className="space-y-5 pt-8">
+            <div className="w-full h-2 rounded-full bg-white/[0.03] overflow-hidden relative">
               <div
                 className="absolute top-0 left-0 bottom-0 bg-warning transition-all duration-700 ease-out"
                 style={{ width: `${Math.min(progress.percent, 100)}%` }}
               />
             </div>
-            <div className="flex items-end justify-between">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground font-bold tracking-[0.1em] uppercase">Feito</span>
-                  <span className="text-lg font-black text-foreground">{progress.done}</span>
+            <div className="flex items-end justify-between px-1">
+              <div className="flex items-center gap-8">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[11px] text-muted-foreground font-bold tracking-[0.15em] uppercase">Feito</span>
+                  <span className="text-2xl font-black text-foreground">{progress.done}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground font-bold tracking-[0.1em] uppercase">Total</span>
-                  <span className="text-lg font-black text-muted-foreground">{progress.ordered}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[11px] text-muted-foreground font-bold tracking-[0.15em] uppercase">Total</span>
+                  <span className="text-2xl font-black text-muted-foreground">{progress.ordered}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground font-bold tracking-[0.1em] uppercase">Falta</span>
-                  <span className="text-lg font-black text-warning">{progress.pending}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[11px] text-muted-foreground font-bold tracking-[0.15em] uppercase">Falta</span>
+                  <span className="text-2xl font-black text-warning">{progress.pending}</span>
                 </div>
               </div>
               <span className={cn(
-                "text-5xl font-black font-display leading-[0.8]",
+                "text-[40px] font-black font-display leading-[0.8]",
                 progress.percent >= 100 ? "text-success" : "text-warning"
               )}>
                 {progress.percent}%
