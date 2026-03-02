@@ -130,8 +130,9 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
       const orderIds = (order as any)._allOrderIds || [order.id];
       const { data, error } = await supabase
         .from('production_order_items')
-        .select('*, checklist_item:checklist_items(id, name, target_quantity, subcategory_id, piece_dimensions)')
-        .in('order_id', orderIds);
+        .select('*, checklist_item:checklist_items(id, name, target_quantity, subcategory_id, piece_dimensions, sort_order)')
+        .in('order_id', orderIds)
+        .order('created_at', { ascending: true });
       if (error) throw error;
       return (data || []) as ProductionOrderItem[];
     },
@@ -210,7 +211,9 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
     });
 
     // Aggregate order items by checklist_item_id (needed for __all__ mode with same item across projects)
-    const aggregated = new Map<string, { qty: number; name: string; dims: string | null }>();
+    // Preserve insertion order (first-seen) for consistent display
+    const aggregated = new Map<string, { qty: number; name: string; dims: string | null; sortOrder: number; firstIndex: number }>();
+    let idx = 0;
     orderItems.forEach(oi => {
       const existing = aggregated.get(oi.checklist_item_id);
       if (existing) {
@@ -220,30 +223,35 @@ export function useProductionOrders(unitId: string | null, date: Date, shift: nu
           qty: oi.quantity_ordered,
           name: oi.checklist_item?.name || 'Item',
           dims: oi.checklist_item?.piece_dimensions || null,
+          sortOrder: (oi.checklist_item as any)?.sort_order ?? 999,
+          firstIndex: idx,
         });
       }
+      idx++;
     });
 
-    return [...aggregated.entries()].map(([itemId, agg]) => {
-      const rawDone = doneMap.get(itemId) || 0;
-      const done = completedWithoutQtySet.has(itemId)
-        ? Math.max(rawDone, agg.qty)
-        : rawDone;
-      const pending = Math.max(0, agg.qty - done);
-      const percent = agg.qty > 0 ? Math.round((done / agg.qty) * 100) : 0;
-      const isInProgress = inProgressSet.has(itemId);
-      return {
-        checklist_item_id: itemId,
-        item_name: agg.name,
-        piece_dimensions: agg.dims,
-        quantity_ordered: agg.qty,
-        quantity_done: done,
-        quantity_pending: pending,
-        percent: Math.min(percent, 100),
-        status: percent >= 100 ? 'complete' : done > 0 ? 'partial' : isInProgress ? 'in_progress' : 'not_started',
-        duration_ms: durationMap.get(itemId) ?? null,
-      };
-    });
+    return [...aggregated.entries()]
+      .sort(([, a], [, b]) => a.firstIndex - b.firstIndex)
+      .map(([itemId, agg]) => {
+        const rawDone = doneMap.get(itemId) || 0;
+        const done = completedWithoutQtySet.has(itemId)
+          ? Math.max(rawDone, agg.qty)
+          : rawDone;
+        const pending = Math.max(0, agg.qty - done);
+        const percent = agg.qty > 0 ? Math.round((done / agg.qty) * 100) : 0;
+        const isInProgress = inProgressSet.has(itemId);
+        return {
+          checklist_item_id: itemId,
+          item_name: agg.name,
+          piece_dimensions: agg.dims,
+          quantity_ordered: agg.qty,
+          quantity_done: done,
+          quantity_pending: pending,
+          percent: Math.min(percent, 100),
+          status: percent >= 100 ? 'complete' : done > 0 ? 'partial' : isInProgress ? 'in_progress' : 'not_started',
+          duration_ms: durationMap.get(itemId) ?? null,
+        };
+      });
   }, [orderItems, completions]);
 
   // Totals
