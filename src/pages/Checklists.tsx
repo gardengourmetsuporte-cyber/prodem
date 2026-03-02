@@ -495,23 +495,10 @@ export default function ChecklistsPage() {
                 isShift1Closed={isShift1Closed}
                 onCreatePlan={() => setPlanSheetOpen(true)}
                 onViewReport={() => setReportSheetOpen(true)}
-                onCloseShift={async () => {
-                  await closeShiftAndCreateNext();
-                  toast.success('Turno 1 fechado! Turno 2 criado com itens pendentes.');
-                  setChecklistType('fechamento');
-                }}
+                onEditPlan={() => setPlanSheetOpen(true)}
                 onReopenShift={async () => {
                   await reopenOrder();
                   toast.success('Turno reaberto com sucesso!');
-                }}
-                onDeletePlan={async () => {
-                  if (!confirm('Tem certeza que deseja apagar o plano e todos os registros de produção do dia? Esta ação não pode ser desfeita.')) return;
-                  try {
-                    await deleteOrder();
-                    toast.success('Plano apagado! Você pode criar um novo.');
-                  } catch (err) {
-                    toast.error('Erro ao apagar plano');
-                  }
                 }}
               />
             )}
@@ -826,6 +813,22 @@ export default function ChecklistsPage() {
         date={selectedDate}
         onSave={saveOrder}
         onCopyFromDate={copyFromDate}
+        hasExistingPlan={hasProductionOrder}
+        currentShift={currentShift}
+        isShift1Closed={isShift1Closed}
+        onCloseShift={async () => {
+          await closeShiftAndCreateNext();
+          toast.success('Turno 1 fechado! Turno 2 criado com itens pendentes.');
+          setChecklistType('fechamento');
+        }}
+        onDeletePlan={async () => {
+          try {
+            await deleteOrder();
+            toast.success('Plano apagado! Você pode criar um novo.');
+          } catch (err) {
+            toast.error('Erro ao apagar plano');
+          }
+        }}
       />
       <ProductionReportSheet
         open={reportSheetOpen}
@@ -835,8 +838,13 @@ export default function ChecklistsPage() {
         order={productionOrder}
         date={selectedDate}
         isAdmin={isAdmin}
+        currentShift={currentShift}
+        shift1Report={shift1Hook.report}
+        shift1Totals={shift1Hook.totals}
+        shift2Report={shift2Hook.report}
+        shift2Totals={shift2Hook.totals}
+        hasShift2={shift2Hook.hasOrder}
         onEditPlan={() => { setReportSheetOpen(false); setPlanSheetOpen(true); }}
-        onClosePlan={async () => { await closeOrder(); setReportSheetOpen(false); toast.success('Plano fechado!'); }}
       />
     </AppLayout>
   );
