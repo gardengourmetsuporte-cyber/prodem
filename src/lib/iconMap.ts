@@ -125,6 +125,7 @@ export const ICON_MAP: Record<string, string> = {
   Utensils: 'restaurant',
   Soup: 'ramen_dining',
   UtensilsCrossed: 'restaurant',
+  Factory: 'precision_manufacturing',
 
   // Rewards & Achievements
   Gift: 'redeem',

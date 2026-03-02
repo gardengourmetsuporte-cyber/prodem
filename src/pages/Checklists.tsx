@@ -541,7 +541,7 @@ export default function ChecklistsPage() {
                 )}
                 <div className="flex items-center gap-3 mb-3">
                   <AppIcon
-                    name={getTypeProgress.fechamento.percent === 100 ? 'check_circle' : 'Wrench'}
+                    name={getTypeProgress.fechamento.percent === 100 ? 'check_circle' : 'Factory'}
                     size={22}
                     fill={getTypeProgress.fechamento.percent === 100 ? 1 : 0}
                     className={cn(
