@@ -36,18 +36,16 @@ export function ProductionReportSheet({
         </div>
 
         {/* Admin actions */}
-        {isAdmin && order && (
+        {isAdmin && order && order.status !== 'closed' && (
           <div className="flex gap-2 pt-3 border-t border-border/40">
             <Button variant="outline" className="flex-1" onClick={onEditPlan}>
               <AppIcon name="Pencil" size={14} />
               Editar Plano
             </Button>
-            {order.status !== 'closed' && (
-              <Button variant="secondary" className="flex-1" onClick={onClosePlan}>
-                <AppIcon name="Lock" size={14} />
-                Fechar Dia
-              </Button>
-            )}
+            <Button variant="secondary" className="flex-1" onClick={onClosePlan}>
+              <AppIcon name="Lock" size={14} />
+              Fechar Dia
+            </Button>
           </div>
         )}
       </SheetContent>
