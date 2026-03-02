@@ -2681,6 +2681,7 @@ export type Database = {
           date: string
           id: string
           notes: string | null
+          shift: number
           status: string
           unit_id: string
           updated_at: string
@@ -2691,6 +2692,7 @@ export type Database = {
           date: string
           id?: string
           notes?: string | null
+          shift?: number
           status?: string
           unit_id: string
           updated_at?: string
@@ -2701,6 +2703,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
+          shift?: number
           status?: string
           unit_id?: string
           updated_at?: string

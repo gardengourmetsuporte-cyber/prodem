@@ -10,6 +10,7 @@ export interface ProductionOrder {
   created_by: string;
   date: string;
   status: 'draft' | 'active' | 'closed';
+  shift: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -43,15 +44,15 @@ export interface ProductionReportItem {
   duration_ms: number | null;
 }
 
-export function useProductionOrders(unitId: string | null, date: Date) {
+export function useProductionOrders(unitId: string | null, date: Date, shift: number = 1) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const dateStr = format(date, 'yyyy-MM-dd');
 
-  const orderKey = ['production-order', unitId, dateStr];
-  const itemsKey = ['production-order-items', unitId, dateStr];
+  const orderKey = ['production-order', unitId, dateStr, shift];
+  const itemsKey = ['production-order-items', unitId, dateStr, shift];
 
-  // Fetch current day's order
+  // Fetch current day's order for this shift
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: orderKey,
     queryFn: async () => {
@@ -60,12 +61,36 @@ export function useProductionOrders(unitId: string | null, date: Date) {
         .select('*')
         .eq('unit_id', unitId!)
         .eq('date', dateStr)
+        .eq('shift', shift)
         .maybeSingle();
       if (error) throw error;
       return data as ProductionOrder | null;
     },
     enabled: !!user && !!unitId,
   });
+
+  // Also fetch the other shift's order (to know if shift 1 is closed)
+  const otherShift = shift === 1 ? 2 : 1;
+  const { data: otherShiftOrder } = useQuery({
+    queryKey: ['production-order', unitId, dateStr, otherShift],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('production_orders')
+        .select('*')
+        .eq('unit_id', unitId!)
+        .eq('date', dateStr)
+        .eq('shift', otherShift)
+        .maybeSingle();
+      if (error) throw error;
+      return data as ProductionOrder | null;
+    },
+    enabled: !!user && !!unitId,
+  });
+
+  // For shift 2: check if shift 1 is closed
+  const shift1Order = shift === 1 ? order : otherShiftOrder;
+  const shift2Order = shift === 2 ? order : otherShiftOrder;
+  const isShift1Closed = shift1Order?.status === 'closed';
 
   // Fetch order items with checklist_item join
   const { data: orderItems = [], isLoading: itemsLoading } = useQuery({
@@ -82,42 +107,59 @@ export function useProductionOrders(unitId: string | null, date: Date) {
     enabled: !!order?.id,
   });
 
-  // Fetch completions for report
+  // Fetch completions for report — ALL shifts for this date (to calculate cross-shift progress)
   const { data: completions = [] } = useQuery({
     queryKey: ['production-completions', unitId, dateStr],
     queryFn: async () => {
-      const itemIds = orderItems.map(i => i.checklist_item_id);
-      if (itemIds.length === 0 || !unitId) return [];
+      // Get all checklist item IDs from both shifts
+      const allItemIds = new Set<string>();
+      
+      // Fetch items for all orders on this date
+      const { data: allOrders } = await supabase
+        .from('production_orders')
+        .select('id')
+        .eq('unit_id', unitId!)
+        .eq('date', dateStr);
+      
+      if (!allOrders || allOrders.length === 0) return [];
+      
+      const orderIds = allOrders.map(o => o.id);
+      const { data: allItems } = await supabase
+        .from('production_order_items')
+        .select('checklist_item_id')
+        .in('order_id', orderIds);
+      
+      (allItems || []).forEach(i => allItemIds.add(i.checklist_item_id));
+      
+      if (allItemIds.size === 0) return [];
+      
       const { data, error } = await supabase
         .from('checklist_completions')
-        .select('item_id, quantity_done, is_skipped, started_at, finished_at')
+        .select('item_id, quantity_done, is_skipped, started_at, finished_at, checklist_type')
         .eq('date', dateStr)
-        .eq('unit_id', unitId)
+        .eq('unit_id', unitId!)
         .in('status', ['completed', 'done'])
-        .in('item_id', itemIds);
+        .in('item_id', [...allItemIds]);
       if (error) throw error;
       return data || [];
     },
-    enabled: orderItems.length > 0 && !!unitId,
+    enabled: !!unitId && !!order?.id,
   });
 
-  // Build report
+  // Build report for THIS shift's items
   const report = useMemo((): ProductionReportItem[] => {
     if (orderItems.length === 0) return [];
 
-    // Sum quantity_done per item + track duration
     const doneMap = new Map<string, number>();
     const durationMap = new Map<string, number | null>();
     completions.forEach(c => {
       if (!c.is_skipped) {
         doneMap.set(c.item_id, (doneMap.get(c.item_id) || 0) + (c.quantity_done ?? 0));
-        // Calculate duration from started_at/finished_at
         const startedAt = (c as any).started_at;
         const finishedAt = (c as any).finished_at;
         if (startedAt && finishedAt) {
           const dur = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
           const existing = durationMap.get(c.item_id);
-          // Sum durations across shifts
           durationMap.set(c.item_id, (existing || 0) + dur);
         }
       }
@@ -151,8 +193,8 @@ export function useProductionOrders(unitId: string | null, date: Date) {
   }, [report]);
 
   const invalidate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: orderKey });
-    queryClient.invalidateQueries({ queryKey: itemsKey });
+    queryClient.invalidateQueries({ queryKey: ['production-order', unitId, dateStr] });
+    queryClient.invalidateQueries({ queryKey: ['production-order-items', unitId, dateStr] });
     queryClient.invalidateQueries({ queryKey: ['production-completions', unitId, dateStr] });
   }, [queryClient, unitId, dateStr]);
 
@@ -166,16 +208,14 @@ export function useProductionOrders(unitId: string | null, date: Date) {
     let orderId = order?.id;
 
     if (!orderId) {
-      // Create new order
       const { data, error } = await supabase
         .from('production_orders')
-        .insert({ unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes })
+        .insert({ unit_id: unitId, created_by: user.id, date: dateStr, status: 'active', notes, shift })
         .select('id')
         .single();
       if (error) throw error;
       orderId = data.id;
     } else {
-      // Update existing
       await supabase
         .from('production_orders')
         .update({ notes, status: 'active', updated_at: new Date().toISOString() })
@@ -198,14 +238,60 @@ export function useProductionOrders(unitId: string | null, date: Date) {
 
     invalidate();
     return orderId;
-  }, [user, unitId, dateStr, order?.id, invalidate]);
+  }, [user, unitId, dateStr, order?.id, shift, invalidate]);
 
-  // Close order
+  // Close this shift's order
   const closeOrder = useCallback(async () => {
     if (!order?.id) return;
     await supabase.from('production_orders').update({ status: 'closed' }).eq('id', order.id);
     invalidate();
   }, [order?.id, invalidate]);
+
+  // Close shift 1 and auto-create shift 2 with remaining items
+  const closeShiftAndCreateNext = useCallback(async () => {
+    if (!order?.id || !user || !unitId) return;
+    if (shift !== 1) return; // Only shift 1 can trigger this
+
+    // Close shift 1
+    await supabase.from('production_orders').update({ status: 'closed' }).eq('id', order.id);
+
+    // Calculate remaining items
+    const remaining = report
+      .filter(r => r.quantity_pending > 0)
+      .map(r => ({
+        checklist_item_id: r.checklist_item_id,
+        quantity_ordered: r.quantity_pending,
+      }));
+
+    if (remaining.length > 0) {
+      // Create shift 2 order
+      const { data: newOrder, error: orderError } = await supabase
+        .from('production_orders')
+        .insert({
+          unit_id: unitId,
+          created_by: user.id,
+          date: dateStr,
+          status: 'active',
+          shift: 2,
+          notes: 'Continuação do Turno 1',
+        })
+        .select('id')
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert remaining items
+      const rows = remaining.map(r => ({
+        order_id: newOrder.id,
+        checklist_item_id: r.checklist_item_id,
+        quantity_ordered: r.quantity_ordered,
+        unit_id: unitId,
+      }));
+      await supabase.from('production_order_items').insert(rows);
+    }
+
+    invalidate();
+  }, [order?.id, user, unitId, shift, dateStr, report, invalidate]);
 
   // Copy from another date
   const copyFromDate = useCallback(async (sourceDate: string) => {
@@ -215,6 +301,7 @@ export function useProductionOrders(unitId: string | null, date: Date) {
       .select('id')
       .eq('unit_id', unitId)
       .eq('date', sourceDate)
+      .eq('shift', 1) // Always copy from shift 1
       .maybeSingle();
     if (!sourceOrder) return null;
 
@@ -234,8 +321,12 @@ export function useProductionOrders(unitId: string | null, date: Date) {
     totals,
     isLoading: orderLoading || itemsLoading,
     hasOrder: !!order,
+    isShift1Closed,
+    shift1Order,
+    shift2Order,
     saveOrder,
     closeOrder,
+    closeShiftAndCreateNext,
     copyFromDate,
     invalidate,
   };
