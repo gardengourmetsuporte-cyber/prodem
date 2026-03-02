@@ -175,7 +175,7 @@ export function BottomTabBar() {
                    "hover:scale-[1.08] active:scale-[0.92]"
                  )}
                  style={{
-                   boxShadow: '0 4px 20px rgba(16,185,129,0.35), 0 8px 32px rgba(0,0,0,0.2)',
+                   boxShadow: '0 4px 20px hsl(25 85% 54% / 0.35), 0 8px 32px rgba(0,0,0,0.2)',
                  }}
               >
                 <AppIcon

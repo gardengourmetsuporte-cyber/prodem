@@ -143,7 +143,7 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
         className="fixed inset-x-0 top-0 bottom-0 z-50 overflow-hidden flex flex-col animate-fade-in"
         style={{
           paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
-          background: 'linear-gradient(to bottom, #050a05 0px, #102a1d 280px, hsl(var(--background)) 280px)',
+          background: 'linear-gradient(to bottom, hsl(25 30% 4%) 0px, hsl(25 40% 10%) 280px, hsl(var(--background)) 280px)',
         }}
       >
         <div className="overflow-y-auto h-full">
@@ -151,7 +151,7 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
           <div
             className="relative px-4 pt-[calc(env(safe-area-inset-top,12px)+12px)] pb-6 space-y-3"
             style={{
-              background: 'linear-gradient(135deg, #050a05 0%, #0a1a12 30%, #102a1d 70%, #050a05 100%)',
+              background: 'linear-gradient(135deg, hsl(25 30% 4%) 0%, hsl(25 40% 8%) 30%, hsl(25 40% 10%) 70%, hsl(25 30% 4%) 100%)',
             }}
           >
             {/* Close button */}
@@ -199,7 +199,7 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
                       <span
                         className={cn(
                           "w-2 h-2 rounded-full shrink-0",
-                          isActive ? "bg-emerald-400" : "bg-white/40"
+                          isActive ? "bg-primary" : "bg-white/40"
                         )}
                       />
                       <span className="truncate">{unit.name}</span>
@@ -264,12 +264,12 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
                     className={cn(
                       "flex flex-col items-center justify-center gap-1.5 py-3.5 px-2 rounded-2xl transition-all active:scale-95 relative overflow-hidden",
                       active
-                        ? "bg-[#0d1f14] border border-emerald-500/25"
+                        ? "bg-primary/10 border border-primary/25"
                         : "card-surface hover:bg-card/90"
                     )}
                     style={{
                       opacity: locked ? 0.55 : 1,
-                      ...(active ? { boxShadow: '0 0 20px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.04)' } : {}),
+                      ...(active ? { boxShadow: '0 0 20px hsl(25 85% 54% / 0.08), inset 0 1px 0 rgba(255,255,255,0.04)' } : {}),
                     }}
                   >
                     {isProd && (
@@ -281,18 +281,18 @@ export const MoreDrawer = React.forwardRef<HTMLDivElement, MoreDrawerProps>(func
                       <div className={cn(
                         "w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 transition-all duration-300",
                         active
-                          ? "bg-emerald-500/15 border border-emerald-500/30"
+                          ? "bg-primary/15 border border-primary/30"
                           : "bg-card border border-white/5"
                       )}
-                        style={active ? { boxShadow: '0 0 12px rgba(16,185,129,0.2)' } : undefined}
+                        style={active ? { boxShadow: '0 0 12px hsl(25 85% 54% / 0.2)' } : undefined}
                       >
-                        <AppIcon name={item.icon} size={20} fill={active ? 1 : 0} className={active ? "text-emerald-400" : "text-foreground/70"} />
+                        <AppIcon name={item.icon} size={20} fill={active ? 1 : 0} className={active ? "text-primary" : "text-foreground/70"} />
                       </div>
                       {locked && (
                         <AppIcon name="Gem" size={10} className="absolute -top-1 -right-1" style={{ color: 'hsl(45 90% 55%)' }} />
                       )}
                     </div>
-                    <span className={cn("text-[11px] font-medium leading-tight text-center truncate max-w-full relative z-10", active ? "text-emerald-100 font-semibold" : locked ? "text-muted-foreground" : "text-foreground/80")}>
+                    <span className={cn("text-[11px] font-medium leading-tight text-center truncate max-w-full relative z-10", active ? "text-primary font-semibold" : locked ? "text-muted-foreground" : "text-foreground/80")}>
                       {item.label}
                     </span>
                     {locked && planLabel && (

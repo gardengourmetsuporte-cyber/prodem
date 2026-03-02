@@ -112,8 +112,8 @@ export default {
           "50%": { opacity: "1" },
         },
         "glow-border": {
-          "0%, 100%": { borderColor: "hsl(156 72% 40% / 0.2)" },
-          "50%": { borderColor: "hsl(156 72% 40% / 0.45)" },
+          "0%, 100%": { borderColor: "hsl(25 85% 54% / 0.2)" },
+          "50%": { borderColor: "hsl(25 85% 54% / 0.45)" },
         },
         "task-complete": {
           "0%": { opacity: "1", transform: "translateX(0)" },
