@@ -22,27 +22,30 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify caller via getClaims (faster than getUser)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await adminClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims?.sub) {
+    
+    // Verify caller via getUser (more reliable than getClaims)
+    const { data: userData, error: userError } = await adminClient.auth.getUser(token);
+    if (userError || !userData?.user?.id) {
+      console.error("Auth error:", userError?.message);
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const callerId = claimsData.claims.sub as string;
+    const callerId = userData.user.id;
 
     // Verify caller is admin
-    const { data: roleData } = await adminClient
+    const { data: roleRows } = await adminClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", callerId)
-      .single();
+      .eq("user_id", callerId);
 
-    if (!roleData || !["admin", "super_admin"].includes(roleData.role)) {
+    const roles = (roleRows || []).map((r: any) => r.role);
+    if (!roles.some((r: string) => ["admin", "super_admin"].includes(r))) {
+      console.error("Permission denied for user:", callerId, "roles:", roles);
       return new Response(JSON.stringify({ error: "Sem permissão" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
