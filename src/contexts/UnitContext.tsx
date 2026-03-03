@@ -82,25 +82,38 @@ export function UnitProvider({ children }: { children: ReactNode }) {
             setActiveUnitIdState(allUnits[0].id);
           }
         } else {
-          // Check for pending invites
-          const { data: pendingInvites } = await supabase
-            .from('invites')
-            .select('id')
-            .eq('email', user.email!)
-            .is('accepted_at', null)
-            .limit(1);
+          // Check profile status — if pending, don't auto-provision
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('user_id', user.id)
+            .maybeSingle();
 
           if (fetchId !== fetchIdRef.current) return;
 
-          if (pendingInvites && pendingInvites.length > 0) {
-            console.log('[UnitContext] Pending invite found, skipping auto-provision');
+          if (profileData?.status === 'pending') {
+            console.log('[UnitContext] Profile pending approval, skipping auto-provision');
             setUnits([]);
           } else {
-            // Auto-provision
-            try {
-              const { data: newUnitId, error: provisionError } = await supabase
-                .rpc('auto_provision_unit', { p_user_id: user.id });
-              if (provisionError) throw provisionError;
+            // Check for pending invites
+            const { data: pendingInvites } = await supabase
+              .from('invites')
+              .select('id')
+              .eq('email', user.email!)
+              .is('accepted_at', null)
+              .limit(1);
+
+            if (fetchId !== fetchIdRef.current) return;
+
+            if (pendingInvites && pendingInvites.length > 0) {
+              console.log('[UnitContext] Pending invite found, skipping auto-provision');
+              setUnits([]);
+            } else {
+              // Auto-provision
+              try {
+                const { data: newUnitId, error: provisionError } = await supabase
+                  .rpc('auto_provision_unit', { p_user_id: user.id });
+                if (provisionError) throw provisionError;
 
               if (fetchId !== fetchIdRef.current) return;
 
@@ -148,6 +161,7 @@ export function UnitProvider({ children }: { children: ReactNode }) {
               } catch {
                 setUnits([]);
               }
+            }
             }
           }
         }
